@@ -19,8 +19,8 @@
     --ease:cubic-bezier(.2,.8,.2,1);
     /* critically-damped spring (no wobble), sampled into CSS linear() */
     --spring:linear(0,.009,.035 2.1%,.141 4.4%,.281 6.7%,.723 12.9%,.938 16.7%,1.017 19.3%,1.042 21.8%,1.04 24.3%,1.024 28.5%,1.003 35.3%,.998 41.4%,1);
-    --bar:180px;
-    font-synthesis:none; -webkit-text-size-adjust:100%;
+    --bar:180px; --pick-bg:#ffffff;
+    color-scheme:light dark; font-synthesis:none; -webkit-text-size-adjust:100%;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -28,7 +28,7 @@
       --label:#fff; --label2:rgba(235,235,245,.64); --label3:rgba(235,235,245,.32); --sep:rgba(84,84,88,.55);
       --accent:#229964; --accent-press:#1c8455; --accent-soft:rgba(48,209,120,.15); --accent-text:#4fd391;
       --orange-text:#ffb340; --orange-soft:rgba(255,159,10,.17); --indigo-text:#a3a1ff; --indigo-soft:rgba(94,92,230,.24);
-      --material:rgba(22,22,24,.78); --nav-material:rgba(0,0,0,.72); --shadow:none;
+      --material:rgba(22,22,24,.78); --nav-material:rgba(0,0,0,.72); --shadow:none; --pick-bg:#000;
     }
   }
   :root[data-theme="dark"]{
@@ -36,7 +36,7 @@
     --label:#fff; --label2:rgba(235,235,245,.64); --label3:rgba(235,235,245,.32); --sep:rgba(84,84,88,.55);
     --accent:#229964; --accent-press:#1c8455; --accent-soft:rgba(48,209,120,.15); --accent-text:#4fd391;
     --orange-text:#ffb340; --orange-soft:rgba(255,159,10,.17); --indigo-text:#a3a1ff; --indigo-soft:rgba(94,92,230,.24);
-    --material:rgba(22,22,24,.78); --nav-material:rgba(0,0,0,.72); --shadow:none;
+    --material:rgba(22,22,24,.78); --nav-material:rgba(0,0,0,.72); --shadow:none; --pick-bg:#000;
   }
 
   *{box-sizing:border-box}
@@ -59,8 +59,10 @@
   .nav .mini{font-weight:600;font-size:17px;letter-spacing:-.02em;opacity:0;transform:translateY(4px);transition:opacity .2s,transform .3s var(--ease)}
   .nav.scrolled .mini{opacity:1;transform:none}
   .langpick{position:relative}
-  .langpick select{appearance:none;-webkit-appearance:none;border:0;background:var(--fill2);border-radius:999px;
+  .langpick select{appearance:none;-webkit-appearance:none;border:.5px solid var(--sep);background:var(--pick-bg);border-radius:999px;
                    padding:7px 30px 7px 13px;font-size:15px;font-weight:500;cursor:pointer;max-width:58vw;text-overflow:ellipsis}
+  .langpick select option{background:var(--pick-bg);color:var(--label)}
+  body.picking .langpick{visibility:hidden}
   .langpick::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;margin-top:-5px;border:solid var(--label2);
                    border-width:0 1.8px 1.8px 0;transform:rotate(45deg);pointer-events:none}
 
@@ -89,6 +91,27 @@
   .startbtn svg{width:22px;height:22px}
   .welcome .hint{text-align:center;color:var(--label2);font-size:13px;margin:10px 18px 0;letter-spacing:0}
   body.talking .welcome{display:none}
+
+  /* ------------------------------------------------------------------ first screen: choose a language */
+  .picker{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;display:none;
+          padding:calc(env(safe-area-inset-top) + 28px) 16px calc(env(safe-area-inset-bottom) + 28px)}
+  body.picking .picker{display:block}
+  .picker .in{max-width:520px;margin:0 auto;animation:rise .6s var(--spring) both}
+  .picker .brand{font-size:15px;font-weight:600;color:var(--accent-text);letter-spacing:-.01em}
+  .picker h2{margin:6px 0 2px;font-size:30px;line-height:1.2;font-weight:700;letter-spacing:-.02em}
+  .picker .en{margin:0;color:var(--label2);font-size:17px}
+  .langs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+  .langs button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:0;border-radius:18px;
+                background:var(--surface);box-shadow:var(--shadow);padding:14px 16px;cursor:pointer;
+                transition:transform .35s var(--spring),box-shadow .2s}
+  .langs button:active{transform:scale(.96);transition-duration:.06s}
+  .langs .native{font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+  .langs .eng{font-size:13px;color:var(--label2);letter-spacing:0}
+  .langs .eng i{font-style:normal;color:var(--orange-text)}
+  .langs .auto{grid-column:1/-1;background:var(--accent-soft);box-shadow:none}
+  .langs .auto .native{font-size:18px;color:var(--accent-text)}
+  body.leaving .picker{animation:fade-out .35s var(--ease) forwards}
+  @keyframes fade-out{to{opacity:0;transform:scale(1.02)}}
 
   /* ------------------------------------------------------------------ conversation */
   .chat{margin-top:18px;display:flex;flex-direction:column;gap:6px}
@@ -210,13 +233,21 @@
   @media (min-width:700px){ .hero h1{font-size:40px} .row{max-width:72%} }
 </style>
 </head>
-<body>
+<body class="picking">
+<section class="picker" id="picker" aria-label="Choose your language">
+  <div class="in">
+    <div class="brand">Yojana Saathi · योजना साथी</div>
+    <h2>अपनी भाषा चुनें</h2>
+    <p class="en">Choose your language</p>
+    <div class="langs" id="langs"></div>
+  </div>
+</section>
 <nav class="nav" id="nav">
   <span class="mini">Yojana Saathi</span>
   <label class="langpick" aria-label="Language">
     <select id="langsel">
       <option value="auto">🌐 Auto</option>
-      <option value="hi">हिंदी / Hinglish</option>
+      <option value="hi">हिंदी · Hindi</option>
       <option value="en">English</option>
     </select>
   </label>
@@ -225,22 +256,22 @@
 <main class="wrap">
   <header class="hero" id="hero">
     <h1>Yojana Saathi</h1>
-    <p class="sub">योजना साथी · Bol ke jaaniye, aapke liye kaunsi sarkari yojana hai</p>
-    <div class="models"><span>🎙️ Gnani Prisma</span><span>🔊 Gnani Timbre</span><span>10 bhashayein · languages</span></div>
+    <p class="sub" id="w-sub"></p>
+    <div class="models"><span>🎙️ Gnani Prisma</span><span>🔊 Gnani Timbre</span><span id="w-chip"></span></div>
     <div id="beta" class="beta" role="note"></div>
   </header>
 
   <section class="welcome" id="welcome">
     <ol>
-      <li><span class="ico">🎙️</span><div><b>Apni bhasha mein boliye</b><small>Speak in your language: umar, kaam, kamaai. Hindi, English or any of 10 languages.</small></div></li>
-      <li><span class="ico">✅</span><div><b>Kaunsi yojana, aur kyun</b><small>See which central and state schemes fit you, and why, from verified rules.</small></div></li>
-      <li><span class="ico">💬</span><div><b>Samjhaiye, aur WhatsApp</b><small>Ask where to apply and which documents to bring, then share the list.</small></div></li>
+      <li><span class="ico">🎙️</span><div><b id="w-s1t"></b><small id="w-s1d"></small></div></li>
+      <li><span class="ico">✅</span><div><b id="w-s2t"></b><small id="w-s2d"></small></div></li>
+      <li><span class="ico">💬</span><div><b id="w-s3t"></b><small id="w-s3d"></small></div></li>
     </ol>
     <button class="startbtn" id="startbtn">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
-      <span>Shuru karein · Start</span>
+      <span id="w-start"></span>
     </button>
-    <p class="hint">Galat sun liya? Kisi bhi jawab ke neeche "Badlein" dabaiye · Tap "Change" under any answer to fix it.</p>
+    <p class="hint" id="w-hint"></p>
   </section>
 
   <div id="chat" class="chat" aria-live="polite"></div>
@@ -323,7 +354,7 @@ const T = {
 };
 // New strings for the "fix a wrong answer" button (beta translations, like the rest of the 8 language packs)
 const X = {
-  hi:{fix:"Badlein", redo:"Theek hai, dobara boliye", redo_say:"ठीक है, दोबारा बोलिए।", restart:"Phir se", neterr:"Network mein dikkat aayi. Dobara koshish karein."},
+  hi:{fix:"बदलें", redo:"Theek hai, dobara boliye", redo_say:"ठीक है, दोबारा बोलिए।", restart:"Phir se", neterr:"Network mein dikkat aayi. Dobara koshish karein."},
   en:{fix:"Change", redo:"OK, say it again", redo_say:"OK, please say it again.", restart:"Restart", neterr:"Network problem. Please try again."},
   bn:{fix:"বদলান", redo:"ঠিক আছে, আবার বলুন", redo_say:"ঠিক আছে, আবার বলুন।", restart:"আবার শুরু", neterr:"নেটওয়ার্কে সমস্যা। আবার চেষ্টা করুন।"},
   gu:{fix:"બદલો", redo:"બરાબર, ફરી બોલો", redo_say:"બરાબર, ફરી બોલો.", restart:"ફરી શરૂ", neterr:"નેટવર્કમાં તકલીફ. ફરી પ્રયાસ કરો."},
@@ -370,6 +401,106 @@ function applyLang(l) {
   $("#restartlbl").textContent = t("restart");
   if (focus) setFocus(focus);
 }
+
+// ---------------------------------------------------------------- first screen: language, then a welcome in it
+// Welcome-screen text per language (the 8 beta ones are AI translations, like the rest of their packs)
+const W = {
+  hi:{sub:"योजना साथी · बोलकर जानिए, आपके लिए कौन-सी सरकारी योजना है", chip:"10 भाषाएँ",
+      s1t:"अपनी भाषा में बोलिए", s1d:"अपनी उम्र, काम और महीने की कमाई बताइए।",
+      s2t:"कौन-सी योजना, और क्यों", s2d:"केंद्र और राज्य की कौन-सी योजनाएँ आपके लिए हैं, और क्यों, पक्के नियमों से।",
+      s3t:"समझिए, और WhatsApp कीजिए", s3d:"कहाँ आवेदन करें, कौन-से कागज़ लाएँ, यह पूछिए। फिर सूची भेजिए।",
+      start:"शुरू करें", hint:"गलत सुन लिया? किसी भी जवाब के नीचे \"बदलें\" दबाइए।", type:"या यहाँ लिखें…"},
+  en:{sub:"Speak, and find out which government schemes are for you", chip:"10 languages",
+      s1t:"Speak in your language", s1d:"Tell us your age, your work and what you earn in a month.",
+      s2t:"Which schemes, and why", s2d:"Central and state schemes that fit you, and why, from verified rules.",
+      s3t:"Ask, then share on WhatsApp", s3d:"Ask where to apply and which documents to bring, then share the list.",
+      start:"Start", hint:"Misheard? Tap \"Change\" under any answer to fix it.", type:"Or type here…"},
+  bn:{sub:"বলে জানুন, আপনার জন্য কোন সরকারি প্রকল্প আছে", chip:"10টি ভাষা",
+      s1t:"নিজের ভাষায় বলুন", s1d:"আপনার বয়স, কাজ আর মাসের আয় বলুন।",
+      s2t:"কোন প্রকল্প, আর কেন", s2d:"কেন্দ্র ও রাজ্যের কোন প্রকল্প আপনার জন্য, আর কেন, যাচাই করা নিয়ম থেকে।",
+      s3t:"জেনে নিন, WhatsApp-এ পাঠান", s3d:"কোথায় আবেদন করবেন, কোন কাগজ লাগবে জিজ্ঞেস করুন, তারপর তালিকা পাঠান।",
+      start:"শুরু করুন", hint:"ভুল শুনেছে? যেকোনো উত্তরের নিচে \"বদলান\" চাপুন।", type:"অথবা এখানে লিখুন…"},
+  gu:{sub:"બોલીને જાણો, તમારા માટે કઈ સરકારી યોજના છે", chip:"10 ભાષાઓ",
+      s1t:"તમારી ભાષામાં બોલો", s1d:"તમારી ઉંમર, કામ અને મહિનાની કમાણી જણાવો.",
+      s2t:"કઈ યોજના, અને કેમ", s2d:"કેન્દ્ર અને રાજ્યની કઈ યોજનાઓ તમારા માટે છે, અને કેમ, ચકાસેલા નિયમોથી.",
+      s3t:"સમજો, અને WhatsApp કરો", s3d:"ક્યાં અરજી કરવી, કયા કાગળ લાવવા તે પૂછો, પછી યાદી મોકલો.",
+      start:"શરૂ કરો", hint:"ખોટું સાંભળ્યું? કોઈપણ જવાબ નીચે \"બદલો\" દબાવો.", type:"અથવા અહીં લખો…"},
+  kn:{sub:"ಮಾತನಾಡಿ ತಿಳಿಯಿರಿ, ನಿಮಗೆ ಯಾವ ಸರ್ಕಾರಿ ಯೋಜನೆ ಇದೆ", chip:"10 ಭಾಷೆಗಳು",
+      s1t:"ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ ಮಾತನಾಡಿ", s1d:"ನಿಮ್ಮ ವಯಸ್ಸು, ಕೆಲಸ ಮತ್ತು ತಿಂಗಳ ಆದಾಯ ತಿಳಿಸಿ.",
+      s2t:"ಯಾವ ಯೋಜನೆ, ಮತ್ತು ಏಕೆ", s2d:"ಕೇಂದ್ರ ಮತ್ತು ರಾಜ್ಯದ ಯಾವ ಯೋಜನೆಗಳು ನಿಮಗೆ ಸೂಕ್ತ, ಮತ್ತು ಏಕೆ, ಪರಿಶೀಲಿಸಿದ ನಿಯಮಗಳಿಂದ.",
+      s3t:"ಕೇಳಿ, ನಂತರ WhatsApp ಮಾಡಿ", s3d:"ಎಲ್ಲಿ ಅರ್ಜಿ ಹಾಕಬೇಕು, ಯಾವ ದಾಖಲೆ ತರಬೇಕು ಕೇಳಿ, ನಂತರ ಪಟ್ಟಿ ಕಳುಹಿಸಿ.",
+      start:"ಪ್ರಾರಂಭಿಸಿ", hint:"ತಪ್ಪಾಗಿ ಕೇಳಿದೆಯೇ? ಯಾವುದೇ ಉತ್ತರದ ಕೆಳಗೆ \"ಬದಲಿಸಿ\" ಒತ್ತಿ.", type:"ಅಥವಾ ಇಲ್ಲಿ ಬರೆಯಿರಿ…"},
+  ml:{sub:"സംസാരിച്ച് അറിയൂ, നിങ്ങൾക്കുള്ള സർക്കാർ പദ്ധതികൾ", chip:"10 ഭാഷകൾ",
+      s1t:"നിങ്ങളുടെ ഭാഷയിൽ സംസാരിക്കൂ", s1d:"നിങ്ങളുടെ പ്രായം, ജോലി, മാസവരുമാനം പറയൂ.",
+      s2t:"ഏത് പദ്ധതി, എന്തുകൊണ്ട്", s2d:"നിങ്ങൾക്ക് യോജിച്ച കേന്ദ്ര, സംസ്ഥാന പദ്ധതികളും കാരണവും, പരിശോധിച്ച നിയമങ്ങളിൽ നിന്ന്.",
+      s3t:"ചോദിക്കൂ, WhatsApp ചെയ്യൂ", s3d:"എവിടെ അപേക്ഷിക്കണം, ഏതു രേഖകൾ വേണം എന്ന് ചോദിക്കൂ, പിന്നെ പട്ടിക അയയ്ക്കൂ.",
+      start:"തുടങ്ങാം", hint:"തെറ്റായി കേട്ടോ? ഏത് ഉത്തരത്തിനു താഴെയും \"മാറ്റുക\" അമർത്തൂ.", type:"അല്ലെങ്കിൽ ഇവിടെ എഴുതൂ…"},
+  mr:{sub:"बोलून जाणून घ्या, तुमच्यासाठी कोणती सरकारी योजना आहे", chip:"10 भाषा",
+      s1t:"तुमच्या भाषेत बोला", s1d:"तुमचे वय, काम आणि महिन्याची कमाई सांगा.",
+      s2t:"कोणती योजना, आणि का", s2d:"केंद्र आणि राज्याच्या कोणत्या योजना तुमच्यासाठी आहेत, आणि का, तपासलेल्या नियमांवरून.",
+      s3t:"समजून घ्या, WhatsApp करा", s3d:"कुठे अर्ज करायचा, कोणती कागदपत्रे लागतील ते विचारा, मग यादी पाठवा.",
+      start:"सुरू करा", hint:"चुकीचे ऐकले? कोणत्याही उत्तराखाली \"बदला\" दाबा.", type:"किंवा इथे लिहा…"},
+  pa:{sub:"ਬੋਲ ਕੇ ਜਾਣੋ, ਤੁਹਾਡੇ ਲਈ ਕਿਹੜੀ ਸਰਕਾਰੀ ਯੋਜਨਾ ਹੈ", chip:"10 ਭਾਸ਼ਾਵਾਂ",
+      s1t:"ਆਪਣੀ ਭਾਸ਼ਾ ਵਿੱਚ ਬੋਲੋ", s1d:"ਆਪਣੀ ਉਮਰ, ਕੰਮ ਅਤੇ ਮਹੀਨੇ ਦੀ ਕਮਾਈ ਦੱਸੋ।",
+      s2t:"ਕਿਹੜੀ ਯੋਜਨਾ, ਅਤੇ ਕਿਉਂ", s2d:"ਕੇਂਦਰ ਅਤੇ ਰਾਜ ਦੀਆਂ ਕਿਹੜੀਆਂ ਯੋਜਨਾਵਾਂ ਤੁਹਾਡੇ ਲਈ ਹਨ, ਅਤੇ ਕਿਉਂ, ਪੱਕੇ ਨਿਯਮਾਂ ਤੋਂ।",
+      s3t:"ਪੁੱਛੋ, ਫਿਰ WhatsApp ਕਰੋ", s3d:"ਕਿੱਥੇ ਅਰਜ਼ੀ ਦੇਣੀ ਹੈ, ਕਿਹੜੇ ਕਾਗਜ਼ ਲਿਆਉਣੇ ਹਨ ਪੁੱਛੋ, ਫਿਰ ਸੂਚੀ ਭੇਜੋ।",
+      start:"ਸ਼ੁਰੂ ਕਰੋ", hint:"ਗਲਤ ਸੁਣਿਆ? ਕਿਸੇ ਵੀ ਜਵਾਬ ਹੇਠਾਂ \"ਬਦਲੋ\" ਦਬਾਓ।", type:"ਜਾਂ ਇੱਥੇ ਲਿਖੋ…"},
+  ta:{sub:"பேசி அறியுங்கள், உங்களுக்கு எந்த அரசுத் திட்டம் உள்ளது", chip:"10 மொழிகள்",
+      s1t:"உங்கள் மொழியில் பேசுங்கள்", s1d:"உங்கள் வயது, வேலை, மாத வருமானம் சொல்லுங்கள்.",
+      s2t:"எந்தத் திட்டம், ஏன்", s2d:"உங்களுக்குப் பொருந்தும் மத்திய, மாநிலத் திட்டங்களும் காரணமும், சரிபார்த்த விதிகளிலிருந்து.",
+      s3t:"கேளுங்கள், WhatsApp செய்யுங்கள்", s3d:"எங்கே விண்ணப்பிப்பது, என்ன ஆவணங்கள் வேண்டும் என்று கேளுங்கள், பிறகு பட்டியலை அனுப்புங்கள்.",
+      start:"தொடங்குங்கள்", hint:"தவறாகக் கேட்டதா? எந்தப் பதிலின் கீழும் \"மாற்று\" அழுத்துங்கள்.", type:"அல்லது இங்கே எழுதுங்கள்…"},
+  te:{sub:"మాట్లాడి తెలుసుకోండి, మీకు ఏ ప్రభుత్వ పథకం ఉంది", chip:"10 భాషలు",
+      s1t:"మీ భాషలో మాట్లాడండి", s1d:"మీ వయసు, పని, నెల ఆదాయం చెప్పండి.",
+      s2t:"ఏ పథకం, ఎందుకు", s2d:"మీకు సరిపోయే కేంద్ర, రాష్ట్ర పథకాలు, కారణంతో సహా, ధృవీకరించిన నియమాల నుండి.",
+      s3t:"అడగండి, తర్వాత WhatsApp చేయండి", s3d:"ఎక్కడ దరఖాస్తు చేయాలి, ఏ పత్రాలు కావాలి అని అడగండి, తర్వాత జాబితా పంపండి.",
+      start:"ప్రారంభించండి", hint:"తప్పుగా విన్నారా? ఏ జవాబు కిందైనా \"మార్చండి\" నొక్కండి.", type:"లేదా ఇక్కడ రాయండి…"},
+};
+// most-spoken first; native name big, English name small
+const PICK = [["hi","हिंदी","Hindi"],["en","English","English"],["bn","বাংলা","Bengali"],["mr","मराठी","Marathi"],
+  ["te","తెలుగు","Telugu"],["ta","தமிழ்","Tamil"],["gu","ગુજરાતી","Gujarati"],["kn","ಕನ್ನಡ","Kannada"],
+  ["ml","മലയാളം","Malayalam"],["pa","ਪੰਜਾਬੀ","Punjabi"]];
+const BETA = new Set(["bn","gu","kn","ml","mr","pa","ta","te"]);
+
+function renderWelcome() {
+  // Auto: English text with the Hindi start button, since we don't know the language yet
+  const w = auto ? Object.assign({}, W.en, {sub: W.hi.sub, start: W.hi.start + " · Start", type: "Or type here… / यहाँ लिखें…"})
+                 : (W[lang] || W.en);
+  for (const k of ["sub","chip","s1t","s1d","s2t","s2d","s3t","s3d","start","hint"]) { const el = $("#w-" + k); if (el) el.textContent = w[k]; }
+  $("#text").placeholder = w.type;
+}
+// Picking a language fixes it for the whole conversation (Prisma listens for that language only);
+// "Auto" keeps detecting whichever of the 10 languages the person speaks.
+function choose(v) {
+  auto = v === "auto";
+  const l = auto ? initialLang() : v;
+  lang = l; document.documentElement.lang = l;
+  if (LANGS[l]) applyLang(l);
+  $("#langsel").value = v;
+  renderWelcome();
+  if (document.body.classList.contains("picking")) {
+    document.body.classList.add("leaving");
+    setTimeout(() => document.body.classList.remove("picking", "leaving"), REDUCE ? 0 : 330);
+    window.scrollTo(0, 0);
+  }
+  preloadIntro();
+}
+(function buildPicker() {
+  const box = $("#langs");
+  for (const [id, native, eng] of PICK) {
+    const b = document.createElement("button"); b.lang = id;
+    b.innerHTML = `<span class="native"></span><span class="eng"></span>`;
+    b.querySelector(".native").textContent = native;
+    b.querySelector(".eng").textContent = eng;
+    if (BETA.has(id)) { const i = document.createElement("i"); i.textContent = " · beta"; b.querySelector(".eng").appendChild(i); }
+    b.onclick = () => choose(id);
+    box.appendChild(b);
+  }
+  const a = document.createElement("button"); a.className = "auto";
+  a.innerHTML = `<span class="native">🌐 Auto · कोई भी भाषा</span><span class="eng">Speak any of the 10 languages; the app follows you</span>`;
+  a.onclick = () => choose("auto");
+  box.appendChild(a);
+})();
 
 // ---------------------------------------------------------------- layout: scrolling + nav material
 // The bottom bar is fixed, so the page keeps room for it (--bar) and every new message is scrolled into view above it.
@@ -913,9 +1044,11 @@ $("#hf").onclick = e => {
 $("#startbtn").onclick = () => start();
 $("#langsel").onchange = e => {
   const v = e.target.value;
+  if (!started) { choose(v); return; }            // still on the welcome screen: just switch its language
+  if (busy) { e.target.value = auto ? "auto" : lang; return; }
   auto = v === "auto";
   if (!auto) applyLang(v);
-  if (!busy) start(); else e.target.value = auto ? "auto" : lang;
+  start();
 };
 
 // The whole greeting is fetched and voiced while the welcome screen is showing, so tapping Start plays it
@@ -965,7 +1098,7 @@ fetch("/api/langs").then(r => r.json()).then(list => {
 
 fetch("/api/health").then(r => r.json()).then(h => { health = h; }).catch(() => {});
 document.documentElement.lang = lang;
-preloadIntro();
+renderWelcome();
 </script>
 </body>
 </html>
