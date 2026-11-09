@@ -52,16 +52,20 @@ def info():
     return out
 
 
-def stt_code(lang, auto=True, known=False):
+def stt_code(lang, auto=True, known=False, stream=False):
     """
     language_code for Prisma v3.0.
-    Auto mode, nothing heard yet  -> "indic-auto" (Prisma works out the language itself).
-    Language known / picked       -> that language + English as a hint (people mix in English words everywhere).
-    The list is a hint, not a lock, so someone who switches language mid-way is still transcribed.
+    Auto mode (default)      -> "indic-auto": Prisma works out the language every time, so we keep following the
+                                person even if they switch language. (`known` is accepted but no longer changes this.)
+    Language picked in menu  -> REST: that language + English as a hint ("ta-IN,en-IN"; a hint, not a lock).
+                                Stream: that one language only. The live stream rejects lists:
+                                "exactly one locale is required (e.g. hi-IN)" (tested 9 Nov 2026).
     """
     lang = valid(lang)
-    if auto and not known:
+    if auto:
         return os.environ.get("STT_AUTO_CODE", "indic-auto")
+    if stream:
+        return code(lang)
     if lang == "en":
         return "en-IN,hi-IN"
     return f"{code(lang)},en-IN"

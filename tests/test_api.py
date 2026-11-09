@@ -38,7 +38,7 @@ def tiny_wav():
 
 def test_routes():
     appmod.API_KEY = "test-key"
-    appmod.requests.post = fake_post
+    appmod.HTTP.post = fake_post
     c = appmod.app.test_client()
 
     r = c.post("/api/stt", data={"lang": "hi", "audio": (io.BytesIO(tiny_wav()), "speech.wav")},
@@ -50,13 +50,19 @@ def test_routes():
     # auto mode, language not known yet -> Prisma works it out itself
     assert stt["data"] == {"language_code": "indic-auto", "format": "transcribe", "model": "prisma-v3.0"}
     assert "audio_file" in stt["files"]
-    # language known (or picked by hand) -> that language + English as a hint
+    # Auto mode keeps indic-auto even once the language is known (so a switch of language is still followed)
     c.post("/api/stt", data={"lang": "ta", "auto": "1", "known": "1", "audio": (io.BytesIO(tiny_wav()), "s.wav")},
            content_type="multipart/form-data")
-    assert calls[-1]["data"]["language_code"] == "ta-IN,en-IN"
+    assert calls[-1]["data"]["language_code"] == "indic-auto"
+    # picked by hand -> that language + English as a hint (REST accepts a list)
     c.post("/api/stt", data={"lang": "hi", "auto": "0", "audio": (io.BytesIO(tiny_wav()), "s.wav")},
            content_type="multipart/form-data")
     assert calls[-1]["data"]["language_code"] == "hi-IN,en-IN"
+    # ...but the live stream only accepts ONE locale ("exactly one locale is required", real API, 9 Nov 2026)
+    assert appmod.langs.stt_code("ta", auto=False, stream=True) == "ta-IN"
+    assert appmod.langs.stt_code("ta", auto=True, known=True, stream=True) == "indic-auto"
+    for lang in appmod.langs.ALL:
+        assert "," not in appmod.langs.stt_code(lang, auto=False, stream=True)
 
     r = c.post("/api/tts", json={"text": "வணக்கம்", "lang": "ta"})
     assert calls[-1]["json"]["language"] == "ta-IN"
@@ -75,7 +81,7 @@ def test_routes():
     tts = calls[-1]
     assert tts["url"] == "https://api.vachana.ai/api/v1/tts/inference"
     assert tts["json"]["model"] == "timbre-v3.0" and tts["json"]["voice"] == "Shivani"
-    assert tts["json"]["language"] == "hi-IN" and tts["json"]["audio_config"]["container"] == "wav"
+    assert tts["json"]["language"] == "hi-IN" and tts["json"]["audio_config"]["container"] == "mp3"
 
     r = c.post("/api/turn", json={"state": {}, "text": "", "lang": "hi"})
     assert r.get_json()["state"]["asked"] == "intro"

@@ -96,7 +96,7 @@ def qt(lang, key):
 
 
 MAX_RETRIES = 1        # re-ask a slot once, then move on
-MAX_SPOKEN = 4         # speak the top 4 schemes, show all on screen
+MAX_SPOKEN = 3         # speak the top 3 schemes (keeps the voice reply short), show all on screen
 
 
 def needed_slots(p: dict):

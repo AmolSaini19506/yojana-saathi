@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -107,12 +107,12 @@
       <button id="mic" aria-label="Tap to speak">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
       </button>
-      <div id="status">Tap karke boliye · Tap to speak</div>
+      <div id="status">Tap to speak · बोलने के लिए टैप करें</div>
       <div class="opts"><label id="hfwrap" style="display:none"><input type="checkbox" id="handsfree" checked> Hands-free (live Prisma)</label></div>
     </div>
     <div class="typerow">
-      <input id="text" placeholder="Ya yahan likhiye… (or type here)" autocomplete="off">
-      <button id="send">Bhejo</button>
+      <input id="text" placeholder="Or type here… / यहाँ लिखें…" autocomplete="off">
+      <button id="send" aria-label="Send">➤</button>
       <button id="restart" class="ghost" title="Start over">↺</button>
     </div>
   </div>
@@ -125,7 +125,17 @@
 
 <script>
 const $ = s => document.querySelector(s);
-let lang = "hi", state = {}, busy = false, currentAudio = null;
+// First language = the phone/browser language if it's one of ours (e.g. ta-IN -> Tamil), otherwise English.
+// No location permission needed. After the first answer, auto-detect follows whatever language the person speaks.
+const SUPPORTED = ["hi","en","bn","gu","kn","ml","mr","pa","ta","te"];
+function initialLang() {
+  for (const l of (navigator.languages || [navigator.language || "en"])) {
+    const p = String(l).toLowerCase().split("-")[0];
+    if (SUPPORTED.includes(p)) return p;
+  }
+  return "en";
+}
+let lang = initialLang(), state = {}, busy = false, currentAudio = null, speakToken = 0;
 let auto = true, langKnown = false, lastDetected = null;  // auto: answer in whatever language the person speaks
 let LANGS = {hi:{code:"hi-IN"}, en:{code:"en-IN"}};
 let health = {}, results = null, focus = null;          // results = {eligible, maybe} once the checker finishes
@@ -218,24 +228,59 @@ function setFocus(id) {
 }
 
 // ---------------------------------------------------------------- voice out: Timbre (browser voice only as fallback)
-async function speak(text) {
-  if (!text) return;
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  setStatus(t("speak"));
+// Split a reply into sentences: the first is sent to Timbre alone so the voice starts in ~1 s,
+// the rest in chunks of up to ~240 characters, each fetched while the previous one plays.
+function splitSpeech(text) {
+  const parts = String(text).split(/(?<=[।!?.])\s+/).map(x => x.trim()).filter(Boolean);
+  const out = [];
+  for (const p of parts) {
+    if (out.length > 1 && (out[out.length - 1] + " " + p).length <= 240) out[out.length - 1] += " " + p;
+    else out.push(p);
+  }
+  return out.length ? out : [String(text)];
+}
+async function fetchTTS(text, l) {
   try {
-    const r = await fetch("/api/tts", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text, lang})});
-    if (r.status === 200) {
-      currentAudio = new Audio(URL.createObjectURL(await r.blob()));
-      await new Promise(res => { currentAudio.onended = res; currentAudio.onerror = res; currentAudio.play().catch(res); });
-      return;
-    }
-    if (r.status !== 204) console.warn("Timbre error", await r.text());
+    const r = await fetch("/api/tts", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text, lang: l})});
+    if (r.status === 200) return URL.createObjectURL(await r.blob());
+    if (r.status !== 204) console.warn("Timbre error", r.status, await r.text());
   } catch (e) { console.warn(e); }
-  if ("speechSynthesis" in window) await new Promise(res => {
-    const u = new SpeechSynthesisUtterance(text); u.lang = (LANGS[lang] || {}).code || "hi-IN"; u.onend = res; u.onerror = res; speechSynthesis.speak(u);
+  return null;
+}
+function playUrl(url) {
+  return new Promise(res => {
+    currentAudio = new Audio(url);
+    currentAudio.onended = res; currentAudio.onerror = res; currentAudio.play().catch(res);
   });
 }
-function stopSpeaking() { if (currentAudio) currentAudio.pause(); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+function browserSpeak(text, l) {
+  if (!("speechSynthesis" in window)) return Promise.resolve();
+  return new Promise(res => {
+    const u = new SpeechSynthesisUtterance(text); u.lang = (LANGS[l] || {}).code || "hi-IN";
+    u.onend = res; u.onerror = res; speechSynthesis.speak(u);
+  });
+}
+async function speak(text) {
+  if (!text) return;
+  const my = ++speakToken, l = lang;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  setStatus(t("speak"));
+  const parts = splitSpeech(text);
+  let next = fetchTTS(parts[0], l);
+  for (let i = 0; i < parts.length; i++) {
+    const url = await next;
+    if (my !== speakToken) return;                       // interrupted (new reply, mic tapped, restart)
+    next = i + 1 < parts.length ? fetchTTS(parts[i + 1], l) : null;   // prefetch while this one plays
+    if (url) await playUrl(url);
+    else { await browserSpeak(parts.slice(i).join(" "), l); return; }  // no key / Timbre down: browser voice
+    if (my !== speakToken) return;
+  }
+}
+function stopSpeaking() {
+  speakToken++;
+  if (currentAudio) currentAudio.pause();
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+}
 
 // ---------------------------------------------------------------- brain: checker turns, then scheme Q&A
 async function handleUserText(text, bubble) {
@@ -346,22 +391,28 @@ async function startStreaming() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(`${proto}://${location.host}/ws/stt?lang=${lang}&auto=${auto ? 1 : 0}&known=${langKnown ? 1 : 0}`);
   ws.binaryType = "arraybuffer";
-  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error("ws")); setTimeout(() => rej(new Error("timeout")), 6000); });
-  const stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}});
+  // connect and open the mic at the same time; audio spoken while connecting is buffered, not lost
+  const opened = new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error("ws")); setTimeout(() => rej(new Error("timeout")), 8000); });
+  opened.catch(() => {});
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}}); }
+  catch (e) { try { ws.close(); } catch {} throw e; }     // no mic: don't leave a Prisma session open
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const src = ctx.createMediaStreamSource(stream);
   const proc = ctx.createScriptProcessor(4096, 1, 1);
   let pending = new Int16Array(0);
   proc.onaudioprocess = e => {
-    if (ws.readyState !== 1) return;
+    if (ws.readyState > 1) return;
     const pcm = floatTo16k(e.inputBuffer.getChannelData(0), ctx.sampleRate);
-    const merged = new Int16Array(pending.length + pcm.length); merged.set(pending); merged.set(pcm, pending.length);
+    let merged = new Int16Array(pending.length + pcm.length); merged.set(pending); merged.set(pcm, pending.length);
+    if (ws.readyState !== 1) { pending = merged.slice(-16000 * 8); return; }   // still connecting: keep up to 8 s
     let off = 0;
     while (merged.length - off >= 512) { ws.send(merged.slice(off, off + 512).buffer); off += 512; }   // 1024-byte frames
     pending = merged.slice(off);
   };
   src.connect(proc); proc.connect(ctx.destination);
-  live = {ws, ctx, stream, proc, text: "", bubble: null, timer: null, idle: null, committing: false};
+  live = {ws, ctx, stream, proc, text: "", bubble: null, timer: null, idle: null, committing: false, error: null};
+  setMic("rec"); setStatus(t("listen"));                  // red right away, even before the stream is connected
   live.idle = setTimeout(() => { if (live && !live.text) { stopListening(true); setStatus(t("nothing"), true); } }, 12000);
   ws.onmessage = ev => {
     let m; try { m = JSON.parse(ev.data); } catch { return; }
@@ -376,9 +427,10 @@ async function startStreaming() {
       live.meta = `Prisma live${m.detected_language_code ? " · " + m.detected_language_code : ""}${m.latency ? " · " + Math.round(m.latency) + " ms" : ""}`;
       clearTimeout(live.timer);
       live.timer = setTimeout(finishListening, live.committing ? 100 : 1300);   // short pause after a phrase = end of turn
-    } else if (m.type === "error") { console.warn("Prisma:", m.message); setStatus("Prisma: " + m.message, true); }
+    } else if (m.type === "error") { console.warn("Prisma:", m.message); live.error = m.message; setStatus("Prisma: " + m.message, true); }
   };
   ws.onclose = () => { if (live && live.ws === ws) finishListening(); };
+  await opened;                                            // throws -> startListening falls back to tap-to-record
 }
 
 function stopListening(discard) {
@@ -397,6 +449,12 @@ async function finishListening() {
   const L = stopListening();
   if (!L) return;
   if (busy) { if (L.bubble) L.bubble.remove(); return; }
+  if (!L.text && L.error) {
+    // the live stream refused (or broke): say why, and use tap-to-record from now on so the mic keeps working
+    health.streaming = false; $("#hfwrap").style.display = "none";
+    setStatus("Live mode error: " + L.error + " · " + t("tap"), true);
+    return;
+  }
   if (!L.text) { setStatus(t("nothing"), true); return; }
   L.bubble.classList.remove("live");
   const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = L.meta || "Prisma live"; L.bubble.appendChild(meta);
@@ -408,7 +466,6 @@ async function startListening() {
   stopSpeaking();
   try {
     await startStreaming();
-    setMic("rec"); setStatus(t("listen"));
   } catch (e) {
     console.warn("streaming unavailable, using tap-to-record", e);
     stopListening(true);
@@ -439,7 +496,7 @@ async function startRec() {
   stopSpeaking();
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}}); }
-  catch (e) { setStatus("Mic permission nahi mili. Neeche likh kar bhi jawab de sakte hain.", true); return; }
+  catch (e) { setStatus("🎙️ No mic permission, you can type your answer below · Mic ki permission nahi mili, neeche likh sakte hain.", true); return; }
   chunks = []; rec = new MediaRecorder(stream);
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
   rec.onstop = async () => {
@@ -511,6 +568,7 @@ fetch("/api/langs").then(r => r.json()).then(list => {
   list.forEach(l => {
     LANGS[l.id] = l;
     if (l.ui) T[l.id] = l.ui;
+    if (l.id === lang) setTimeout(() => applyLang(lang), 0);
     if (!sel.querySelector(`option[value="${l.id}"]`)) {
       const o = document.createElement("option"); o.value = l.id;
       o.textContent = `${l.name} · ${l.en_name}${l.beta ? " (beta)" : ""}`; sel.appendChild(o);
@@ -530,7 +588,7 @@ document.addEventListener("click", e => {
   started = true;
   start();
 }, {capture:true});
-addMsg("Shuru karne ke liye kahin bhi tap kijiye 👆 Apni bhasha mein boliye.  ·  Tap anywhere to begin, and speak in your own language.", "bot");
+addMsg("👆 Tap anywhere to begin, and speak in your own language.\nशुरू करने के लिए कहीं भी टैप करें और अपनी भाषा में बोलें।", "bot");
 </script>
 </body>
 </html>

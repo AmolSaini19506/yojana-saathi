@@ -40,29 +40,37 @@ STT_MODEL = os.environ.get("PRISMA_MODEL", "prisma-v3.0")         # set to "" to
 TTS_MODEL = os.environ.get("TIMBRE_MODEL", "timbre-v3.0")
 TTS_VOICE = os.environ.get("TIMBRE_VOICE", "Shivani")              # v3.0 voices speak all 10 languages
 
-# Prisma v3.0: "indic-auto" until we know the language, then "<lang>-IN,en-IN" (see langs.stt_code)
+# Prisma v3.0: "indic-auto" in Auto mode; a picked language otherwise (see langs.stt_code)
 
 
-def stt_code(args):
+def stt_code(args, stream=False):
     lang = langs.valid(args.get("lang", "hi"))
     if not STT_MODEL:                                   # Prisma v2.5: one language only, no auto-detect
         return "en-IN" if lang == "en" else "hi-IN"
-    return langs.stt_code(lang, auto=args.get("auto", "1") == "1", known=args.get("known", "0") == "1")
+    return langs.stt_code(lang, auto=args.get("auto", "1") == "1", known=args.get("known", "0") == "1", stream=stream)
+
+
+# one keep-alive connection pool to Gnani: saves a TLS handshake on every STT / TTS call
+HTTP = requests.Session()
 
 app = Flask(__name__, static_folder="static")
 
 # ---------------------------------------------------------------- protect your credits on a public site
-# Each visitor (IP) gets RATE_PER_HOUR Gnani calls per hour. One full conversation uses roughly 15–25.
+# Each visitor (IP) gets RATE_PER_HOUR speech-to-text calls per hour (one full conversation uses ~10).
+# Voice replies are spoken sentence by sentence (several short Timbre calls per reply), so TTS gets its own,
+# larger allowance: TTS_RATE_FACTOR x RATE_PER_HOUR.
 RATE_PER_HOUR = int(os.environ.get("RATE_PER_HOUR", "80"))
+TTS_RATE_FACTOR = int(os.environ.get("TTS_RATE_FACTOR", "4"))
 _hits = defaultdict(deque)
 
 
-def rate_limited() -> bool:
+def rate_limited(kind: str = "stt") -> bool:
     ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "?").split(",")[0].strip()
-    now, q = time.time(), _hits[ip]
+    limit = RATE_PER_HOUR * (TTS_RATE_FACTOR if kind == "tts" else 1)
+    now, q = time.time(), _hits[(ip, kind)]
     while q and now - q[0] > 3600:
         q.popleft()
-    if len(q) >= RATE_PER_HOUR:
+    if len(q) >= limit:
         return True
     q.append(now)
     return False
@@ -91,7 +99,7 @@ if STREAMING_LIB:
         if not API_KEY:
             client.send(json.dumps({"type": "error", "message": "No GNANI_API_KEY set"}))
             return
-        headers = {"x-api-key-id": API_KEY, "language_code": stt_code(request.args),
+        headers = {"x-api-key-id": API_KEY, "language_code": stt_code(request.args, stream=True),
                    "x-sample-rate": "16000", "format": "transcribe", "x-api-request-id": str(uuid.uuid4())}
         if STT_MODEL:
             headers["model"] = STT_MODEL
@@ -166,7 +174,7 @@ def stt():
     if STT_MODEL:
         data["model"] = STT_MODEL
     try:
-        r = requests.post(
+        r = HTTP.post(
             STT_URL,
             headers={"X-API-Key-ID": API_KEY, "X-API-Request-ID": str(uuid.uuid4())},
             files={"audio_file": ("speech.wav", f.read(), "audio/wav")},
@@ -192,7 +200,7 @@ def tts():
     """Text -> Timbre WAV. Returns 204 if no key, so the page can fall back to the browser voice."""
     if not API_KEY:
         return Response(status=204)
-    if rate_limited():
+    if rate_limited("tts"):
         return jsonify(error="rate limited"), 429           # page falls back to the browser voice
     j = request.get_json(force=True) or {}
     text, lang = (j.get("text") or "").strip(), langs.valid(j.get("lang", "hi"))
@@ -204,10 +212,11 @@ def tts():
         "voice": TTS_VOICE,
         "language": langs.code(lang),
         "speed": 0.95,                       # a touch slower: easier for older listeners
-        "audio_config": {"sample_rate": 24000, "container": "wav"},
+        # MP3 is ~6x smaller than WAV (99 KB vs 603 KB for the greeting), so it reaches the phone much sooner
+        "audio_config": {"sample_rate": 24000, "container": "mp3", "bitrate": "64k"},
     }
     try:
-        r = requests.post(TTS_URL, headers={"Content-Type": "application/json", "X-API-Key-ID": API_KEY},
+        r = HTTP.post(TTS_URL, headers={"Content-Type": "application/json", "X-API-Key-ID": API_KEY},
                           json=payload, timeout=60)
     except requests.RequestException as e:
         return jsonify(error=f"Could not reach Timbre: {e}"), 502
@@ -217,7 +226,8 @@ def tts():
         except ValueError:
             err = r.text[:200]
         return jsonify(error=err), r.status_code if r.status_code != 200 else 502
-    return Response(r.content, mimetype=r.headers.get("Content-Type", "audio/wav"))
+    return Response(r.content, mimetype=r.headers.get("Content-Type", "audio/mpeg"),
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.post("/api/ask")
