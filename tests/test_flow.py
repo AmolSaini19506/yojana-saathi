@@ -124,7 +124,7 @@ def test_retry_then_skip():
     r = dialog.turn(r["state"], "pata nahi", "hi")      # intro: nothing understood -> asks age
     assert r["state"]["asked"] == "age"
     r = dialog.turn(r["state"], "hmm", "hi")            # can't parse -> retry once
-    assert r["state"]["asked"] == "age" and "samajh" in r["show"].lower()
+    assert r["state"]["asked"] == "age" and "समझ" in r["show"]   # "समझ नहीं आया" (Hindi is shown in Devanagari since 10 Nov)
     r = dialog.turn(r["state"], "hmm", "hi")            # still nothing -> move on
     assert r["state"]["asked"] == "occupation"
 
@@ -188,3 +188,12 @@ if __name__ == "__main__":
                 fails += 1
                 print("FAIL", name, e)
     sys.exit(1 if fails else 0)
+
+
+def test_hindi_screen_text_is_devanagari():
+    """Picking हिंदी shows the questions in Devanagari, not Roman Hinglish (user request, 10 Nov 2026)."""
+    import re
+    for key, d in dialog.Q["hi"].items():
+        if "show" in d:
+            roman = re.sub(r"\{\w+\}|\b(PF|ESIC|ITR|CSC|UP|Provident|Fund)\b", "", d["show"])
+            assert not re.search(r"[a-z]{3,}", roman), (key, d["show"])

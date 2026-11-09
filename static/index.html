@@ -277,7 +277,7 @@
   <div id="chat" class="chat" aria-live="polite"></div>
 
   <footer>
-    Yeh sirf ek shuruaati jaanch hai. Final eligibility CSC, bank ya sarkari portal par confirm karein.
+    यह सिर्फ़ एक शुरुआती जाँच है। आख़िरी पात्रता CSC, बैंक या सरकारी पोर्टल पर पक्की करें।
     This is a screening tool, not an official decision. Demo uses only made-up voices and data.
   </footer>
 </main>
@@ -331,16 +331,17 @@ let LANGS = {hi:{code:"hi-IN"}, en:{code:"en-IN"}};
 let health = {}, results = null, focus = null, handsfree = true;  // results = {eligible, maybe} once the checker finishes
 
 const T = {
-  hi: { tap:"Tap karke boliye", answer:"Tap karke jawab dijiye", think:"Soch raha hoon…", speak:"Bol raha hoon… beech mein bolne ke liye mic dabaiye",
-        listen:"Sun raha hoon… boliye", heard:"Samajh raha hoon (Prisma)…", ask:"Kuch bhi poochhiye, ya kisi yojana pe 'Samjhaiye' dabaiye",
-        nothing:"Kuch sunai nahi diya, dobara boliye.", eligible:"Aap yogya lag rahe hain", check:"Check karein",
-        where:"Kahan", docs:"Kagaz", note:"Dhyan dein", why:"Kyun", explain:"🗣️ Samjhaiye aur poochhiye",
-        wa:"WhatsApp pe bhejiye", copy:"Copy", copied:"Copy ho gaya ✓", back:"← Sab yojanayein",
-        talking:"Baat ho rahi hai:", state_scheme:"Rajya sarkar", explain_me:"Samjhaiye:", rec:"Boliye… khatam hone par dobara tap karein",
-        share_head:"🇮🇳 *Yojana Saathi* ne yeh sarkari yojanayein dhoondhi:", share_also:"Check karein",
-        share_tail:"📄 Aadhaar aur bank passbook lekar nazdeeki CSC ya bank jaiye.\n⚠️ Yeh shuruaati jaanch hai, final confirm CSC/bank par karein.",
-        sug:[["Kahan apply karein?","kahan apply karun"],["Kaunse kagaz?","kaunse kagaz chahiye"],
-             ["Kitna milega?","kitna paisa milega"],["Kitna jama karna?","kitna jama karna padega"],["Helpline","helpline number"]] },
+  hi: { tap:"टैप करके बोलिए", answer:"टैप करके जवाब दीजिए", think:"सोच रहा हूँ…", speak:"बोल रहा हूँ… बीच में बोलने के लिए माइक दबाइए",
+        listen:"सुन रहा हूँ… बोलिए", heard:"समझ रहा हूँ (Prisma)…", ask:"कुछ भी पूछिए, या किसी योजना पर 'समझाइए' दबाइए",
+        nothing:"कुछ सुनाई नहीं दिया, दोबारा बोलिए।", eligible:"आप योग्य लग रहे हैं", check:"जाँच लें",
+        where:"कहाँ", docs:"कागज़", note:"ध्यान दें", why:"क्यों", explain:"🗣️ समझाइए और पूछिए",
+        wa:"WhatsApp पर भेजिए", copy:"कॉपी", copied:"कॉपी हो गया ✓", back:"← सब योजनाएँ",
+        talking:"बात हो रही है:", state_scheme:"राज्य सरकार", explain_me:"समझाइए:", rec:"बोलिए… खत्म होने पर दोबारा टैप करें",
+        share_head:"🇮🇳 *योजना साथी* ने ये सरकारी योजनाएँ ढूँढीं:", share_also:"यह भी देखें",
+        share_tail:"📄 आधार और बैंक पासबुक लेकर नज़दीकी CSC या बैंक जाइए।\n⚠️ यह शुरुआती जाँच है, आख़िरी पुष्टि CSC या बैंक पर करें।",
+        // [label shown, text sent]: the sent text is what the scheme chat already understands
+        sug:[["कहाँ आवेदन करें?","kahan apply karun"],["कौन-से कागज़?","kaunse kagaz chahiye"],
+             ["कितना मिलेगा?","kitna paisa milega"],["कितना जमा करना है?","kitna jama karna padega"],["हेल्पलाइन","helpline number"]] },
   en: { tap:"Tap to speak", answer:"Tap to answer", think:"Thinking…", speak:"Speaking… tap the mic to cut in",
         listen:"Listening… go ahead", heard:"Transcribing (Prisma)…", ask:"Ask anything, or tap 'Explain' on a scheme",
         nothing:"Didn't hear anything, try again.", eligible:"Looks eligible", check:"Worth checking",
@@ -354,7 +355,7 @@ const T = {
 };
 // New strings for the "fix a wrong answer" button (beta translations, like the rest of the 8 language packs)
 const X = {
-  hi:{fix:"बदलें", redo:"Theek hai, dobara boliye", redo_say:"ठीक है, दोबारा बोलिए।", restart:"Phir se", neterr:"Network mein dikkat aayi. Dobara koshish karein."},
+  hi:{fix:"बदलें", redo:"ठीक है, दोबारा बोलिए", redo_say:"ठीक है, दोबारा बोलिए।", restart:"फिर से", neterr:"नेटवर्क में दिक्कत आई। दोबारा कोशिश करें।"},
   en:{fix:"Change", redo:"OK, say it again", redo_say:"OK, please say it again.", restart:"Restart", neterr:"Network problem. Please try again."},
   bn:{fix:"বদলান", redo:"ঠিক আছে, আবার বলুন", redo_say:"ঠিক আছে, আবার বলুন।", restart:"আবার শুরু", neterr:"নেটওয়ার্কে সমস্যা। আবার চেষ্টা করুন।"},
   gu:{fix:"બદલો", redo:"બરાબર, ફરી બોલો", redo_say:"બરાબર, ફરી બોલો.", restart:"ફરી શરૂ", neterr:"નેટવર્કમાં તકલીફ. ફરી પ્રયાસ કરો."},
@@ -379,15 +380,20 @@ const EN_SLOT = {
   itax: v => v ? "pays tax" : "no tax", epf: v => v ? "PF" : "no PF", daughter_u10: v => v ? "daughter <10" : "no daughter <10",
   state: v => STATE_NAMES[v] || v, gender: v => v === "f" ? "woman" : "man", biz: v => v ? "new business" : "no new business",
 };
+const STATE_HI = {UP:"उत्तर प्रदेश", BR:"बिहार", MH:"महाराष्ट्र", MP:"मध्य प्रदेश", RJ:"राजस्थान", WB:"पश्चिम बंगाल",
+  TN:"तमिलनाडु", KA:"कर्नाटक", GJ:"गुजरात", PB:"पंजाब", HR:"हरियाणा", DL:"दिल्ली", KL:"केरल", AP:"आंध्र प्रदेश",
+  TG:"तेलंगाना", OD:"ओडिशा", JH:"झारखंड", CG:"छत्तीसगढ़", UK:"उत्तराखंड", HP:"हिमाचल प्रदेश", JK:"जम्मू-कश्मीर",
+  AS:"असम", GA:"गोवा"};
+const stateName = v => (lang === "hi" && STATE_HI[v]) || STATE_NAMES[v] || v;
 const SLOT_LABEL = {
-  age: v => `umar ${v}`, occupation: v => ({farmer:"kisan", shopkeeper:"dukaandaar", street_vendor:"thela/rehdi",
-    labourer:"mazdoor", artisan:"karigar", salaried_private:"private naukri", govt_employee:"sarkari naukri",
-    homemaker:"grihini", student:"student", unemployed:"berozgar"}[v] || v),
-  trade: v => v.replace(/_/g," "), land_ha: v => `zameen ~${(v/0.4047).toFixed(1)} acre`,
-  income_month: v => `₹${Number(v).toLocaleString("en-IN")}/mahina`,
-  itax: v => v ? "tax bharte hain" : "tax nahi", epf: v => v ? "PF hai" : "PF nahi",
-  daughter_u10: v => v ? "beti <10" : "beti <10 nahi",
-  state: v => STATE_NAMES[v] || v, gender: v => v === "f" ? "mahila" : "purush", biz: v => v ? "naya kaam" : "naya kaam nahi",
+  age: v => `उम्र ${v}`, occupation: v => ({farmer:"किसान", shopkeeper:"दुकानदार", street_vendor:"ठेला/रेहड़ी",
+    labourer:"मज़दूर", artisan:"कारीगर", salaried_private:"प्राइवेट नौकरी", govt_employee:"सरकारी नौकरी",
+    homemaker:"गृहिणी", student:"छात्र", unemployed:"बेरोज़गार"}[v] || v),
+  trade: v => v.replace(/_/g," "), land_ha: v => `ज़मीन ~${(v/0.4047).toFixed(1)} एकड़`,
+  income_month: v => `₹${Number(v).toLocaleString("en-IN")}/महीना`,
+  itax: v => v ? "टैक्स भरते हैं" : "टैक्स नहीं", epf: v => v ? "PF है" : "PF नहीं",
+  daughter_u10: v => v ? "बेटी <10" : "बेटी <10 नहीं",
+  state: v => stateName(v), gender: v => v === "f" ? "महिला" : "पुरुष", biz: v => v ? "नया काम" : "नया काम नहीं",
 };
 
 // switch the conversation's language (auto-detected from speech, or picked in the menu)
@@ -763,7 +769,7 @@ function renderResults(anchorRow) {
     const h = document.createElement("div"); h.className = "sect"; h.textContent = `${label} · ${list.length}`; box.appendChild(h);
     list.forEach(s => {
       const el = document.createElement("article"); el.className = "card" + (maybe ? " maybe" : ""); el.dataset.id = s.id;
-      const pills = [s.state ? `<span class="pill state">🏛️ ${esc(t("state_scheme"))} · ${esc(STATE_NAMES[s.state] || s.state)}</span>` : "",
+      const pills = [s.state ? `<span class="pill state">🏛️ ${esc(t("state_scheme"))} · ${esc(stateName(s.state))}</span>` : "",
                      maybe ? `<span class="pill maybe">${esc(t("check"))}</span>` : ""].join("");
       const local = s.name_local || s.name_hi;
       el.innerHTML = `${pills ? `<div class="pills">${pills}</div>` : ""}
@@ -878,8 +884,8 @@ async function startStreaming() {
   live.check = setTimeout(() => {
     if (live !== me || me.text || me.partial) return;
     console.info("mic check", diag);
-    if (!diag.frames) { ctx.resume(); setStatus("🎙️ Mic se awaaz nahi aa rahi (audio stuck). Mic dobara dabaiye · Mic not delivering audio, tap it again.", true); }
-    else if (diag.peak < 0.0002) setStatus(`🎙️ Mic chup hai: ${diag.track}. Doosra mic chunein ya mute hataiye · This mic is silent; pick another input or unmute it.`, true);
+    if (!diag.frames) { ctx.resume(); setStatus("🎙️ माइक से आवाज़ नहीं आ रही, माइक दोबारा दबाइए · Mic not delivering audio, tap it again.", true); }
+    else if (diag.peak < 0.0002) setStatus(`🎙️ माइक चुप है: ${diag.track}. दूसरा माइक चुनें या म्यूट हटाएँ · This mic is silent; pick another input or unmute it.`, true);
   }, 4000);
   live.idle = setTimeout(() => {
     if (!live || live.text || live.partial) return;
@@ -985,7 +991,7 @@ async function startRec() {
   stopSpeaking();
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}}); }
-  catch (e) { setStatus("🎙️ No mic permission, you can type your answer below · Mic ki permission nahi mili, neeche likh sakte hain.", true); return; }
+  catch (e) { setStatus("🎙️ No mic permission, you can type your answer below · माइक की अनुमति नहीं मिली, नीचे लिख सकते हैं।", true); return; }
   chunks = []; rec = new MediaRecorder(stream);
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
   rec.onstop = async () => {

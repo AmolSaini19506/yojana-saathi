@@ -13,57 +13,57 @@ import states
 Q = {
     "hi": {
         "intro": {
-            "show": "Namaste! Main Yojana Saathi hoon. Apne baare mein bataiye: umar, kya kaam karte hain, "
-                    "aur mahine ki kamai lagbhag kitni hai. Aap apni kisi bhi bhasha mein bol sakte hain.",
+            "show": "नमस्ते! मैं योजना साथी हूँ। अपने बारे में बताइए: आपकी उम्र, आप क्या काम करते हैं, "
+                    "और महीने की कमाई लगभग कितनी है। आप अपनी किसी भी भाषा में बोल सकते हैं।",
             "say": "नमस्ते! मैं योजना साथी हूँ। अपने बारे में बताइए: आपकी उम्र, आप क्या काम करते हैं, "
                    "और महीने की कमाई लगभग कितनी है। आप अपनी किसी भी भाषा में बोल सकते हैं।",
         },
-        "age": {"show": "Aapki umar kitni hai?", "say": "आपकी उम्र कितनी है?"},
+        "age": {"show": "आपकी उम्र कितनी है?", "say": "आपकी उम्र कितनी है?"},
         "occupation": {
-            "show": "Aap kya kaam karte hain? Jaise kheti, dukaan, thela, mazdoori, naukri, "
-                    "ya koi hunar jaise darzi, barhai, nai.",
+            "show": "आप क्या काम करते हैं? जैसे खेती, दुकान, ठेला, मज़दूरी, नौकरी, या कोई हुनर, "
+                    "जैसे दर्ज़ी, बढ़ई या नाई।",
             "say": "आप क्या काम करते हैं? जैसे खेती, दुकान, ठेला, मज़दूरी, नौकरी, या कोई हुनर, "
                    "जैसे दर्ज़ी, बढ़ई या नाई।",
         },
-        "land_ha": {"show": "Aapke naam par kitni zameen hai? Acre ya bigha mein bataiye.",
+        "land_ha": {"show": "आपके नाम पर कितनी ज़मीन है? एकड़ या बीघा में बताइए।",
                     "say": "आपके नाम पर कितनी ज़मीन है? एकड़ या बीघा में बताइए।"},
-        "income_month": {"show": "Mahine ki kamai lagbhag kitni hai?",
+        "income_month": {"show": "महीने की कमाई लगभग कितनी है?",
                          "say": "महीने की कमाई लगभग कितनी है?"},
-        "itax": {"show": "Kya aap income tax bharte hain?", "say": "क्या आप इनकम टैक्स भरते हैं?"},
-        "epf": {"show": "Kya aapka PF katta hai, ya ESIC card hai?",
+        "itax": {"show": "क्या आप इनकम टैक्स भरते हैं?", "say": "क्या आप इनकम टैक्स भरते हैं?"},
+        "epf": {"show": "क्या आपकी सैलरी से PF कटता है, या ESIC कार्ड है?",
                 "say": "क्या आपकी सैलरी से पीएफ कटता है, या ईएसआईसी कार्ड है?"},
-        "state": {"show": "Aap kis rajya mein rehte hain? Jaise UP, Bihar, Maharashtra.",
+        "state": {"show": "आप किस राज्य में रहते हैं? जैसे UP, बिहार, महाराष्ट्र।",
                   "say": "आप किस राज्य में रहते हैं? जैसे यूपी, बिहार, महाराष्ट्र।"},
-        "gender": {"show": "Kya aap mahila hain ya purush? Kuch yojanayein sirf mahilaon ke liye hain.",
+        "gender": {"show": "क्या आप महिला हैं या पुरुष? कुछ योजनाएँ सिर्फ़ महिलाओं के लिए हैं।",
                    "say": "क्या आप महिला हैं या पुरुष? कुछ योजनाएँ सिर्फ़ महिलाओं के लिए हैं।"},
-        "biz": {"show": "Kya aap apna naya kaam-dhandha shuru karna chahte hain?",
+        "biz": {"show": "क्या आप अपना नया काम-धंधा शुरू करना चाहते हैं?",
                 "say": "क्या आप अपना नया काम-धंधा शुरू करना चाहते हैं?"},
-        "state_note": {"show": "{state} ki rajya yojanayein abhi app mein nahi hain, isliye yeh kendra sarkar ki yojanayein "
-                               "hain. Rajya ki yojanaon ke liye nazdeeki CSC par poochhiye.",
+        "state_note": {"show": "{state} की राज्य योजनाएँ अभी ऐप में नहीं हैं, इसलिए ये केंद्र सरकार की योजनाएँ हैं। "
+                               "राज्य की योजनाओं के लिए नज़दीकी CSC पर पूछिए।",
                        "say": "{state} की राज्य योजनाएँ अभी ऐप में नहीं हैं, इसलिए ये केंद्र सरकार की योजनाएँ हैं। राज्य की "
                               "योजनाओं के लिए नज़दीकी सीएससी केंद्र पर पूछिए।"},
-        "daughter_u10": {"show": "Kya ghar mein 10 saal se chhoti beti hai?",
+        "daughter_u10": {"show": "क्या घर में 10 साल से छोटी बेटी है?",
                          "say": "क्या घर में दस साल से छोटी बेटी है?"},
-        "retry": {"show": "Maaf kijiye, samajh nahi aaya. ", "say": "माफ़ कीजिए, समझ नहीं आया। "},
-        "none": {"show": "Aapke jawabon se abhi koi pakki yojana nahi mili. Nazdeeki CSC par ek baar zaroor poochhiye.",
+        "retry": {"show": "माफ़ कीजिए, समझ नहीं आया। ", "say": "माफ़ कीजिए, समझ नहीं आया। "},
+        "none": {"show": "आपके जवाबों से अभी कोई पक्की योजना नहीं मिली। नज़दीकी CSC पर एक बार ज़रूर पूछिए।",
                  "say": "आपके जवाबों से अभी कोई पक्की योजना नहीं मिली। नज़दीकी सीएससी केंद्र पर एक बार ज़रूर पूछिए।"},
-        "found": {"show": "Aapke liye {n} yojanayein mili hain 👇",
+        "found": {"show": "आपके लिए {n} योजनाएँ मिली हैं 👇",
                   "say": "बढ़िया! आपके लिए {n} योजनाएँ मिली हैं।"},
-        "outro": {"show": "Inke liye apna Aadhaar aur bank passbook lekar nazdeeki CSC ya bank jaiye.",
+        "outro": {"show": "इनके लिए अपना आधार और बैंक पासबुक लेकर नज़दीकी CSC या बैंक जाइए।",
                   "say": "इनके लिए अपना आधार और बैंक पासबुक लेकर नज़दीकी सीएससी केंद्र या बैंक जाइए।"},
         "more": {"say": "बाकी योजनाएँ स्क्रीन पर देखिए।"},
         # asked back "what is that?" -> explain the term, then ask again
-        "x_epf": {"show": "PF matlab Provident Fund: agar aap kisi company ya office mein naukri karte hain, to har mahine "
-                          "salary se kuch paisa PF khate mein katta hai. ESIC card company ki taraf se ilaaj ka beema hota hai. "
-                          "Agar aap apna kaam khud karte hain, ya salary slip mein PF nahi katta, to jawab hai 'nahi'.",
+        "x_epf": {"show": "PF यानी प्रोविडेंट फ़ंड (Provident Fund): अगर आप किसी कंपनी या दफ़्तर में नौकरी करते हैं, तो "
+                          "हर महीने सैलरी से कुछ पैसा PF खाते में कटता है। ESIC कार्ड कंपनी की तरफ़ से इलाज का बीमा होता है। "
+                          "अगर आप अपना काम खुद करते हैं, या सैलरी स्लिप में PF नहीं कटता, तो जवाब है 'नहीं'।",
                   "say": "पीएफ यानी प्रोविडेंट फ़ंड: अगर आप किसी कंपनी या दफ़्तर में नौकरी करते हैं, तो हर महीने सैलरी से कुछ "
                          "पैसा पीएफ खाते में कटता है। ईएसआईसी कार्ड कंपनी की तरफ़ से इलाज का बीमा होता है। अगर आप अपना काम "
                          "खुद करते हैं, या सैलरी स्लिप में पीएफ नहीं कटता, तो जवाब है नहीं।"},
-        "x_itax": {"show": "Income tax woh tax hai jo saal ki kamai zyada hone par sarkar ko bharte hain, aur har saal ITR "
-                           "form bharte hain. Agar aapne kabhi ITR nahi bhara, to jawab hai 'nahi'.",
+        "x_itax": {"show": "इनकम टैक्स वो टैक्स है जो साल की कमाई ज़्यादा होने पर सरकार को भरते हैं, और हर साल ITR "
+                           "फ़ॉर्म भरते हैं। अगर आपने कभी ITR नहीं भरा, तो जवाब है 'नहीं'।",
                    "say": "इनकम टैक्स वो टैक्स है जो साल की कमाई ज़्यादा होने पर सरकार को भरते हैं, और हर साल आईटीआर फ़ॉर्म "
                           "भरते हैं। अगर आपने कभी आईटीआर नहीं भरा, तो जवाब है नहीं।"},
-        "ok_skip": {"show": "Koi baat nahi.", "say": "कोई बात नहीं।"},
+        "ok_skip": {"show": "कोई बात नहीं।", "say": "कोई बात नहीं।"},
     },
     "en": {
         "intro": {
@@ -264,7 +264,7 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     st = profile.get("state")
     if st and st not in states.COVERED:
         ns_, ny_ = qt(lang, "state_note")
-        note_show = "\n\n" + ns_.format(state=states.name(st, lang, spoken=False))
+        note_show = "\n\n" + ns_.format(state=states.name(st, lang))
         note_say = " " + ny_.format(state=states.name(st, lang))
     if not eligible:
         ns, ny = qt(lang, "none")
