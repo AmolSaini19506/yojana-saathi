@@ -93,6 +93,7 @@ HINGLISH = {"hai", "hain", "hoon", "hun", "hu", "mera", "meri", "mere", "main", 
             "kamati", "rupaye", "beti", "kaunse", "kahan", "kagaz", "chahiye", "milega", "batao", "bataiye", "umar",
             "dukaan", "dukan", "thela", "mazdoor", "naukri", "bharta", "katta", "lakh", "bigha", "samjhaiye", "paisa"}
 ENGLISH = {"i", "am", "my", "me", "years", "year", "old", "work", "the", "is", "a", "an", "how", "what", "where",
+           "want", "know", "about", "please", "for", "can", "you", "need", "this", "that", "do", "does", "get", "to",
            "much", "do", "have", "pay", "earn", "farmer", "month", "per", "yes", "no", "which", "documents", "apply",
            "and", "of", "in", "as", "shop", "job", "daughter", "land", "acres", "tax", "income", "salary", "it", "will"}
 
@@ -113,12 +114,16 @@ def script_counts(text):
     return counts
 
 
-def detect(text, prisma=None, current="hi"):
+def detect(text, prisma=None, current="hi", settled=False):
     """
     Which language should we answer in?
       text    : what the person said (transcript or typed)
       prisma  : Prisma's detected_language_code, e.g. "ta-IN" (or None)
-      current : the language we're already using (kept for short / ambiguous answers)
+      current : the language we're already using
+      settled : True once the person has answered at least once. From then on the language is STICKY:
+                it only changes on clear evidence (a different script, or a long sentence that is clearly
+                another language). Short replies, numbers, English words in Hindi ("private job"), and
+                Prisma tagging a short Hindi reply as Marathi never flip the conversation.
     """
     current = valid(current)
     prisma = (prisma or "").split("-")[0].lower() or None
@@ -130,13 +135,21 @@ def detect(text, prisma=None, current="hi"):
         script = max(c, key=c.get)
         if script != "deva":
             return script                                 # Tamil, Bengali, ... : the script says it all
-        return _hindi_or_marathi(text, prisma, current, len(words))
+        return _hindi_or_marathi(text, prisma, current, len(words), settled)
     # Latin script: English, or Hinglish typed / transcribed in Roman letters
     toks = _LATIN.findall((text or "").lower())
-    if len(toks) < 2:
-        return current                                    # "yes", "35", "ok": keep going in the same language
     hin = sum(t in HINGLISH for t in toks)
     eng = sum(t in ENGLISH for t in toks)
+    if settled:
+        if current == "en":
+            return "hi" if (hin >= 3 and eng == 0) else "en"          # typed Hinglish sentence
+        if len(toks) >= 4 and eng >= 3 and hin == 0:
+            return "en"                                   # a whole sentence in English
+        if current not in ("hi", "en") and hin >= 3 and eng == 0:
+            return "hi"
+        return current
+    if len(toks) < 2:
+        return current                                    # "yes", "35", "ok": keep going in the same language
     if hin and hin >= eng:
         return "hi"
     if eng:
@@ -144,10 +157,15 @@ def detect(text, prisma=None, current="hi"):
     return current
 
 
-def _hindi_or_marathi(text, prisma, current, nwords):
+def _hindi_or_marathi(text, prisma, current, nwords, settled=False):
     toks = set(re.findall(r"[ऀ-ॿ]+", text or ""))
-    mr = len(toks & MR_MARKERS) + (1 if prisma == "mr" else 0) + (0.5 if current == "mr" else 0)
-    hi = len(toks & HI_MARKERS) + (0.5 if current == "hi" else 0)
+    mr_words, hi_words = len(toks & MR_MARKERS), len(toks & HI_MARKERS)
+    if settled and current == "hi":
+        return "mr" if (mr_words >= 2 and hi_words == 0) else "hi"   # ignore Prisma's tag on short replies
+    if settled and current == "mr":
+        return "hi" if (hi_words >= 2 and mr_words == 0) else "mr"
+    mr = mr_words + (1 if prisma == "mr" else 0) + (0.5 if current == "mr" else 0)
+    hi = hi_words + (0.5 if current == "hi" else 0)
     if nwords < 2 and current in ("hi", "mr") and mr < 1.5 and hi < 1.5:
         return current                                    # "हो" / "हाँ" alone: don't switch
     return "mr" if mr > hi else "hi"

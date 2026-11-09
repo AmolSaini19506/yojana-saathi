@@ -150,3 +150,46 @@ def test_real_prisma_transcripts(lang, detected, text):
                                        ("en", "thirty four years old")])
 def test_number_words_tens_plus_unit(lang, text):
     assert nlu.extract(text, lang=lang)["age"] == 34
+
+
+# ---------------------------------------------------------------- sticky language (bug seen live: it flipped mid-way)
+@pytest.mark.parametrize("text,prisma,current,expected", [
+    ("दस हज़ार", "mr-IN", "hi", "hi"),                 # Prisma tags short Hindi as Marathi: ignore
+    ("नहीं", "mr-IN", "hi", "hi"),
+    ("हो", "mr-IN", "mr", "mr"),
+    ("private job", "en-IN", "hi", "hi"),              # English words inside a Hindi conversation
+    ("Yes I do", "en-IN", "hi", "hi"),
+    ("no", "en-IN", "ta", "ta"),
+    ("15000", None, "bn", "bn"),
+    ("PF नहीं कटता", "hi-IN", "hi", "hi"),
+    ("I want to know about the pension please", "en-IN", "hi", "en"),   # a whole English sentence: switch
+    ("main kisan hoon aur meri zameen hai", "en-IN", "en", "hi"),        # a typed Hinglish sentence: switch
+    ("மாதம் 8000 ரூபாய்", "ta-IN", "hi", "ta"),          # a different script always switches
+    ("माझं वय 34 वर्षे आहे, मी शेतकरी आहे", "mr-IN", "hi", "mr"),       # clearly Marathi: switch
+])
+def test_language_is_sticky_after_first_answer(text, prisma, current, expected):
+    assert langs.detect(text, prisma, current, settled=True) == expected
+
+
+def test_first_answer_still_picks_the_language():
+    assert langs.detect("I am 34 years old and a farmer", "en-IN", "hi", settled=False) == "en"
+    assert langs.detect("main 35 saal ka hoon", "en-IN", "en", settled=False) == "hi"
+    assert langs.detect("माझं वय 34 वर्षे आहे", "mr-IN", "en", settled=False) == "mr"
+
+
+def test_whole_hindi_conversation_never_flips():
+    import app as appmod
+    c = appmod.app.test_client()
+    r = c.post("/api/turn", json={"state": {}, "text": "", "lang": "en", "auto": True}).get_json()
+    lang = r["lang"]
+    replies = [("मैं 30 साल का हूँ, कंपनी में नौकरी करता हूँ", "hi-IN"), ("बीस हज़ार", "mr-IN"),
+               ("no", "en-IN"), ("Yes", "en-IN"), ("नहीं", "mr-IN")]
+    seen = []
+    for text, det in replies:
+        if r.get("done"):
+            break
+        r = c.post("/api/turn", json={"state": r["state"], "text": text, "lang": lang, "auto": True,
+                                      "detected": det}).get_json()
+        lang = r["lang"]
+        seen.append(lang)
+    assert set(seen) == {"hi"}, seen

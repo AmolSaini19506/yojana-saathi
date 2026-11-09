@@ -246,18 +246,21 @@ def ask_route():
     return jsonify(out)
 
 
-def reply_lang(j):
-    """Answer in the language the person spoke, unless they picked one in the UI (auto = false)."""
+def reply_lang(j, settled=True):
+    """Answer in the language the person spoke, unless they picked one in the UI (auto = false).
+    settled: they've answered before, so the language only changes on clear evidence (see langs.detect)."""
     lang = langs.valid(j.get("lang") or "hi")
     if j.get("auto", True) and (j.get("text") or "").strip():
-        lang = langs.detect(j["text"], j.get("detected"), lang)
+        lang = langs.detect(j["text"], j.get("detected"), lang, settled=settled)
     return lang
 
 
 @app.post("/api/turn")
 def turn():
     j = request.get_json(force=True) or {}
-    return jsonify(dialog.turn(j.get("state") or {}, j.get("text") or "", reply_lang(j)))
+    asked = (j.get("state") or {}).get("asked")
+    settled = bool(asked) and asked != "intro"            # the first answer picks the language; later ones rarely
+    return jsonify(dialog.turn(j.get("state") or {}, j.get("text") or "", reply_lang(j, settled)))
 
 
 if __name__ == "__main__":
