@@ -206,3 +206,26 @@ def test_whole_hindi_conversation_never_flips():
         lang = r["lang"]
         seen.append(lang)
     assert set(seen) == {"hi"}, seen
+
+
+# ---------------------------------------------------------------- seen live 10 Nov 2026: "हाँ, नहीं" came back as
+# "ਹਾਂ, ਨਹੀਂ।" (pa-IN) and the whole conversation, cards included, switched to Punjabi
+@pytest.mark.parametrize("text,current,expected", [
+    ("ਹਾਂ, ਨਹੀਂ।", "hi", "hi"),                                     # short reply in another script: keep Hindi
+    ("ਮੇਰੀ ਉਮਰ 34 ਸਾਲ ਹੈ ਔਰ ਮੈਂ ਕਿਸਾਨ ਹੂੰ", "hi", "hi"),              # Hindi words in Gurmukhi letters
+    ("ਮੈਂ 34 ਸਾਲਾਂ ਦਾ ਹਾਂ, ਖੇਤੀ ਕਰਦਾ ਹਾਂ", "hi", "pa"),               # real Punjabi sentence: switch
+    ("ஆம்", "hi", "hi"),
+    ("நான் சென்னையில் இருக்கிறேன், மாதம் பத்தாயிரம்", "hi", "ta"),
+    ("हाँ", "pa", "pa"),
+])
+def test_other_script_short_replies_keep_language(text, current, expected):
+    assert langs.detect(text, "pa-IN", current, settled=True) == expected
+
+
+def test_hindi_in_gurmukhi_is_understood():
+    import dialog
+    st = {"profile": {"age": 30, "occupation": "farmer", "land_ha": 0.8, "income_month": 9000, "itax": False,
+                      "state": "UP"}, "asked": "daughter_u10", "retries": {}}
+    r = dialog.turn(st, langs.for_parsing("ਹਾਂ, ਬੇਟੀ ਹੈ", "hi"), "hi")
+    assert r["state"]["profile"]["daughter_u10"] is True
+    assert langs.for_parsing("ਹਾਂ, ਨਹੀਂ।", "hi") == "हां, नहीं।" and langs.for_parsing("ਹਾਂ", "pa") == "ਹਾਂ"

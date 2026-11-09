@@ -6,6 +6,7 @@ import wave
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ["GNANI_API_KEY"] = "test-key"
+os.environ["TTS_WARM"] = "0"          # no background voice warm-up: keeps the call counts below exact
 
 import app as appmod  # noqa: E402
 
@@ -77,17 +78,50 @@ def test_routes():
     assert r["lang"] == "hi"
 
     r = c.post("/api/tts", json={"text": "नमस्ते", "lang": "hi"})
-    assert r.status_code == 200 and r.mimetype == "audio/wav"
+    assert r.status_code == 200 and r.mimetype == "audio/mpeg"      # we ask Timbre for MP3
     tts = calls[-1]
     assert tts["url"] == "https://api.vachana.ai/api/v1/tts/inference"
     assert tts["json"]["model"] == "timbre-v3.0" and tts["json"]["voice"] == "Shivani"
     assert tts["json"]["language"] == "hi-IN" and tts["json"]["audio_config"]["container"] == "mp3"
+    # the same line again comes from the cache: no second Timbre call
+    n = len(calls)
+    r = c.post("/api/tts", json={"text": "नमस्ते", "lang": "hi"})
+    assert r.status_code == 200 and r.data == b"RIFF....WAVE" and len(calls) == n
+    c.post("/api/tts", json={"text": "नमस्ते", "lang": "mr"})              # other language = other audio
+    assert len(calls) == n + 1
 
     r = c.post("/api/turn", json={"state": {}, "text": "", "lang": "hi"})
     assert r.get_json()["state"]["asked"] == "intro"
 
     appmod.API_KEY = ""
     assert c.post("/api/tts", json={"text": "hi", "lang": "en"}).status_code == 204   # browser-voice fallback
+
+
+def test_speech_parts_and_warm_up():
+    """Replies are voiced one sentence at a time, and the server starts on them before the page asks (10 Nov 2026)."""
+    import time as _t
+    sp = appmod.speech_parts
+    assert sp("Namaste! I'm Yojana Saathi. Tell me about yourself.") == ["Namaste! I'm Yojana Saathi.", "Tell me about yourself."]
+    assert sp("नमस्ते! मैं योजना साथी हूँ। आप कहाँ रहते हैं?") == ["नमस्ते! मैं योजना साथी हूँ।", "आप कहाँ रहते हैं?"]
+    assert sp("") == [] and sp("Ek hi vaakya") == ["Ek hi vaakya"]
+    appmod.API_KEY = "test-key"
+    appmod.HTTP.post = fake_post
+    appmod.TTS_CACHE.clear()
+    c = appmod.app.test_client()
+    os.environ["TTS_WARM"] = "1"
+    try:
+        r = c.post("/api/turn", json={"state": {}, "text": "", "lang": "en"}).get_json()
+    finally:
+        os.environ["TTS_WARM"] = "0"
+    assert r["say_parts"] and " ".join(r["say_parts"]) == r["say"]
+    for _ in range(50):                                   # the warm-up runs in the background
+        if all(("en", p) in appmod.TTS_CACHE for p in r["say_parts"]):
+            break
+        _t.sleep(0.05)
+    n = len(calls)
+    for part in r["say_parts"]:                           # ...so the page's requests are served from the cache
+        assert c.post("/api/tts", json={"text": part, "lang": "en"}).status_code == 200
+    assert len(calls) == n
 
 
 if __name__ == "__main__":

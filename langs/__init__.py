@@ -133,6 +133,14 @@ def detect(text, prisma=None, current="hi", settled=False):
     words = re.findall(r"\w+", text or "")
     if indic_total >= 2 and indic_total >= 0.2 * (latin + indic_total):
         script = max(c, key=c.get)
+        same = script == current or (script == "deva" and current in ("hi", "mr"))
+        if settled and not same:
+            # Prisma sometimes writes a short Hindi reply in another script: "हाँ, नहीं" came back as "ਹਾਂ, ਨਹੀਂ।"
+            # tagged pa-IN (seen live, 10 Nov 2026). A real switch of language is a sentence, not a word or two.
+            if len(words) < 4:
+                return current
+            if current == "hi" and script == "pa" and not _punjabi_not_hindi(text):
+                return "hi"                               # Hindi words, Gurmukhi letters
         if script != "deva":
             return script                                 # Tamil, Bengali, ... : the script says it all
         return _hindi_or_marathi(text, prisma, current, len(words), settled)
@@ -155,6 +163,47 @@ def detect(text, prisma=None, current="hi", settled=False):
     if eng:
         return "en"
     return current
+
+
+# Words that are Punjabi and not Hindi. Hindi written in Gurmukhi ("ਮੇਰੀ ਉਮਰ 34 ਸਾਲ ਹੈ") has none of these.
+PA_MARKERS = {"ਦਾ", "ਦੀ", "ਦੇ", "ਨੂੰ", "ਤੁਸੀਂ", "ਮੈਨੂੰ", "ਵਿੱਚ", "ਵਿਚ", "ਸੀ", "ਹੈਗਾ", "ਹੈਗੀ", "ਸਾਲਾਂ", "ਕਰਦਾ", "ਕਰਦੀ",
+              "ਕਰਦੇ", "ਤੁਹਾਡੇ", "ਤੁਹਾਡਾ", "ਸਾਡੇ", "ਸਾਡਾ", "ਨਾਲ", "ਕਿੰਨੇ", "ਕਿੰਨਾ", "ਕਿੱਥੇ", "ਕਿਹੜੇ", "ਚਾਹੀਦੇ",
+              "ਕੁੜੀ", "ਧੀ", "ਕਮਾਉਂਦਾ", "ਕਮਾਉਂਦੀ", "ਰਹਿੰਦਾ", "ਰਹਿੰਦੀ", "ਹਾਂਜੀ", "ਨਹੀਂਗਾ", "ਜਾਂਦਾ", "ਜਾਂਦੀ"}
+
+
+def _to_deva(text):
+    """Gurmukhi -> Devanagari letter by letter (the Unicode blocks are parallel), to look for Hindi words."""
+    out = []
+    for ch in text:
+        o = ord(ch)
+        if ch == "ੰ":
+            out.append("ं")                         # tippi -> anusvara
+        elif ch == "ੱ":
+            continue                                      # addak (doubling) has no Devanagari letter
+        elif 0x0A00 <= o <= 0x0A7F:
+            out.append(chr(o - 0x100))
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+# Hindi words that Punjabi doesn't use (ਹਾਂ, ਮੈਂ, ਹੈ, ਨਹੀਂ, ਮੇਰੀ... are the same in both, so they don't count)
+HI_ONLY = HI_MARKERS - {"है", "हैं", "हाँ", "हां", "मैं", "मेरा", "मेरी", "मेरे", "नहीं", "की", "के", "हम", "साल",
+                        "ज़मीन", "महीने", "मिलेगा"}
+
+
+def for_parsing(text, lang):
+    """Hindi heard in Gurmukhi letters is parsed as the Devanagari it stands for ("ਹਾਂ, ਨਹੀਂ" -> "हां, नहीं")."""
+    if lang in ("hi", "mr") and re.search(r"[਀-੿]", text or ""):
+        return _to_deva(text)
+    return text
+
+
+def _punjabi_not_hindi(text):
+    toks = re.findall(r"[਀-੿]+", text or "")
+    pa = sum(t in PA_MARKERS for t in toks)
+    hi = sum(t in HI_ONLY for t in re.findall(r"[ऀ-ॿ]+", _to_deva(" ".join(toks))))
+    return pa >= 2 and pa > hi
 
 
 def _hindi_or_marathi(text, prisma, current, nwords, settled=False):

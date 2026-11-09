@@ -37,10 +37,12 @@ cp .env.example .env        # then paste your Gnani API key into .env
 python app.py
 ```
 
-Open **http://localhost:5000** in Chrome, tap anywhere, then talk.
+Open **http://localhost:5000** in Chrome, tap **Start**, then talk.
 
 - **Hands-free mode** (default when `flask-sock` and `websockets` are installed): after the app speaks, it listens
-  automatically. Pause for about a second and it treats that as the end of your answer. Tap the mic to finish early.
+  automatically, and your words appear as you say them. Pause for about a second and it treats that as the end of your
+  answer. Tap the mic to finish early, or tap it while the app is talking to cut in.
+- **Misheard?** Every answer has a **↶ Change** button: it rewinds the conversation to that point and asks again.
 - Without those packages it uses **tap-to-record**: tap, speak, tap again.
 
 - No key yet? It still runs: type your answers in the box, and it speaks with the browser's voice instead of Timbre.
@@ -142,7 +144,8 @@ old-age pension amounts are left out because sources disagree on the amount.
 - **Punjabi is usually heard as Hindi in Auto mode** (very similar speech). Pick Punjabi in the menu.
 - **Hindi vs Marathi** share a script; we tell them apart by common words, so a one-word reply keeps the current language.
 - **Land units are approximate:** bigha ≈ 0.25 ha (Hindi), 0.134 ha (Bengali), vigha ≈ 0.16 ha (Gujarati).
-- **Live mode sends whole phrases, not word by word.** Gnani's stream returns a transcript when you pause.
+- **One voice at a time.** Timbre allows one active request per API key, so with many visitors at once the server
+  queues voice requests (~0.6 s each). Repeated lines (the questions) are cached and play instantly.
 - **The chat only knows what's in `kb.py`.** That's on purpose: it says "I don't know" rather than invent rules.
 - **Demo data is synthetic.** No real people's voices, Aadhaar numbers or phone numbers.
 

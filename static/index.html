@@ -2,130 +2,288 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <title>Yojana Saathi · योजना साथी</title>
 <style>
+  /* ------------------------------------------------------------------ tokens (Apple-style system colours) */
   :root{
-    --bg:#f6f1e7; --card:#fffdf8; --ink:#1f2a24; --muted:#5d6b63; --line:#e4dccb;
-    --green:#1f6b4a; --green-2:#2f8a62; --saffron:#e08a1e; --soft:#eef5ef; --warn:#fff4e2; --wa:#1fa855;
+    --bg:#f2f2f7; --surface:#ffffff; --fill:#e9e9eb; --fill2:rgba(120,120,128,.12); --fill3:rgba(120,120,128,.08);
+    --label:#000; --label2:rgba(60,60,67,.64); --label3:rgba(60,60,67,.34); --sep:rgba(60,60,67,.14);
+    --accent:#1a7f53; --accent-press:#156a45; --accent-soft:rgba(26,127,83,.11); --accent-text:#13724a;
+    --red:#ff3b30; --orange-text:#b86200; --orange-soft:rgba(255,149,0,.13); --indigo-text:#4b49c4; --indigo-soft:rgba(88,86,214,.11);
+    --wa:#1faa59; --material:rgba(246,246,248,.8); --nav-material:rgba(242,242,247,.78);
+    --shadow:0 .5px 1px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+    --r-bubble:20px; --r-card:22px;
+    --ease:cubic-bezier(.2,.8,.2,1);
+    /* critically-damped spring (no wobble), sampled into CSS linear() */
+    --spring:linear(0,.009,.035 2.1%,.141 4.4%,.281 6.7%,.723 12.9%,.938 16.7%,1.017 19.3%,1.042 21.8%,1.04 24.3%,1.024 28.5%,1.003 35.3%,.998 41.4%,1);
+    --bar:180px;
+    font-synthesis:none; -webkit-text-size-adjust:100%;
   }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#000; --surface:#1c1c1e; --fill:#262628; --fill2:rgba(120,120,128,.26); --fill3:rgba(120,120,128,.16);
+      --label:#fff; --label2:rgba(235,235,245,.64); --label3:rgba(235,235,245,.32); --sep:rgba(84,84,88,.55);
+      --accent:#229964; --accent-press:#1c8455; --accent-soft:rgba(48,209,120,.15); --accent-text:#4fd391;
+      --orange-text:#ffb340; --orange-soft:rgba(255,159,10,.17); --indigo-text:#a3a1ff; --indigo-soft:rgba(94,92,230,.24);
+      --material:rgba(22,22,24,.78); --nav-material:rgba(0,0,0,.72); --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#000; --surface:#1c1c1e; --fill:#262628; --fill2:rgba(120,120,128,.26); --fill3:rgba(120,120,128,.16);
+    --label:#fff; --label2:rgba(235,235,245,.64); --label3:rgba(235,235,245,.32); --sep:rgba(84,84,88,.55);
+    --accent:#229964; --accent-press:#1c8455; --accent-soft:rgba(48,209,120,.15); --accent-text:#4fd391;
+    --orange-text:#ffb340; --orange-soft:rgba(255,159,10,.17); --indigo-text:#a3a1ff; --indigo-soft:rgba(94,92,230,.24);
+    --material:rgba(22,22,24,.78); --nav-material:rgba(0,0,0,.72); --shadow:none;
+  }
+
   *{box-sizing:border-box}
-  body{margin:0;font-family:"Noto Sans","Noto Sans Devanagari","Noto Sans Bengali","Noto Sans Gurmukhi","Noto Sans Gujarati",
-       "Noto Sans Tamil","Noto Sans Telugu","Noto Sans Kannada","Noto Sans Malayalam",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-       background:var(--bg);color:var(--ink);}
-  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 40px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  h1{margin:0;font-size:26px;letter-spacing:-.3px}
-  h1 small{display:block;font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:2px}
-  .langs select{appearance:none;-webkit-appearance:none;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235d6b63'/%3E%3C/svg%3E") no-repeat right 12px center;
-                border:1px solid var(--line);border-radius:999px;padding:8px 32px 8px 14px;font-size:14px;color:var(--ink);cursor:pointer;max-width:100%}
-  .langs select:focus{outline:2px solid var(--green-2)}
-  .beta{display:none;margin-top:10px;font-size:12.5px;line-height:1.45;color:#8a5a12;background:var(--warn);border:1px solid #f1d6a8;border-radius:10px;padding:7px 10px}
+  html{background:var(--bg)}
+  body{margin:0;background:var(--bg);color:var(--label);
+       font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",
+       "Noto Sans Bengali","Noto Sans Gurmukhi","Noto Sans Gujarati","Noto Sans Tamil","Noto Sans Telugu","Noto Sans Kannada",
+       "Noto Sans Malayalam",sans-serif;
+       font-size:17px;line-height:1.45;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+  button,input,select{font:inherit;color:inherit;letter-spacing:inherit}
+  button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+  :focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+
+  /* ------------------------------------------------------------------ navigation bar */
+  .nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;justify-content:space-between;
+       padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:transparent;transition:background .25s var(--ease)}
+  .nav::after{content:"";position:absolute;left:0;right:0;bottom:0;height:.5px;background:var(--sep);opacity:0;transition:opacity .25s}
+  .nav.scrolled{background:var(--nav-material);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
+  .nav.scrolled::after{opacity:1}
+  .nav .mini{font-weight:600;font-size:17px;letter-spacing:-.02em;opacity:0;transform:translateY(4px);transition:opacity .2s,transform .3s var(--ease)}
+  .nav.scrolled .mini{opacity:1;transform:none}
+  .langpick{position:relative}
+  .langpick select{appearance:none;-webkit-appearance:none;border:0;background:var(--fill2);border-radius:999px;
+                   padding:7px 30px 7px 13px;font-size:15px;font-weight:500;cursor:pointer;max-width:58vw;text-overflow:ellipsis}
+  .langpick::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;margin-top:-5px;border:solid var(--label2);
+                   border-width:0 1.8px 1.8px 0;transform:rotate(45deg);pointer-events:none}
+
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px calc(var(--bar) + 24px)}
+
+  /* ------------------------------------------------------------------ large title + welcome */
+  .hero h1{margin:2px 0 0;font-size:34px;line-height:1.12;font-weight:700;letter-spacing:-.025em}
+  .hero .sub{margin:4px 0 0;color:var(--label2);font-size:15px;line-height:1.4;letter-spacing:-.005em}
+  .models{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .models span{font-size:12px;font-weight:500;color:var(--label2);background:var(--fill3);border-radius:999px;padding:3px 9px;letter-spacing:0}
+  .beta{display:none;margin-top:12px;font-size:13px;line-height:1.45;color:var(--orange-text);background:var(--orange-soft);border-radius:14px;padding:9px 12px;letter-spacing:0}
   .beta.on{display:block}
-  .badge{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--green);background:var(--soft);
-         border:1px solid #cfe3d6;border-radius:999px;padding:4px 10px;margin-top:10px}
-  .chat{margin-top:18px;display:flex;flex-direction:column;gap:10px;min-height:120px}
-  .msg{max-width:88%;padding:11px 14px;border-radius:16px;line-height:1.5;font-size:16px;white-space:pre-wrap}
-  .bot{background:var(--card);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
-  .me{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
-  .me.live{opacity:.75}
-  .me .meta{color:#cfe8da}
-  .meta{display:block;font-size:11.5px;color:var(--muted);margin-top:5px}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-  .chip{font-size:12px;background:var(--soft);color:var(--green);border:1px solid #cfe3d6;border-radius:999px;padding:2px 9px}
-  .controls{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 78%,transparent);padding:16px 0 6px;margin-top:10px}
-  .focusbar{display:none;align-items:center;justify-content:space-between;gap:8px;background:var(--green);color:#fff;
-            border-radius:14px;padding:9px 12px;margin-bottom:10px;font-size:14.5px}
-  .focusbar.on{display:flex}
-  .focusbar button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:999px;padding:5px 11px;cursor:pointer;font-size:13px}
-  .suggest{display:none;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+
+  .welcome{margin-top:22px;background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);padding:6px 0 18px;
+           animation:rise .6s var(--spring) both}
+  .welcome ol{list-style:none;margin:0;padding:0}
+  .welcome li{display:flex;gap:14px;align-items:flex-start;padding:13px 18px;position:relative}
+  .welcome li + li::before{content:"";position:absolute;top:0;left:62px;right:0;height:.5px;background:var(--sep)}
+  .welcome .ico{flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:17px;background:var(--accent-soft)}
+  .welcome b{display:block;font-weight:600;font-size:16px;letter-spacing:-.015em}
+  .welcome small{display:block;color:var(--label2);font-size:14px;line-height:1.4;margin-top:1px;letter-spacing:0}
+  .startbtn{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 18px 0;width:calc(100% - 36px);height:54px;border:0;border-radius:16px;
+            background:var(--accent);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.01em;cursor:pointer;
+            transition:transform .35s var(--spring),background .2s}
+  .startbtn:active{transform:scale(.97);background:var(--accent-press);transition-duration:.08s}
+  .startbtn svg{width:22px;height:22px}
+  .welcome .hint{text-align:center;color:var(--label2);font-size:13px;margin:10px 18px 0;letter-spacing:0}
+  body.talking .welcome{display:none}
+
+  /* ------------------------------------------------------------------ conversation */
+  .chat{margin-top:18px;display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;flex-direction:column;max-width:84%;scroll-margin-top:64px;animation:msg-in .5s var(--spring) both}
+  .row.bot{align-self:flex-start;transform-origin:0 100%}
+  .row.me{align-self:flex-end;align-items:flex-end;transform-origin:100% 100%}
+  .row + .row.me,.row.me + .row.bot,.row + .results,.results + .row{margin-top:8px}
+  .bubble{padding:10px 15px;border-radius:var(--r-bubble);white-space:pre-wrap;overflow-wrap:anywhere;font-size:17px;line-height:1.42}
+  .bot .bubble{background:var(--fill);border-bottom-left-radius:7px}
+  .me .bubble{background:var(--accent);color:#fff;border-bottom-right-radius:7px}
+  .me.live .bubble{background:color-mix(in srgb,var(--accent) 55%,transparent)}
+  .err .bubble{background:rgba(255,59,48,.12);color:var(--red)}
+  .under{display:flex;flex-wrap:wrap;gap:5px;align-items:center;justify-content:flex-end;margin-top:5px;padding:0 2px;font-size:12px;color:var(--label2);letter-spacing:0}
+  .chip{background:var(--accent-soft);color:var(--accent-text);border-radius:999px;padding:2px 9px;font-weight:500}
+  .meta{color:var(--label3)}
+  .fix{border:0;background:var(--fill2);color:var(--label);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;cursor:pointer;
+       transition:transform .35s var(--spring)}
+  .fix:active{transform:scale(.92);transition-duration:.06s}
+  .typing .bubble{display:flex;gap:4px;padding:14px 16px}
+  .typing i{width:7px;height:7px;border-radius:50%;background:var(--label3);animation:dot 1.2s infinite ease-in-out}
+  .typing i:nth-child(2){animation-delay:.15s} .typing i:nth-child(3){animation-delay:.3s}
+  @keyframes dot{0%,60%,100%{transform:none;opacity:.5}30%{transform:translateY(-3px);opacity:1}}
+  @keyframes msg-in{from{opacity:0;transform:translateY(10px) scale(.96)}}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}}
+
+  /* ------------------------------------------------------------------ results */
+  .results{display:flex;flex-direction:column;gap:12px;scroll-margin-top:70px;animation:rise .55s var(--spring) both}
+  .share{display:flex;gap:8px}
+  .share button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;height:46px;border:0;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;
+                transition:transform .35s var(--spring)}
+  .share button:active{transform:scale(.96);transition-duration:.06s}
+  .share .wa{background:var(--wa);color:#fff}
+  .share .copy{background:var(--surface);box-shadow:var(--shadow)}
+  .sect{margin:10px 4px -2px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--label2)}
+  .card{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);padding:16px 16px 14px;
+        transition:box-shadow .3s var(--ease),transform .4s var(--spring)}
+  .card.active{box-shadow:0 0 0 2.5px var(--accent),var(--shadow)}
+  .card .pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .pill{font-size:12px;font-weight:600;border-radius:999px;padding:3px 9px;letter-spacing:0}
+  .pill.state{background:var(--indigo-soft);color:var(--indigo-text)}
+  .pill.maybe{background:var(--orange-soft);color:var(--orange-text)}
+  .card h3{margin:0;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-.02em}
+  .card .local{color:var(--label2);font-size:15px;margin-top:1px}
+  .card .benefit{margin-top:8px;font-size:17px;line-height:1.42;font-weight:500}
+  .card .why{margin-top:10px;font-size:14.5px;line-height:1.42;color:var(--accent-text);background:var(--accent-soft);border-radius:12px;padding:8px 11px;letter-spacing:0}
+  .card.maybe .why{color:var(--orange-text);background:var(--orange-soft)}
+  .card dl{margin:12px 0 0;border-top:.5px solid var(--sep)}
+  .card dl div{display:grid;grid-template-columns:5.6em 1fr;gap:10px;padding:9px 0;border-bottom:.5px solid var(--sep);font-size:14.5px;line-height:1.42;letter-spacing:0}
+  .card dt{color:var(--label2);font-weight:500}
+  .card dd{margin:0}
+  .card .ask{margin-top:12px;width:100%;height:46px;border:0;border-radius:14px;background:var(--accent-soft);color:var(--accent-text);
+             font-size:16px;font-weight:600;cursor:pointer;transition:transform .35s var(--spring),background .2s}
+  .card .ask:active{transform:scale(.97);transition-duration:.06s}
+  .card.maybe .ask{background:var(--orange-soft);color:var(--orange-text)}
+
+  footer{margin:26px 4px 0;font-size:12.5px;color:var(--label3);line-height:1.5;letter-spacing:0}
+
+  /* ------------------------------------------------------------------ bottom bar (material) */
+  .bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--material);
+       -webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);
+       border-top:.5px solid var(--sep);padding:8px 16px calc(env(safe-area-inset-bottom) + 10px);
+       transform:translateY(110%);transition:transform .55s var(--spring)}
+  body.talking .bar{transform:none}
+  .bar .in{max-width:720px;margin:0 auto}
+  .focus{display:none;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .focus.on{display:flex}
+  .focus span{font-size:14px;font-weight:600;color:var(--accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .focus button{flex:none;border:0;background:var(--fill2);border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .suggest{display:none;gap:7px;overflow-x:auto;margin:0 -16px 8px;padding:0 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .suggest::-webkit-scrollbar{display:none}
   .suggest.on{display:flex}
-  .suggest button{border:1px solid #cfe3d6;background:var(--soft);color:var(--green);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer}
-  .microw{display:flex;flex-direction:column;align-items:center;gap:8px}
-  #mic{width:84px;height:84px;border-radius:50%;border:0;background:var(--green);color:#fff;cursor:pointer;
-       box-shadow:0 6px 18px rgba(31,107,74,.35);display:grid;place-items:center;transition:transform .1s}
-  #mic:active{transform:scale(.96)}
-  #mic svg{width:36px;height:36px}
-  #mic.rec{background:#c0392b;animation:pulse 1.2s infinite}
-  #mic.busy{background:#9aa79f;cursor:wait;box-shadow:none}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}70%{box-shadow:0 0 0 18px rgba(192,57,43,0)}100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}}
-  #status{font-size:14px;color:var(--muted);min-height:20px;text-align:center}
-  .opts{display:flex;gap:14px;justify-content:center;font-size:12.5px;color:var(--muted)}
-  .opts label{display:flex;gap:5px;align-items:center;cursor:pointer}
-  .typerow{display:flex;gap:8px;margin-top:10px}
-  .typerow input{flex:1;padding:11px 13px;border-radius:12px;border:1px solid var(--line);font-size:15px;background:var(--card)}
-  .typerow button,.ghost{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:14px}
-  .results{margin-top:14px;display:grid;gap:10px;padding-bottom:40px}
-  .sharebar{display:flex;gap:8px;flex-wrap:wrap}
-  .sharebar button{flex:1;min-width:150px;padding:11px;border-radius:12px;border:0;font-size:14.5px;cursor:pointer}
-  .wa{background:var(--wa);color:#fff}
-  .copy{background:var(--card);border:1px solid var(--line)!important;color:var(--ink)}
-  .scheme{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--green);border-radius:14px;padding:13px 15px}
-  .scheme.maybe{border-left-color:var(--saffron);background:var(--warn)}
-  .scheme.active{outline:3px solid var(--green-2)}
-  .scheme h3{margin:0;font-size:17px}
-  .scheme h3 span{font-weight:500;color:var(--muted);font-size:14px;margin-left:6px}
-  .scheme .benefit{margin:6px 0 6px;font-size:15.5px}
-  .scheme .why{font-size:13.5px;color:var(--green);background:var(--soft);border-radius:8px;padding:6px 9px;margin-bottom:8px}
-  .maybe .why{color:#8a5a12;background:#fdebcf}
-  .scheme dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:3px 10px;font-size:13.5px;color:var(--muted)}
-  .scheme dt{font-weight:600;color:var(--ink)}
-  .scheme dd{margin:0}
-  .scheme .ask{margin-top:10px;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--green);background:#fff;
-               color:var(--green);font-weight:600;font-size:14.5px;cursor:pointer}
-  .maybe .ask{border-color:var(--saffron);color:#a7650f}
-  .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--green);color:#fff;margin-bottom:6px}
-  .maybe .tag{background:var(--saffron)}
-  .tag.state,.maybe .tag.state{background:#3d5a80}
-  footer{margin-top:22px;font-size:12.5px;color:var(--muted);line-height:1.5}
-  .err{color:#a5281b}
+  .suggest button{flex:none;border:0;background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:7px 13px;font-size:14.5px;font-weight:500;cursor:pointer;
+                  white-space:nowrap;transition:transform .35s var(--spring)}
+  .suggest button:active{transform:scale(.94);transition-duration:.06s}
+  #status{min-height:20px;text-align:center;font-size:13.5px;color:var(--label2);letter-spacing:0;transition:color .2s}
+  #status.err{color:var(--red)}
+  .controls{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:6px 0 10px}
+  .side{display:flex;flex-direction:column;align-items:center;gap:3px;justify-self:center;border:0;background:none;cursor:pointer;
+        color:var(--label2);font-size:11px;font-weight:500;letter-spacing:0;padding:0}
+  .side .disc{width:44px;height:44px;border-radius:50%;background:var(--fill2);display:grid;place-items:center;color:var(--label);
+              transition:transform .35s var(--spring),background .2s}
+  .side:active .disc{transform:scale(.9);transition-duration:.06s}
+  .side svg{width:20px;height:20px}
+  .side[aria-pressed="true"] .disc{background:var(--accent-soft);color:var(--accent-text)}
+  .side[aria-pressed="true"]{color:var(--accent-text)}
+
+  #mic{--lvl:0;position:relative;width:72px;height:72px;border-radius:50%;border:0;background:var(--accent);color:#fff;cursor:pointer;display:grid;place-items:center;
+       box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 35%,transparent);
+       transition:transform .4s var(--spring),background .25s var(--ease),box-shadow .12s linear}
+  #mic:active{transform:scale(.92);transition-duration:.06s}
+  #mic svg{width:30px;height:30px;grid-area:1/1;transition:opacity .2s,transform .35s var(--spring)}
+  #mic .i-wave,#mic .i-stop{opacity:0;transform:scale(.6)}
+  #mic.rec{background:var(--red);box-shadow:0 0 0 calc(5px + var(--lvl) * 20px) rgba(255,59,48,.2),0 6px 18px rgba(255,59,48,.3)}
+  #mic.rec .i-mic{opacity:0;transform:scale(.6)} #mic.rec .i-stop{opacity:1;transform:none}
+  #mic.speaking .i-mic{opacity:0;transform:scale(.6)} #mic.speaking .i-wave{opacity:1;transform:none}
+  #mic.speaking .i-wave rect{animation:eq 1s infinite ease-in-out;transform-origin:center}
+  #mic.speaking .i-wave rect:nth-child(2){animation-delay:.15s} #mic.speaking .i-wave rect:nth-child(3){animation-delay:.3s}
+  #mic.speaking .i-wave rect:nth-child(4){animation-delay:.45s}
+  @keyframes eq{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
+  #mic.busy{background:var(--fill2);color:var(--label2);box-shadow:none;cursor:progress}
+  #mic.busy svg{opacity:0}
+  #mic.busy::after{content:"";position:absolute;inset:22px;border-radius:50%;border:3px solid var(--label3);border-top-color:var(--label);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .typerow{display:flex;align-items:center;gap:8px}
+  .field{flex:1;display:flex;align-items:center;background:var(--surface);border-radius:999px;padding:4px 4px 4px 16px;box-shadow:inset 0 0 0 .5px var(--sep)}
+  .field input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:16px;padding:7px 0}
+  .field input::placeholder{color:var(--label3)}
+  #send{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:var(--accent);color:#fff;display:grid;place-items:center;cursor:pointer;
+        transition:transform .35s var(--spring),opacity .2s}
+  #send:disabled{opacity:.35;cursor:default}
+  #send:active:not(:disabled){transform:scale(.88);transition-duration:.06s}
+  #send svg{width:16px;height:16px}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+    #mic.busy::after{animation:spin 1.6s linear infinite!important}
+  }
+  @media (min-width:700px){ .hero h1{font-size:40px} .row{max-width:72%} }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Yojana Saathi <small>योजना साथी · Bol ke jaaniye, aapke liye kaunsi sarkari yojana hai · 10 bhashayein</small></h1>
-      <div class="badge">🎙️ Speech-to-text: Gnani Prisma · 🔊 Voice: Gnani Timbre</div>
-    </div>
-    <label class="langs" aria-label="Language">
-      <select id="langsel">
-        <option value="auto">🌐 Auto · koi bhi bhasha</option>
-        <option value="hi">हिंदी / Hinglish</option>
-        <option value="en">English</option>
-      </select>
-    </label>
+<nav class="nav" id="nav">
+  <span class="mini">Yojana Saathi</span>
+  <label class="langpick" aria-label="Language">
+    <select id="langsel">
+      <option value="auto">🌐 Auto</option>
+      <option value="hi">हिंदी / Hinglish</option>
+      <option value="en">English</option>
+    </select>
+  </label>
+</nav>
+
+<main class="wrap">
+  <header class="hero" id="hero">
+    <h1>Yojana Saathi</h1>
+    <p class="sub">योजना साथी · Bol ke jaaniye, aapke liye kaunsi sarkari yojana hai</p>
+    <div class="models"><span>🎙️ Gnani Prisma</span><span>🔊 Gnani Timbre</span><span>10 bhashayein · languages</span></div>
+    <div id="beta" class="beta" role="note"></div>
   </header>
-  <div id="beta" class="beta" role="note"></div>
+
+  <section class="welcome" id="welcome">
+    <ol>
+      <li><span class="ico">🎙️</span><div><b>Apni bhasha mein boliye</b><small>Speak in your language: umar, kaam, kamaai. Hindi, English or any of 10 languages.</small></div></li>
+      <li><span class="ico">✅</span><div><b>Kaunsi yojana, aur kyun</b><small>See which central and state schemes fit you, and why, from verified rules.</small></div></li>
+      <li><span class="ico">💬</span><div><b>Samjhaiye, aur WhatsApp</b><small>Ask where to apply and which documents to bring, then share the list.</small></div></li>
+    </ol>
+    <button class="startbtn" id="startbtn">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+      <span>Shuru karein · Start</span>
+    </button>
+    <p class="hint">Galat sun liya? Kisi bhi jawab ke neeche "Badlein" dabaiye · Tap "Change" under any answer to fix it.</p>
+  </section>
 
   <div id="chat" class="chat" aria-live="polite"></div>
-  <div id="results" class="results"></div>
-
-  <div class="controls">
-    <div id="focusbar" class="focusbar"><span id="focusname"></span><button id="unfocus">← Sab yojanayein</button></div>
-    <div id="suggest" class="suggest"></div>
-    <div class="microw">
-      <button id="mic" aria-label="Tap to speak">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
-      </button>
-      <div id="status">Tap to speak · बोलने के लिए टैप करें</div>
-      <div class="opts"><label id="hfwrap" style="display:none"><input type="checkbox" id="handsfree" checked> Hands-free (live Prisma)</label></div>
-    </div>
-    <div class="typerow">
-      <input id="text" placeholder="Or type here… / यहाँ लिखें…" autocomplete="off">
-      <button id="send" aria-label="Send">➤</button>
-      <button id="restart" class="ghost" title="Start over">↺</button>
-    </div>
-  </div>
 
   <footer>
     Yeh sirf ek shuruaati jaanch hai. Final eligibility CSC, bank ya sarkari portal par confirm karein.
     This is a screening tool, not an official decision. Demo uses only made-up voices and data.
   </footer>
+</main>
+
+<div class="bar" id="bar">
+  <div class="in">
+    <div id="focus" class="focus"><span id="focusname"></span><button id="unfocus">← Sab yojanayein</button></div>
+    <div id="suggest" class="suggest"></div>
+    <div id="status" role="status"></div>
+    <div class="controls">
+      <button class="side" id="restart" aria-label="Start over">
+        <span class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></span>
+        <span id="restartlbl">Restart</span>
+      </button>
+      <button id="mic" aria-label="Tap to speak">
+        <svg class="i-mic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+        <svg class="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2.5"/></svg>
+        <svg class="i-wave" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="8" width="2.6" height="8" rx="1.3"/><rect x="8.6" y="4" width="2.6" height="16" rx="1.3"/><rect x="13.2" y="6.5" width="2.6" height="11" rx="1.3"/><rect x="17.8" y="9" width="2.6" height="6" rx="1.3"/></svg>
+      </button>
+      <button class="side" id="hf" aria-pressed="true" aria-label="Hands-free: mic opens by itself after each question">
+        <span class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span>
+        <span>Auto-mic</span>
+      </button>
+    </div>
+    <div class="typerow">
+      <div class="field">
+        <input id="text" placeholder="Or type here… / यहाँ लिखें…" autocomplete="off" enterkeyhint="send">
+        <button id="send" aria-label="Send" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 const $ = s => document.querySelector(s);
+const chat = $("#chat");
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
 // First language = the phone/browser language if it's one of ours (e.g. ta-IN -> Tamil), otherwise English.
 // No location permission needed. After the first answer, auto-detect follows whatever language the person speaks.
 const SUPPORTED = ["hi","en","bn","gu","kn","ml","mr","pa","ta","te"];
@@ -136,13 +294,13 @@ function initialLang() {
   }
   return "en";
 }
-let lang = initialLang(), state = {}, busy = false, currentAudio = null, speakToken = 0;
-let auto = true, langKnown = false, lastDetected = null;  // auto: answer in whatever language the person speaks
+let lang = initialLang(), state = {}, busy = false, currentAudio = null, speakToken = 0, started = false;
+let auto = true, langKnown = false, lastDetected = null, lastBot = null;
 let LANGS = {hi:{code:"hi-IN"}, en:{code:"en-IN"}};
-let health = {}, results = null, focus = null;          // results = {eligible, maybe} once the checker finishes
+let health = {}, results = null, focus = null, handsfree = true;  // results = {eligible, maybe} once the checker finishes
 
 const T = {
-  hi: { tap:"Tap karke boliye", answer:"Tap karke jawab dijiye", think:"Soch raha hoon…", speak:"Bol raha hoon… 🔊",
+  hi: { tap:"Tap karke boliye", answer:"Tap karke jawab dijiye", think:"Soch raha hoon…", speak:"Bol raha hoon… beech mein bolne ke liye mic dabaiye",
         listen:"Sun raha hoon… boliye", heard:"Samajh raha hoon (Prisma)…", ask:"Kuch bhi poochhiye, ya kisi yojana pe 'Samjhaiye' dabaiye",
         nothing:"Kuch sunai nahi diya, dobara boliye.", eligible:"Aap yogya lag rahe hain", check:"Check karein",
         where:"Kahan", docs:"Kagaz", note:"Dhyan dein", why:"Kyun", explain:"🗣️ Samjhaiye aur poochhiye",
@@ -152,7 +310,7 @@ const T = {
         share_tail:"📄 Aadhaar aur bank passbook lekar nazdeeki CSC ya bank jaiye.\n⚠️ Yeh shuruaati jaanch hai, final confirm CSC/bank par karein.",
         sug:[["Kahan apply karein?","kahan apply karun"],["Kaunse kagaz?","kaunse kagaz chahiye"],
              ["Kitna milega?","kitna paisa milega"],["Kitna jama karna?","kitna jama karna padega"],["Helpline","helpline number"]] },
-  en: { tap:"Tap to speak", answer:"Tap to answer", think:"Thinking…", speak:"Speaking… 🔊",
+  en: { tap:"Tap to speak", answer:"Tap to answer", think:"Thinking…", speak:"Speaking… tap the mic to cut in",
         listen:"Listening… go ahead", heard:"Transcribing (Prisma)…", ask:"Ask anything, or tap 'Explain' on a scheme",
         nothing:"Didn't hear anything, try again.", eligible:"Looks eligible", check:"Worth checking",
         where:"Where", docs:"Documents", note:"Note", why:"Why", explain:"🗣️ Explain & ask questions",
@@ -163,29 +321,33 @@ const T = {
         sug:[["Where to apply?","where do I apply"],["Which documents?","which documents do I need"],
              ["How much?","how much will I get"],["What does it cost?","how much do I have to pay"],["Helpline","helpline number"]] },
 };
+// New strings for the "fix a wrong answer" button (beta translations, like the rest of the 8 language packs)
+const X = {
+  hi:{fix:"Badlein", redo:"Theek hai, dobara boliye", redo_say:"ठीक है, दोबारा बोलिए।", restart:"Phir se", neterr:"Network mein dikkat aayi. Dobara koshish karein."},
+  en:{fix:"Change", redo:"OK, say it again", redo_say:"OK, please say it again.", restart:"Restart", neterr:"Network problem. Please try again."},
+  bn:{fix:"বদলান", redo:"ঠিক আছে, আবার বলুন", redo_say:"ঠিক আছে, আবার বলুন।", restart:"আবার শুরু", neterr:"নেটওয়ার্কে সমস্যা। আবার চেষ্টা করুন।"},
+  gu:{fix:"બદલો", redo:"બરાબર, ફરી બોલો", redo_say:"બરાબર, ફરી બોલો.", restart:"ફરી શરૂ", neterr:"નેટવર્કમાં તકલીફ. ફરી પ્રયાસ કરો."},
+  kn:{fix:"ಬದಲಿಸಿ", redo:"ಸರಿ, ಮತ್ತೆ ಹೇಳಿ", redo_say:"ಸರಿ, ಮತ್ತೆ ಹೇಳಿ.", restart:"ಮತ್ತೆ ಶುರು", neterr:"ನೆಟ್‌ವರ್ಕ್ ಸಮಸ್ಯೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."},
+  ml:{fix:"മാറ്റുക", redo:"ശരി, വീണ്ടും പറയൂ", redo_say:"ശരി, വീണ്ടും പറയൂ.", restart:"വീണ്ടും", neterr:"നെറ്റ്‌വർക്ക് പ്രശ്നം. വീണ്ടും ശ്രമിക്കൂ."},
+  mr:{fix:"बदला", redo:"ठीक आहे, पुन्हा बोला", redo_say:"ठीक आहे, पुन्हा बोला.", restart:"पुन्हा", neterr:"नेटवर्कमध्ये अडचण. पुन्हा प्रयत्न करा."},
+  pa:{fix:"ਬਦਲੋ", redo:"ਠੀਕ ਹੈ, ਫਿਰ ਬੋਲੋ", redo_say:"ਠੀਕ ਹੈ, ਫਿਰ ਬੋਲੋ।", restart:"ਫਿਰ ਸ਼ੁਰੂ", neterr:"ਨੈੱਟਵਰਕ ਵਿੱਚ ਦਿੱਕਤ। ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"},
+  ta:{fix:"மாற்று", redo:"சரி, மீண்டும் சொல்லுங்கள்", redo_say:"சரி, மீண்டும் சொல்லுங்கள்.", restart:"மீண்டும்", neterr:"இணைய சிக்கல். மீண்டும் முயலுங்கள்."},
+  te:{fix:"మార్చండి", redo:"సరే, మళ్ళీ చెప్పండి", redo_say:"సరే, మళ్ళీ చెప్పండి.", restart:"మళ్ళీ", neterr:"నెట్‌వర్క్ సమస్య. మళ్ళీ ప్రయత్నించండి."},
+};
 const STATE_NAMES = {UP:"Uttar Pradesh", BR:"Bihar", MH:"Maharashtra", MP:"Madhya Pradesh", RJ:"Rajasthan",
   WB:"West Bengal", TN:"Tamil Nadu", KA:"Karnataka", GJ:"Gujarat", PB:"Punjab", HR:"Haryana", DL:"Delhi", KL:"Kerala",
   AP:"Andhra Pradesh", TG:"Telangana", OD:"Odisha", JH:"Jharkhand", CG:"Chhattisgarh", UK:"Uttarakhand",
   HP:"Himachal Pradesh", JK:"Jammu & Kashmir", AS:"Assam", GA:"Goa"};
-const t = k => (T[lang] && T[lang][k] !== undefined) ? T[lang][k] : T.en[k];
+function t(k) {
+  for (const d of [T[lang], X[lang], T.en, X.en]) if (d && d[k] !== undefined) return d[k];
+  return k;
+}
 const EN_SLOT = {
   age: v => `age ${v}`, occupation: v => v.replace(/_/g," "), trade: v => v.replace(/_/g," "),
   land_ha: v => `land ~${(v/0.4047).toFixed(1)} acre`, income_month: v => `₹${Number(v).toLocaleString("en-IN")}/month`,
   itax: v => v ? "pays tax" : "no tax", epf: v => v ? "PF" : "no PF", daughter_u10: v => v ? "daughter <10" : "no daughter <10",
   state: v => STATE_NAMES[v] || v, gender: v => v === "f" ? "woman" : "man", biz: v => v ? "new business" : "no new business",
 };
-
-// switch the conversation's language (auto-detected from speech, or picked in the menu)
-function applyLang(l) {
-  if (!l || !LANGS[l]) return;
-  if (l !== lang) { lang = l; document.documentElement.lang = l; }
-  const b = $("#beta"), info = LANGS[l];
-  b.classList.toggle("on", !!info.beta);
-  b.textContent = info.beta ? `🧪 ${info.ui.beta}  ·  Beta: translated by AI, not yet checked by a native speaker. Amounts and rules are the same verified facts.` : "";
-  $("#unfocus").textContent = t("back");
-  if (focus) setFocus(focus);
-}
-
 const SLOT_LABEL = {
   age: v => `umar ${v}`, occupation: v => ({farmer:"kisan", shopkeeper:"dukaandaar", street_vendor:"thela/rehdi",
     labourer:"mazdoor", artisan:"karigar", salaried_private:"private naukri", govt_employee:"sarkari naukri",
@@ -197,67 +359,155 @@ const SLOT_LABEL = {
   state: v => STATE_NAMES[v] || v, gender: v => v === "f" ? "mahila" : "purush", biz: v => v ? "naya kaam" : "naya kaam nahi",
 };
 
-// ---------------------------------------------------------------- UI helpers
-function addMsg(text, who, extra) {
-  const d = document.createElement("div");
-  d.className = "msg " + who; d.textContent = text;
-  if (extra) d.appendChild(extra);
-  $("#chat").appendChild(d);
-  d.scrollIntoView({behavior:"smooth", block:"end"});
-  return d;
+// switch the conversation's language (auto-detected from speech, or picked in the menu)
+function applyLang(l) {
+  if (!l || !LANGS[l]) return;
+  if (l !== lang) { lang = l; document.documentElement.lang = l; }
+  const b = $("#beta"), info = LANGS[l];
+  b.classList.toggle("on", !!info.beta);
+  b.textContent = info.beta ? `🧪 ${info.ui.beta}  ·  Beta: translated by AI, not yet checked by a native speaker. Amounts and rules are the same verified facts.` : "";
+  $("#unfocus").textContent = t("back");
+  $("#restartlbl").textContent = t("restart");
+  if (focus) setFocus(focus);
 }
-function chips(obj) {
+
+// ---------------------------------------------------------------- layout: scrolling + nav material
+// The bottom bar is fixed, so the page keeps room for it (--bar) and every new message is scrolled into view above it.
+new ResizeObserver(([e]) => document.documentElement.style.setProperty("--bar", Math.ceil(e.target.offsetHeight) + "px")).observe($("#bar"));
+const nav = $("#nav");
+new IntersectionObserver(([e]) => nav.classList.toggle("scrolled", !e.isIntersecting), {rootMargin:"-60px 0px 0px 0px"}).observe($("#hero h1"));
+const docH = () => document.documentElement.scrollHeight;
+const nearBottom = () => innerHeight + scrollY >= docH() - 220;
+function toBottom(smooth = true) {
+  // layout is synchronous, so scroll right away (no requestAnimationFrame: it pauses in background tabs)
+  window.scrollTo({top: docH(), behavior: smooth && !REDUCE && !document.hidden ? "smooth" : "auto"});
+}
+
+// ---------------------------------------------------------------- conversation helpers
+function addMsg(text, who) {
+  const row = document.createElement("div"); row.className = "row " + who;
+  const b = document.createElement("div"); b.className = "bubble"; b.textContent = text;
+  row.appendChild(b); row.bubble = b;
+  chat.appendChild(row);
+  toBottom();
+  return row;
+}
+function botMsg(j) { const r = addMsg(j.show, "bot"); lastBot = {show: j.show, say: j.say}; return r; }
+function addTyping() {
+  const row = addMsg("", "bot typing");
+  row.bubble.innerHTML = "<i></i><i></i><i></i>"; row.setAttribute("aria-label", t("think"));
+  return row;
+}
+function under(row) {
+  let u = row.querySelector(".under");
+  if (!u) { u = document.createElement("div"); u.className = "under"; row.appendChild(u); }
+  return u;
+}
+function addChips(row, obj) {
   const keys = Object.keys(obj || {}).filter(k => SLOT_LABEL[k] && obj[k] !== null);
-  if (!keys.length) return null;
   const L = lang === "hi" ? SLOT_LABEL : EN_SLOT;
-  const w = document.createElement("div"); w.className = "chips";
-  keys.forEach(k => { const c = document.createElement("span"); c.className = "chip"; c.textContent = "✓ " + L[k](obj[k]); w.appendChild(c); });
-  return w;
+  keys.forEach(k => { const c = document.createElement("span"); c.className = "chip"; c.textContent = "✓ " + L[k](obj[k]); under(row).appendChild(c); });
 }
-function setStatus(s, err) { $("#status").innerHTML = err ? `<span class="err">${s}</span>` : s; }
-function setMic(mode) { const m = $("#mic"); m.classList.remove("rec","busy"); if (mode) m.classList.add(mode); }
+function addMeta(row, text) { const m = document.createElement("span"); m.className = "meta"; m.textContent = text; under(row).prepend(m); }
+function setStatus(s, err) { const el = $("#status"); el.textContent = s || ""; el.classList.toggle("err", !!err); }
+function setMic(mode) {
+  const m = $("#mic"); m.classList.remove("rec", "busy", "speaking"); if (mode) m.classList.add(mode);
+  if (mode !== "rec") m.style.setProperty("--lvl", 0);
+}
 const allCards = () => results ? [...(results.eligible||[]), ...(results.maybe||[])] : [];
 const nameOf = id => (allCards().find(c => c.id === id) || {}).name || id;
+async function postJSON(url, body) {
+  const r = await fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+function netError() { addMsg(t("neterr"), "bot err"); busy = false; setMic(); setStatus(t("tap")); }
 
 function setFocus(id) {
   focus = id;
-  $("#focusbar").classList.toggle("on", !!id);
+  $("#focus").classList.toggle("on", !!id);
   $("#suggest").classList.toggle("on", !!id);
   $("#focusname").textContent = id ? `💬 ${t("talking")} ${nameOf(id)}` : "";
   $("#unfocus").textContent = t("back");
-  document.querySelectorAll(".scheme").forEach(el => el.classList.toggle("active", el.dataset.id === id));
+  document.querySelectorAll(".card").forEach(el => el.classList.toggle("active", el.dataset.id === id));
   const sg = $("#suggest"); sg.innerHTML = "";
   if (id) t("sug").forEach(([label, q]) => {
     const b = document.createElement("button"); b.textContent = label;
-    b.onclick = () => { if (!busy) { stopListening(true); addMsg(label, "me"); handleUserText(q); } };
+    b.onclick = () => { if (!busy) { stopListening(true); handleUserText(q, addMsg(label, "me")); } };
     sg.appendChild(b);
   });
 }
 
+// ---------------------------------------------------------------- undo: go back to any answer and say it again
+// The dialog state lives entirely in the page (the server is stateless), so a snapshot taken before each answer is
+// enough to rewind: remove that answer and everything after it, restore the state, and ask the same question again.
+function attachFix(row, snap) {
+  const b = document.createElement("button"); b.className = "fix"; b.textContent = "↶ " + t("fix");
+  b.setAttribute("aria-label", t("fix"));
+  b.onclick = e => { e.stopPropagation(); rewind(row, snap); };
+  under(row).appendChild(b);
+}
+async function rewind(row, snap) {
+  if (busy || !row.isConnected) return;
+  stopSpeaking(); stopListening(true);
+  while (row.nextSibling) row.nextSibling.remove();
+  row.remove();
+  state = snap.state; results = null; setFocus(null); langKnown = snap.langKnown; lastBot = snap.ask;
+  if (snap.lang !== lang) applyLang(snap.lang);
+  setStatus(t("redo")); toBottom();
+  // re-ask: the question again (or, for the opening question, just "say it again" instead of the whole greeting)
+  const again = snap.state.asked === "intro" || !snap.ask ? t("redo_say") : `${t("redo_say")} ${snap.ask.say}`;
+  const done = await speak(again, willListen() ? prewarm : null);
+  if (done) { setStatus(t("answer")); maybeAutoListen(); }
+}
+
+// ---------------------------------------------------------------- timing marks (sent to the server log)
+let marks = null;
+const mark = (name, extra) => { if (marks) marks.push([name, Math.round(performance.now() - marks.t0), extra ?? ""]); };
+function beginMarks(what) { flushMarks(); marks = []; marks.t0 = performance.now(); marks.what = what; }
+function flushMarks() {
+  if (!marks || !marks.length) { marks = null; return; }
+  let ol = ""; try { ol = actx ? Math.round((actx.outputLatency || 0) * 1000) : ""; } catch {}
+  const body = JSON.stringify({what: marks.what, lang, ua: navigator.userAgent.slice(0, 90), outLatMs: ol, m: marks});
+  marks = null;
+  try { navigator.sendBeacon("/api/metric", body); } catch {}
+}
+
 // ---------------------------------------------------------------- voice out: Timbre (browser voice only as fallback)
-// Split a reply into sentences: the first is sent to Timbre alone so the voice starts in ~1 s,
-// the rest in chunks of up to ~240 characters, each fetched while the previous one plays.
+// One sentence per piece (the server sends the same split as say_parts and starts voicing them right away).
+// Timbre takes ~1.3 s + ~12 ms per character, so long blocks made gaps; a very short first sentence joins the next.
 function splitSpeech(text) {
   const parts = String(text).split(/(?<=[।!?.])\s+/).map(x => x.trim()).filter(Boolean);
-  const out = [];
-  for (const p of parts) {
-    if (out.length > 1 && (out[out.length - 1] + " " + p).length <= 240) out[out.length - 1] += " " + p;
-    else out.push(p);
-  }
-  return out.length ? out : [String(text)];
+  if (parts.length > 1 && parts[0].length < 20) parts.splice(0, 2, parts[0] + " " + parts[1]);
+  return parts.length ? parts : [String(text)];
 }
-async function fetchTTS(text, l) {
-  try {
-    const r = await fetch("/api/tts", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text, lang: l})});
-    if (r.status === 200) return URL.createObjectURL(await r.blob());
-    if (r.status !== 204) console.warn("Timbre error", r.status, await r.text());
-  } catch (e) { console.warn(e); }
-  return null;
+const ttsMemo = new Map();          // same line again (re-asked question, greeting) plays instantly
+function fetchTTS(text, l) {
+  const key = l + "|" + text;
+  if (ttsMemo.has(key)) return ttsMemo.get(key);
+  const p = (async () => {
+    try {
+      const t = performance.now();
+      const r = await fetch("/api/tts", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text, lang: l})});
+      if (r.status === 200) { const u = URL.createObjectURL(await r.blob()); mark("tts-fetched", Math.round(performance.now() - t) + "ms " + text.length + "ch"); return u; }
+      mark("tts-status", r.status);
+      if (r.status !== 204) console.warn("Timbre error", r.status, await r.text());
+    } catch (e) { console.warn(e); }
+    return null;
+  })();
+  ttsMemo.set(key, p);
+  p.then(u => { if (!u) ttsMemo.delete(key); });
+  if (ttsMemo.size > 60) ttsMemo.delete(ttsMemo.keys().next().value);
+  return p;
 }
 function playUrl(url) {
   return new Promise(res => {
     currentAudio = new Audio(url);
-    currentAudio.onended = res; currentAudio.onerror = res; currentAudio.play().catch(res);
+    const a = currentAudio;
+    mark("play()");
+    a.addEventListener("playing", () => mark("playing", Math.round(a.duration * 1000)), {once: true});
+    a.onended = () => { mark("ended"); res(); }; a.onerror = () => { mark("audio-error"); res(); }; a.onpause = res;
+    a.play().catch(e => { mark("play-rejected", String(e && e.name)); res(); });
   });
 }
 function browserSpeak(text, l) {
@@ -267,104 +517,141 @@ function browserSpeak(text, l) {
     u.onend = res; u.onerror = res; speechSynthesis.speak(u);
   });
 }
-async function speak(text) {
-  if (!text) return;
+// Returns true if it finished, false if it was cut off (mic tapped, typed, rewound, restarted).
+// onLast runs as the last sentence starts, so the mic connection is ready the moment the voice stops.
+async function speak(text, onLast, given) {
   const my = ++speakToken, l = lang;
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  setStatus(t("speak"));
-  const parts = splitSpeech(text);
+  if (!text) { if (onLast) onLast(); return true; }
+  setMic("speaking"); setStatus(t("speak"));
+  const parts = given && given.length ? given : splitSpeech(text);
   let next = fetchTTS(parts[0], l);
-  for (let i = 0; i < parts.length; i++) {
-    const url = await next;
-    if (my !== speakToken) return;                       // interrupted (new reply, mic tapped, restart)
-    next = i + 1 < parts.length ? fetchTTS(parts[i + 1], l) : null;   // prefetch while this one plays
-    if (url) await playUrl(url);
-    else { await browserSpeak(parts.slice(i).join(" "), l); return; }  // no key / Timbre down: browser voice
-    if (my !== speakToken) return;
+  try {
+    for (let i = 0; i < parts.length; i++) {
+      mark("wait-part", i);
+      const url = await next;
+      mark("got-part", i);
+      if (my !== speakToken) return false;
+      next = i + 1 < parts.length ? fetchTTS(parts[i + 1], l) : null;   // prefetch while this one plays
+      if (i === parts.length - 1 && onLast) onLast();
+      if (url) await playUrl(url);
+      else {                                                           // no key / Timbre down: browser voice
+        if (onLast && i < parts.length - 1) onLast();
+        await browserSpeak(parts.slice(i).join(" "), l);
+        return my === speakToken;
+      }
+      if (my !== speakToken) return false;
+    }
+    return true;
+  } finally {
+    if (my === speakToken && !live) setMic();
+    flushMarks();
   }
 }
 function stopSpeaking() {
   speakToken++;
-  if (currentAudio) currentAudio.pause();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   if ("speechSynthesis" in window) speechSynthesis.cancel();
+  if (!live && !busy) setMic();
 }
 
 // ---------------------------------------------------------------- brain: checker turns, then scheme Q&A
-async function handleUserText(text, bubble) {
+const willListen = () => !!(health.streaming && handsfree && (!results || focus));
+
+async function handleUserText(text, row) {
   if (busy) return;
-  stopListening(true);                                // typed text / chip tapped while mic was open: drop the mic
+  stopListening(true); stopSpeaking();
+  const snap = !results ? {state: JSON.parse(JSON.stringify(state)), lang, langKnown, ask: lastBot} : null;
+  beginMarks("answer");
   busy = true; setMic("busy"); setStatus(t("think"));
+  const typing = addTyping();
   let reply;
-  if (!results) {                                     // still answering the checker's questions
-    const before = JSON.stringify(state.profile || {});
-    const r = await fetch("/api/turn", {method:"POST", headers:{"Content-Type":"application/json"},
-                                        body: JSON.stringify({state, text, lang, auto, detected: lastDetected})});
-    reply = await r.json(); state = reply.state;
-    if (reply.lang) { applyLang(reply.lang); langKnown = true; }
-    const prev = JSON.parse(before), fresh = {};
-    Object.keys(state.profile || {}).forEach(k => { if (JSON.stringify(state.profile[k]) !== JSON.stringify(prev[k])) fresh[k] = state.profile[k]; });
-    const c = chips(fresh); if (c && bubble) bubble.appendChild(c);
-    addMsg(reply.show, "bot");
-    if (reply.done) { results = {eligible: reply.eligible || [], maybe: reply.maybe || []}; renderResults(); }
-  } else {                                            // asking about schemes
-    reply = await askAbout(text);
-  }
-  await speak(reply.say);
-  lastDetected = null;
+  try {
+    if (!results) {                                     // still answering the checker's questions
+      const before = state.profile || {};
+      reply = await postJSON("/api/turn", {state, text, lang, auto, detected: lastDetected});
+      typing.remove();
+      state = reply.state;
+      if (reply.lang) { applyLang(reply.lang); langKnown = true; }
+      const fresh = {};
+      Object.keys(state.profile || {}).forEach(k => { if (JSON.stringify(state.profile[k]) !== JSON.stringify(before[k])) fresh[k] = state.profile[k]; });
+      if (row) { addChips(row, fresh); attachFix(row, snap); }
+      const botRow = botMsg(reply);
+      if (reply.done) { results = {eligible: reply.eligible || [], maybe: reply.maybe || []}; renderResults(botRow); }
+    } else {                                            // asking about schemes
+      reply = await askAbout(text);
+      typing.remove();
+      showAnswer(reply);
+    }
+  } catch (e) { console.warn(e); typing.remove(); netError(); return; }
+  lastDetected = null; mark("reply-shown");
   busy = false; setMic();
-  setStatus(results ? t("ask") : t("answer"));
-  maybeAutoListen();
+  const done = await speak(reply.say, willListen() ? prewarm : null, reply.say_parts);
+  if (done) { setStatus(results && !focus ? t("ask") : t("answer")); maybeAutoListen(); }
 }
 
-async function askAbout(text, forceFocus) {
+function askAbout(text, forceFocus) {
   const cards = allCards().map(c => ({id:c.id, name:c.name, why:c.why}));
-  const r = await fetch("/api/ask", {method:"POST", headers:{"Content-Type":"application/json"},
-                                     body: JSON.stringify({text, lang, auto, detected: text ? lastDetected : null,
-                                                           focus: forceFocus || focus, eligible: cards})});
-  const j = await r.json();
+  return postJSON("/api/ask", {text, lang, auto, detected: text ? lastDetected : null, focus: forceFocus || focus, eligible: cards});
+}
+function showAnswer(j) {
   if (j.lang) applyLang(j.lang);
   setFocus(j.focus);
   addMsg(j.show, "bot");
-  return j;
 }
 
 async function explain(id) {
   if (busy) return;
   stopSpeaking(); stopListening(true);
-  busy = true; setMic("busy");
   setFocus(id);
   addMsg(`${t("explain_me")} ${nameOf(id)}`, "me");
-  const j = await askAbout("", id);
-  window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});
-  await speak(j.say);
-  busy = false; setMic(); setStatus(t("ask"));
-  maybeAutoListen();
+  busy = true; setMic("busy"); setStatus(t("think"));
+  const typing = addTyping();
+  let j;
+  try { j = await askAbout("", id); } catch (e) { typing.remove(); netError(); return; }
+  typing.remove(); showAnswer(j);
+  busy = false; setMic();
+  const done = await speak(j.say, willListen() ? prewarm : null, j.say_parts);
+  if (done) { setStatus(t("answer")); maybeAutoListen(); }
 }
 
-// ---------------------------------------------------------------- results + share
-function renderResults() {
-  const box = $("#results"); box.innerHTML = "";
-  const share = document.createElement("div"); share.className = "sharebar";
-  share.innerHTML = `<button class="wa">🟢 ${t("wa")}</button><button class="copy">📋 ${t("copy")}</button>`;
+// ---------------------------------------------------------------- results (inline in the conversation) + share
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function renderResults(anchorRow) {
+  const box = document.createElement("section"); box.className = "results";
+  const share = document.createElement("div"); share.className = "share";
+  share.innerHTML = `<button class="wa">${esc(t("wa"))}</button><button class="copy">${esc(t("copy"))}</button>`;
   share.querySelector(".wa").onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText()), "_blank");
   share.querySelector(".copy").onclick = async e => {
-    try { await navigator.clipboard.writeText(shareText()); e.target.textContent = t("copied"); } catch { e.target.textContent = "✗"; }
+    const b = e.currentTarget;
+    try { await navigator.clipboard.writeText(shareText()); b.textContent = t("copied"); } catch { b.textContent = "✗"; }
   };
   box.appendChild(share);
-  const card = (s, maybe) => {
-    const el = document.createElement("div"); el.className = "scheme" + (maybe ? " maybe" : ""); el.dataset.id = s.id;
-    el.innerHTML = `<span class="tag">${maybe ? t("check") : t("eligible")}</span>${s.state ? ` <span class="tag state">🏛️ ${t("state_scheme")}: ${STATE_NAMES[s.state] || s.state}</span>` : ""}
-      <h3>${s.name}<span>${s.name_local || s.name_hi}${s.trade_hi ? " · " + s.trade_hi : ""}</span></h3>
-      <div class="benefit">${s.benefit_local || s.benefit}</div>
-      ${s.why ? `<div class="why">✓ ${t("why")}: ${s.why}</div>` : ""}
-      <dl><dt>${t("where")}</dt><dd>${s.apply_local || s.apply}</dd><dt>${t("docs")}</dt><dd>${s.docs_local || s.docs}</dd><dt>${t("note")}</dt><dd>${s.note_local || s.note}</dd></dl>
-      <button class="ask">${t("explain")}</button>`;
-    el.querySelector(".ask").onclick = () => explain(s.id);
-    box.appendChild(el);
+  const section = (label, list, maybe) => {
+    if (!list.length) return;
+    const h = document.createElement("div"); h.className = "sect"; h.textContent = `${label} · ${list.length}`; box.appendChild(h);
+    list.forEach(s => {
+      const el = document.createElement("article"); el.className = "card" + (maybe ? " maybe" : ""); el.dataset.id = s.id;
+      const pills = [s.state ? `<span class="pill state">🏛️ ${esc(t("state_scheme"))} · ${esc(STATE_NAMES[s.state] || s.state)}</span>` : "",
+                     maybe ? `<span class="pill maybe">${esc(t("check"))}</span>` : ""].join("");
+      const local = s.name_local || s.name_hi;
+      el.innerHTML = `${pills ? `<div class="pills">${pills}</div>` : ""}
+        <h3>${esc(s.name)}</h3>${local && local !== s.name ? `<div class="local">${esc(local)}${s.trade_hi ? " · " + esc(s.trade_hi) : ""}</div>` : ""}
+        <div class="benefit">${esc(s.benefit_local || s.benefit)}</div>
+        ${s.why ? `<div class="why">✓ ${esc(t("why"))}: ${esc(s.why)}</div>` : ""}
+        <dl><div><dt>${esc(t("where"))}</dt><dd>${esc(s.apply_local || s.apply)}</dd></div>
+            <div><dt>${esc(t("docs"))}</dt><dd>${esc(s.docs_local || s.docs)}</dd></div>
+            <div><dt>${esc(t("note"))}</dt><dd>${esc(s.note_local || s.note)}</dd></div></dl>
+        <button class="ask">${esc(t("explain"))}</button>`;
+      el.querySelector(".ask").onclick = () => explain(s.id);
+      box.appendChild(el);
+    });
   };
-  results.eligible.forEach(s => card(s, false));
-  results.maybe.forEach(s => card(s, true));
-  box.scrollIntoView({behavior:"smooth", block:"start"});
+  section(t("eligible"), results.eligible, false);
+  section(t("check"), results.maybe, true);
+  chat.appendChild(box);
+  // show the "found N schemes" message and the first cards, not the bottom of a long list
+  (anchorRow || box).scrollIntoView({behavior: REDUCE || document.hidden ? "auto" : "smooth", block: "start"});
 }
 
 function shareText() {
@@ -379,93 +666,158 @@ function shareText() {
 }
 
 // ---------------------------------------------------------------- voice in, mode A: hands-free streaming (Prisma WebSocket)
-let live = null;   // {ws, ctx, stream, proc, text, bubble, timer, idle, committing}
+// Speed-ups (10 Nov 2026): the WebSocket to Prisma is opened while the last sentence is still being spoken (an idle
+// stream stays open for 20+ s), the AudioContext is reused, and Prisma's partials give words as they're spoken plus
+// a speech_end, so the turn ends ~0.6 s after the final transcript instead of ~1.3 s.
+let live = null;   // {ws, stream, src, proc, mute, text, partial, row, timer, idle, committing, error}
+let actx = null, warm = null;
 
-function maybeAutoListen() {
-  if (health.streaming && $("#handsfree").checked && (!results || focus)) startListening();
+function audioCtx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === "suspended") actx.resume();
+  return actx;
 }
+function maybeAutoListen() { if (willListen()) startListening(); }
 
 function floatTo16k(input, rate) {
   const ratio = rate / 16000, n = Math.floor(input.length / ratio), out = new Int16Array(n);
-  for (let i = 0; i < n; i++) {
-    const x = input[Math.floor(i * ratio)];
-    out[i] = Math.max(-32768, Math.min(32767, x * 32767));
-  }
+  for (let i = 0; i < n; i++) out[i] = Math.max(-32768, Math.min(32767, input[Math.floor(i * ratio)] * 32767));
   return out;
 }
+const wsUrl = () => `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/stt?lang=${lang}&auto=${auto ? 1 : 0}&known=${langKnown ? 1 : 0}`;
+function openSocket() {
+  const url = wsUrl(), ws = new WebSocket(url); ws.binaryType = "arraybuffer";
+  const s = {ws, url, early: []};
+  s.opened = new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error("ws")); setTimeout(() => rej(new Error("timeout")), 8000); });
+  s.opened.catch(() => {});
+  ws.onmessage = ev => s.early.push(ev);           // anything said before we start listening (e.g. an error)
+  return s;
+}
+function prewarm() {
+  if (!willListen() || (warm && warm.url === wsUrl() && warm.ws.readyState <= 1)) return;
+  dropWarm();
+  const w = warm = openSocket();
+  w.expire = setTimeout(() => { if (warm === w) dropWarm(); }, 30000);   // never keep an unused stream long
+}
+function dropWarm() { if (warm) { clearTimeout(warm.expire); try { warm.ws.close(); } catch {} warm = null; } }
+function takeSocket() {
+  if (warm && warm.url === wsUrl() && warm.ws.readyState <= 1) { const w = warm; clearTimeout(w.expire); warm = null; return w; }
+  dropWarm(); return openSocket();
+}
+// a short pause ends the turn; the opening answer is longer, so people get more time to think there
+const endGap = () => (!results && state.asked === "intro") ? 1100 : 650;
 
 async function startStreaming() {
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${proto}://${location.host}/ws/stt?lang=${lang}&auto=${auto ? 1 : 0}&known=${langKnown ? 1 : 0}`);
-  ws.binaryType = "arraybuffer";
-  // connect and open the mic at the same time; audio spoken while connecting is buffered, not lost
-  const opened = new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error("ws")); setTimeout(() => rej(new Error("timeout")), 8000); });
-  opened.catch(() => {});
+  const s = takeSocket(), ws = s.ws;
   let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}}); }
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true}}); }
   catch (e) { try { ws.close(); } catch {} throw e; }     // no mic: don't leave a Prisma session open
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  // A fresh AudioContext for each listen, made AFTER the mic is open (as before 10 Nov): opening the mic can switch
+  // the audio device (e.g. Bluetooth earbuds go to headset mode), and a context made earlier then gets no sound.
+  let ctx;
+  try { ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); }
+  catch (e) { stream.getTracks().forEach(tr => tr.stop()); try { ws.close(); } catch {} throw e; }
   const src = ctx.createMediaStreamSource(stream);
   const proc = ctx.createScriptProcessor(4096, 1, 1);
-  let pending = new Int16Array(0);
+  const mute = ctx.createGain(); mute.gain.value = 0;
+  const micEl = $("#mic");
+  let pending = new Int16Array(0), lvl = 0;
+  const diag = {frames: 0, peak: 0, t0: performance.now(), rate: ctx.sampleRate,
+                track: (stream.getAudioTracks()[0] || {}).label || "?"};
   proc.onaudioprocess = e => {
+    const data = e.inputBuffer.getChannelData(0);
+    let sum = 0, pk = 0;
+    for (let i = 0; i < data.length; i += 4) { const v = data[i]; sum += v * v; if (v > pk) pk = v; else if (-v > pk) pk = -v; }
+    diag.frames++; if (pk > diag.peak) diag.peak = pk;
+    lvl = Math.max(Math.min(1, Math.sqrt(sum / (data.length / 4)) * 9), lvl * 0.7);   // ring follows the voice
+    micEl.style.setProperty("--lvl", lvl.toFixed(2));
     if (ws.readyState > 1) return;
-    const pcm = floatTo16k(e.inputBuffer.getChannelData(0), ctx.sampleRate);
-    let merged = new Int16Array(pending.length + pcm.length); merged.set(pending); merged.set(pcm, pending.length);
+    const pcm = floatTo16k(data, ctx.sampleRate);
+    const merged = new Int16Array(pending.length + pcm.length); merged.set(pending); merged.set(pcm, pending.length);
     if (ws.readyState !== 1) { pending = merged.slice(-16000 * 8); return; }   // still connecting: keep up to 8 s
     let off = 0;
     while (merged.length - off >= 512) { ws.send(merged.slice(off, off + 512).buffer); off += 512; }   // 1024-byte frames
     pending = merged.slice(off);
   };
-  src.connect(proc); proc.connect(ctx.destination);
-  live = {ws, ctx, stream, proc, text: "", bubble: null, timer: null, idle: null, committing: false, error: null};
+  src.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
+  live = {ws, ctx, stream, src, proc, mute, diag, text: "", partial: "", row: null, timer: null, idle: null, committing: false, error: null};
   setMic("rec"); setStatus(t("listen"));                  // red right away, even before the stream is connected
-  live.idle = setTimeout(() => { if (live && !live.text) { stopListening(true); setStatus(t("nothing"), true); } }, 12000);
-  ws.onmessage = ev => {
-    let m; try { m = JSON.parse(ev.data); } catch { return; }
-    if (!live) return;
-    if (m.type === "speech_start") { clearTimeout(live.timer); setStatus(t("listen")); }
-    else if (m.type === "processing") setStatus(t("heard"));
-    else if (m.type === "transcript" && m.text) {
-      live.text = (live.text + " " + m.text).trim();
-      if (!live.bubble) { live.bubble = addMsg("", "me live"); }
-      live.bubble.firstChild ? (live.bubble.firstChild.nodeValue = live.text) : live.bubble.prepend(document.createTextNode(live.text));
-      if (m.detected_language_code) lastDetected = m.detected_language_code;
-      live.meta = `Prisma live${m.detected_language_code ? " · " + m.detected_language_code : ""}${m.latency ? " · " + Math.round(m.latency) + " ms" : ""}`;
-      clearTimeout(live.timer);
-      live.timer = setTimeout(finishListening, live.committing ? 100 : 1300);   // short pause after a phrase = end of turn
-    } else if (m.type === "error") { console.warn("Prisma:", m.message); live.error = m.message; setStatus("Prisma: " + m.message, true); }
+  // If the mic delivers nothing (wrong input device, muted, OS privacy switch), say so instead of waiting in silence
+  const me = live;
+  live.check = setTimeout(() => {
+    if (live !== me || me.text || me.partial) return;
+    console.info("mic check", diag);
+    if (!diag.frames) { ctx.resume(); setStatus("🎙️ Mic se awaaz nahi aa rahi (audio stuck). Mic dobara dabaiye · Mic not delivering audio, tap it again.", true); }
+    else if (diag.peak < 0.0002) setStatus(`🎙️ Mic chup hai: ${diag.track}. Doosra mic chunein ya mute hataiye · This mic is silent; pick another input or unmute it.`, true);
+  }, 4000);
+  live.idle = setTimeout(() => {
+    if (!live || live.text || live.partial) return;
+    const silent = live.diag.peak < 0.0002;
+    stopListening(true);
+    if (!silent) setStatus(t("nothing"), true);            // a silent-mic warning stays on screen
+  }, 12000);
+  const show = () => {
+    const txt = (live.text + " " + live.partial).trim();
+    if (!txt) return;
+    const stick = nearBottom();
+    if (!live.row) live.row = addMsg("", "me live");
+    live.row.bubble.textContent = txt;
+    if (stick) toBottom(false);
   };
+  const handle = ev => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if (!live || live.ws !== ws) return;
+    switch (m.type) {
+      case "speech_start": clearTimeout(live.timer); setStatus(t("listen")); break;
+      case "partial_transcript": if (m.text) { clearTimeout(live.timer); live.partial = m.text; show(); } break;
+      case "speech_end": case "processing": setStatus(t("heard")); break;
+      case "transcript": case "final_transcript":
+        if (!m.text) break;
+        live.text = (live.text + " " + m.text).trim(); live.partial = ""; show();
+        if (m.detected_language_code) lastDetected = m.detected_language_code;
+        live.meta = `Prisma live${m.detected_language_code ? " · " + m.detected_language_code : ""}${m.latency ? " · " + Math.round(m.latency) + " ms" : ""}`;
+        clearTimeout(live.timer);
+        live.timer = setTimeout(finishListening, live.committing ? 100 : endGap());
+        break;
+      case "error": console.warn("Prisma:", m.message); live.error = m.message; setStatus("Prisma: " + m.message, true); break;
+    }
+  };
+  ws.onmessage = handle;
+  s.early.forEach(handle);
   ws.onclose = () => { if (live && live.ws === ws) finishListening(); };
-  await opened;                                            // throws -> startListening falls back to tap-to-record
+  if (ws.readyState > 1) { finishListening(); return; }
+  await s.opened;                                          // throws -> startListening falls back to tap-to-record
 }
 
 function stopListening(discard) {
   if (!live) return;
   const L = live; live = null;
-  clearTimeout(L.timer); clearTimeout(L.idle);
-  try { L.proc.disconnect(); L.ctx.close(); } catch {}
+  clearTimeout(L.timer); clearTimeout(L.idle); clearTimeout(L.check);
+  try { L.proc.onaudioprocess = null; L.src.disconnect(); L.proc.disconnect(); L.mute.disconnect(); } catch {}
+  try { L.ctx.close(); } catch {}
   L.stream.getTracks().forEach(tr => tr.stop());
   try { L.ws.close(); } catch {}
-  setMic();
-  if (discard && L.bubble) L.bubble.remove();         // user switched to typing/tapping: drop the half-heard phrase
+  setMic(busy ? "busy" : "");
+  if (discard && L.row) L.row.remove();               // user switched to typing/tapping: drop the half-heard phrase
   return L;
 }
 
 async function finishListening() {
   const L = stopListening();
   if (!L) return;
-  if (busy) { if (L.bubble) L.bubble.remove(); return; }
-  if (!L.text && L.error) {
+  const text = (L.text || L.partial || "").trim();
+  if (busy) { if (L.row) L.row.remove(); return; }
+  if (!text && L.error) {
     // the live stream refused (or broke): say why, and use tap-to-record from now on so the mic keeps working
-    health.streaming = false; $("#hfwrap").style.display = "none";
+    health.streaming = false;
     setStatus("Live mode error: " + L.error + " · " + t("tap"), true);
     return;
   }
-  if (!L.text) { setStatus(t("nothing"), true); return; }
-  L.bubble.classList.remove("live");
-  const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = L.meta || "Prisma live"; L.bubble.appendChild(meta);
-  await handleUserText(L.text, L.bubble);
+  if (!text) { if (L.row) L.row.remove(); setStatus(t("nothing"), true); return; }
+  if (!L.row) L.row = addMsg(text, "me");
+  L.row.classList.remove("live"); L.row.bubble.textContent = text;
+  addMeta(L.row, L.meta || "Prisma live");
+  await handleUserText(text, L.row);
 }
 
 async function startListening() {
@@ -476,7 +828,7 @@ async function startListening() {
   } catch (e) {
     console.warn("streaming unavailable, using tap-to-record", e);
     stopListening(true);
-    health.streaming = false; $("#hfwrap").style.display = "none";
+    health.streaming = false;
     startRec();
   }
 }
@@ -485,8 +837,7 @@ async function startListening() {
 let rec = null, chunks = [], stopTimer = null;
 
 async function toWav16k(blob) {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const decoded = await ctx.decodeAudioData(await blob.arrayBuffer()); ctx.close();
+  const decoded = await audioCtx().decodeAudioData(await blob.arrayBuffer());
   const rate = 16000, off = new OfflineAudioContext(1, Math.ceil(decoded.duration * rate), rate);
   const src = off.createBufferSource(); src.buffer = decoded; src.connect(off.destination); src.start();
   const pcm = (await off.startRendering()).getChannelData(0);
@@ -515,9 +866,10 @@ async function startRec() {
       if (!r.ok) throw new Error(typeof j.error === "string" ? j.error : JSON.stringify(j.error));
       if (!j.transcript) { setMic(); setStatus(t("nothing"), true); return; }
       lastDetected = j.detected || null;
-      const meta = document.createElement("span"); meta.className = "meta";
-      meta.textContent = `Prisma${j.model ? " " + j.model.replace("prisma-","") : ""}${j.detected ? " · " + j.detected : ""}${j.latency ? " · " + Number(j.latency).toFixed(2) + "s" : ""}`;
-      await handleUserText(j.transcript, addMsg(j.transcript, "me", meta));
+      const row = addMsg(j.transcript, "me");
+      addMeta(row, `Prisma${j.model ? " " + j.model.replace("prisma-","") : ""}${j.detected ? " · " + j.detected : ""}${j.latency ? " · " + Number(j.latency).toFixed(2) + "s" : ""}`);
+      setMic();
+      await handleUserText(j.transcript, row);
     } catch (e) { setMic(); setStatus("Error: " + e.message, true); }
   };
   rec.start(); setMic("rec"); setStatus(t("rec"));
@@ -526,48 +878,76 @@ async function startRec() {
 
 // ---------------------------------------------------------------- wiring
 $("#mic").onclick = () => {
+  if (!started) { start(); return; }
   if (busy) return;
   if (live) {                                   // tap while streaming = "I'm done": commit and wait for the last phrase
     live.committing = true;
     try { live.ws.send(JSON.stringify({type:"commit"})); } catch {}
-    clearTimeout(live.timer); live.timer = setTimeout(finishListening, 2500);
+    clearTimeout(live.timer); live.timer = setTimeout(finishListening, 2000);
     setMic("busy"); setStatus(t("heard"));
     return;
   }
   if (rec && rec.state === "recording") { rec.stop(); return; }
-  health.streaming ? startListening() : startRec();
+  health.streaming ? startListening() : startRec();   // tapping while the voice speaks = cut in and talk
 };
-$("#send").onclick = async () => {
-  const v = $("#text").value.trim(); if (!v || busy) return;
-  stopListening(true); $("#text").value = "";
+const textEl = $("#text"), sendEl = $("#send");
+textEl.addEventListener("input", () => { sendEl.disabled = !textEl.value.trim(); });
+textEl.addEventListener("focus", () => { if (live && !live.text && !live.partial) stopListening(true); });
+sendEl.onclick = async () => {
+  const v = textEl.value.trim(); if (!v || busy) return;
+  textEl.value = ""; sendEl.disabled = true;
+  stopListening(true); stopSpeaking();
   await handleUserText(v, addMsg(v, "me"));
 };
-$("#text").addEventListener("keydown", e => { if (e.key === "Enter") $("#send").click(); });
-$("#unfocus").onclick = async () => {
+textEl.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendEl.click(); });
+$("#unfocus").onclick = () => {
   if (busy) return;
-  stopListening(true); setFocus(null);
+  stopListening(true); stopSpeaking(); setFocus(null);
   setStatus(t("ask"));
 };
 $("#restart").onclick = () => !busy && start();
+$("#hf").onclick = e => {
+  handsfree = !handsfree; e.currentTarget.setAttribute("aria-pressed", handsfree);
+  if (!handsfree) dropWarm();
+};
+$("#startbtn").onclick = () => start();
 $("#langsel").onchange = e => {
   const v = e.target.value;
   auto = v === "auto";
   if (!auto) applyLang(v);
-  started = true;
   if (!busy) start(); else e.target.value = auto ? "auto" : lang;
 };
 
+// The whole greeting is fetched and voiced while the welcome screen is showing, so tapping Start plays it
+// straight through with no gaps. Timbre audio is cached on the server, so this costs no extra credits.
+let intro = null;
+function preloadIntro() {
+  const l = lang;
+  const p = postJSON("/api/turn", {state:{}, text:"", lang: l});
+  intro = {lang: l, p};
+  p.then(async j => { for (const part of (j.say_parts || splitSpeech(j.say))) await fetchTTS(part, l); })
+   .catch(() => { if (intro && intro.p === p) intro = null; });
+}
+
 async function start() {
-  stopSpeaking(); stopListening(true);
-  state = {}; results = null; setFocus(null); langKnown = !auto; lastDetected = null;
-  $("#chat").innerHTML = ""; $("#results").innerHTML = "";
-  busy = true; setMic("busy");
-  const r = await fetch("/api/turn", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({state:{}, text:"", lang})});
-  const j = await r.json(); state = j.state;
-  addMsg(j.show, "bot");
-  await speak(j.say);
-  busy = false; setMic(); setStatus(t("answer"));
-  maybeAutoListen();
+  beginMarks("start");
+  mark("intro-preloaded", !!(intro && intro.lang === lang));
+  started = true;
+  document.body.classList.add("talking");
+  stopSpeaking(); stopListening(true); dropWarm();
+  state = {}; results = null; setFocus(null); langKnown = !auto; lastDetected = null; lastBot = null;
+  chat.innerHTML = "";
+  busy = true; setMic("busy"); setStatus(t("think"));
+  const typing = addTyping();
+  let j;
+  try { j = (intro && intro.lang === lang) ? await intro.p : await postJSON("/api/turn", {state:{}, text:"", lang}); }
+  catch (e) { intro = null; typing.remove(); netError(); return; }
+  intro = null;
+  typing.remove(); state = j.state; botMsg(j); mark("greeting-shown");
+  busy = false; setMic();
+  const done = await speak(j.say, willListen() ? prewarm : null, j.say_parts);
+  if (done) { setStatus(t("answer")); maybeAutoListen(); }
+  preloadIntro();                                  // ready for "Restart"
 }
 
 fetch("/api/langs").then(r => r.json()).then(list => {
@@ -583,19 +963,9 @@ fetch("/api/langs").then(r => r.json()).then(list => {
   });
 }).catch(() => {});
 
-fetch("/api/health").then(r => r.json()).then(h => {
-  health = h;
-  if (h.streaming) $("#hfwrap").style.display = "flex";
-}).catch(() => {});
-
-// browsers block audio until the user interacts, so the first tap anywhere starts the conversation
-let started = false;
-document.addEventListener("click", e => {
-  if (started || e.target.closest(".langs")) return;   // opening the language menu doesn't start; picking one does
-  started = true;
-  start();
-}, {capture:true});
-addMsg("👆 Tap anywhere to begin, and speak in your own language.\nशुरू करने के लिए कहीं भी टैप करें और अपनी भाषा में बोलें।", "bot");
+fetch("/api/health").then(r => r.json()).then(h => { health = h; }).catch(() => {});
+document.documentElement.lang = lang;
+preloadIntro();
 </script>
 </body>
 </html>
