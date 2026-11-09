@@ -145,6 +145,7 @@ def vocab(lang: str):
         "yes": {kw(x) for x in W.get("yes", ())}, "no": {kw(x) for x in W.get("no", ())},
         "no_sub": stems("no_sub"), "and": stems("and"),
         "tax": stems("tax"), "pf": stems("pf"), "no_land": stems("no_land"), "zero_income": stems("zero_income"),
+        "what": stems("what"), "dontknow": stems("dontknow"),
     }
 
 
@@ -275,14 +276,50 @@ POS = {"haan", "han", "ha", "haa", "hanji", "ji", "yes", "yeah", "yep", "bilkul"
 NEG, POS = {_nfc(w) for w in NEG}, {_nfc(w) for w in POS}
 
 
+# "है" / "hai" / "ji" also appear in questions ("वो क्या होता है?"), so on their own they only count as "yes"
+# when the person isn't asking something.
+WEAK_POS = {_nfc(w) for w in ("hai", "है", "ji", "जी")}
+QUESTION_WORDS = {_nfc(w) for w in ("kya", "kyaa", "क्या", "what", "whats", "kaun", "kaunsa", "कौन", "कौनसा", "kaise",
+                                    "कैसे", "kyun", "kyon", "क्यों", "why", "how", "which", "matlab", "मतलब")}
+
+
 def parse_yes_no(text: str, lang: str = "hi"):
     V = vocab(lang)
     t = normalize(text)
     toks = set(tokens(t))
     if toks & NEG or toks & V["no"] or any(s in t for s in V["no_sub"]):
         return False
-    if toks & POS or toks & V["yes"]:
+    strong = (toks & (POS - WEAK_POS)) or (toks & V["yes"])
+    if strong:
         return True
+    if toks & WEAK_POS and not (toks & QUESTION_WORDS or "?" in (text or "")):
+        return True
+    return None
+
+
+# The person didn't answer, they asked back ("PF kya hota hai?") or said they don't know ("pata nahi").
+WHAT_KEYS = [_nfc(k) for k in ["kya hota", "kya hoti", "kya hai ye", "kya hai yeh", "ye kya", "yeh kya", "kya matlab",
+                               "matlab", "samjha nahi", "samjhi nahi", "samajh nahi", "samjha nahin", "what is",
+                               "what's", "what does", "what do you mean", "meaning", "didn't understand", "dont understand",
+                               "don't understand", "क्या होता", "क्या होती", "क्या है ये", "क्या है यह", "ये क्या", "यह क्या",
+                               "मतलब", "समझ नहीं", "समझा नहीं", "समझी नहीं"]]
+DONTKNOW_KEYS = [_nfc(k) for k in ["pata nahi", "pata nahin", "pata nai", "nahi pata", "nahin pata", "maloom nahi",
+                                   "malum nahi", "don't know", "dont know", "do not know", "not sure", "no idea",
+                                   "पता नहीं", "नहीं पता", "मालूम नहीं", "नहीं मालूम", "पता नही"]]
+
+
+def clarify(text: str, lang: str = "hi"):
+    """'what' if the person asked what something means, 'dontknow' if they said they don't know, else None."""
+    V = vocab(lang)
+    t = normalize(text)
+    if any(k in t for k in DONTKNOW_KEYS) or any(k in t for k in V["dontknow"]):
+        return "dontknow"
+    if any(k in t for k in WHAT_KEYS) or any(k in t for k in V["what"]):
+        return "what"
+    toks = set(tokens(t))
+    if ("?" in (text or "") or toks & QUESTION_WORDS) and not ((toks & (POS - WEAK_POS)) or (toks & V["yes"])
+                                                              or toks & NEG or toks & V["no"]):
+        return "what"             # a question with no yes/no in it
     return None
 
 

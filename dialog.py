@@ -41,6 +41,18 @@ Q = {
         "outro": {"show": "Inke liye apna Aadhaar aur bank passbook lekar nazdeeki CSC ya bank jaiye.",
                   "say": "इनके लिए अपना आधार और बैंक पासबुक लेकर नज़दीकी सीएससी केंद्र या बैंक जाइए।"},
         "more": {"say": "बाकी योजनाएँ स्क्रीन पर देखिए।"},
+        # asked back "what is that?" -> explain the term, then ask again
+        "x_epf": {"show": "PF matlab Provident Fund: agar aap kisi company ya office mein naukri karte hain, to har mahine "
+                          "salary se kuch paisa PF khate mein katta hai. ESIC card company ki taraf se ilaaj ka beema hota hai. "
+                          "Agar aap apna kaam khud karte hain, ya salary slip mein PF nahi katta, to jawab hai 'nahi'.",
+                  "say": "पीएफ यानी प्रोविडेंट फ़ंड: अगर आप किसी कंपनी या दफ़्तर में नौकरी करते हैं, तो हर महीने सैलरी से कुछ "
+                         "पैसा पीएफ खाते में कटता है। ईएसआईसी कार्ड कंपनी की तरफ़ से इलाज का बीमा होता है। अगर आप अपना काम "
+                         "खुद करते हैं, या सैलरी स्लिप में पीएफ नहीं कटता, तो जवाब है नहीं।"},
+        "x_itax": {"show": "Income tax woh tax hai jo saal ki kamai zyada hone par sarkar ko bharte hain, aur har saal ITR "
+                           "form bharte hain. Agar aapne kabhi ITR nahi bhara, to jawab hai 'nahi'.",
+                   "say": "इनकम टैक्स वो टैक्स है जो साल की कमाई ज़्यादा होने पर सरकार को भरते हैं, और हर साल आईटीआर फ़ॉर्म "
+                          "भरते हैं। अगर आपने कभी आईटीआर नहीं भरा, तो जवाब है नहीं।"},
+        "ok_skip": {"show": "Koi baat nahi.", "say": "कोई बात नहीं।"},
     },
     "en": {
         "intro": {
@@ -70,6 +82,17 @@ Q = {
         "outro": {"show": "Take your Aadhaar and bank passbook to the nearest CSC or bank to apply.",
                   "say": "Take your Aadhaar and bank passbook to the nearest CSC or bank to apply."},
         "more": {"say": "See the rest on the screen."},
+        "x_epf": {"show": "PF means Provident Fund: if you have a salaried job at a company or office, part of your salary "
+                          "is cut every month and put into a PF account. ESIC is a health insurance card given through your "
+                          "employer. If you work for yourself, or no PF is cut from your salary slip, the answer is no.",
+                  "say": "PF means Provident Fund: if you have a salaried job at a company or office, part of your salary "
+                         "is cut every month and put into a PF account. ESIC is a health insurance card given through your "
+                         "employer. If you work for yourself, or no PF is cut from your salary slip, the answer is no."},
+        "x_itax": {"show": "Income tax is the tax people with higher yearly earnings pay to the government, filing an ITR "
+                           "form every year. If you have never filed an ITR, the answer is no.",
+                   "say": "Income tax is the tax people with higher yearly earnings pay to the government, filing an ITR "
+                          "form every year. If you have never filed an ITR, the answer is no."},
+        "ok_skip": {"show": "No problem.", "say": "No problem."},
     },
 }
 
@@ -96,6 +119,8 @@ def qt(lang, key):
 
 
 MAX_RETRIES = 1        # re-ask a slot once, then move on
+YES_NO_SLOTS = {"itax", "epf", "daughter_u10"}
+EXPLAINABLE = {"itax", "epf"}   # jargon people often ask about; Q["x_itax"] / Q["x_epf"] explain it
 MAX_SPOKEN = 3         # speak the top 3 schemes (keeps the voice reply short), show all on screen
 
 
@@ -145,6 +170,34 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
         state.update(profile=profile, asked="intro", retries={})
         show, say = qt(lang, "intro")
         return {"state": state, "show": show, "say": say, "done": False, "lang": lang}
+
+    # They asked back ("PF kya hota hai?") or said they don't know ("pata nahi") instead of answering.
+    # For yes/no questions check this first: "वो क्या होता है?" must not count as "yes" because of "है".
+    explained = list(state.get("explained") or [])
+    clar = nlu.clarify(text, lang) if (text and asked and asked != "intro") else None
+    if clar and asked not in YES_NO_SLOTS:
+        if asked in nlu.extract(text, expecting=asked, lang=lang):
+            clar = None                    # "pata nahi, shayad 10 hazaar" still answered the question
+    if clar == "dontknow":
+        profile[asked] = None              # unknown: rules treat it as "not true", nobody loses eligibility
+        _apply_inferences(profile)
+        nxt = next_slot(profile)
+        (ks, ky) = qt(lang, "ok_skip")
+        if nxt:
+            state.update(profile=profile, asked=nxt, retries=retries, explained=explained)
+            qs, qy = qt(lang, nxt)
+            return {"state": state, "heard": {}, "show": ks + " " + qs, "say": ky + " " + qy, "done": False,
+                    "lang": lang}
+        text = ""                          # nothing left to ask: fall through to the results
+    elif clar == "what" and asked in EXPLAINABLE and asked not in explained:
+        explained.append(asked)
+        state.update(profile=profile, asked=asked, retries=retries, explained=explained)
+        (xs, xy), (qs, qy) = qt(lang, "x_" + asked), qt(lang, asked)
+        return {"state": state, "heard": {}, "show": xs + "\n\n" + qs, "say": xy + " " + qy, "done": False,
+                "lang": lang}
+    elif clar == "what":
+        text = ""                          # a question we can't explain: treat as not understood (asks again)
+    state["explained"] = explained
 
     got = nlu.extract(text or "", expecting=None if asked == "intro" else asked, lang=lang)
     if asked == "daughter_u10":
