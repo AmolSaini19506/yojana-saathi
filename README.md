@@ -103,16 +103,40 @@ python tests/test_api.py      # checks requests to Prisma and Timbre match Gnani
 | `langs/` | Language detection (`__init__.py`) + one file per beta language: questions, cards, facts, keywords |
 | `static/index.html` | Mic → 16 kHz WAV in the browser → Prisma; chat; result cards; language menu |
 
-## Schemes covered
+## Schemes covered (30)
 
-PM-KISAN · PM Kisan Maan-Dhan · PM SVANidhi · PM Vishwakarma · PM Mudra · PM Shram Yogi Maan-Dhan ·
+**Central (17):** PM-KISAN · PM Kisan Maan-Dhan · PM SVANidhi · PM Vishwakarma · PM Mudra · PM Shram Yogi Maan-Dhan ·
 e-Shram · Atal Pension Yojana · PMJJBY · PMSBY · Sukanya Samriddhi · Ayushman Vay Vandana (70+) ·
-*Ayushman Bharat PM-JAY shown as "check this", because it depends on SECC lists*
+**PMEGP** (new business, 15–35% subsidy) · **Kisan Credit Card** · **PM Fasal Bima** · **Udyam registration** ·
+*"check this": Ayushman Bharat PM-JAY (depends on SECC lists), Startup India (companies/LLPs only)*
+
+**State (13, for 8 states with ~60% of India's people):**
+
+| State | Schemes |
+|---|---|
+| Uttar Pradesh | CM-YUVA (₹5 lakh interest-free business loan, 21–40) · Kanya Sumangala (₹25,000 for a daughter) |
+| Bihar | Mahila Rozgar Yojana (₹10,000 + up to ₹2 lakh) · Vridhjan Pension (₹1,100/month, 60+) |
+| Maharashtra | Majhi Ladki Bahin (₹1,500/month) · Namo Shetkari (₹6,000/yr on top of PM-KISAN) |
+| Madhya Pradesh | *check:* Ladli Behna (₹1,500/month; new names only in special drives) |
+| Rajasthan | *check:* MAA Yojana (₹25 lakh/yr cashless health cover per family) |
+| West Bengal | Annapurna Bhandar (₹3,000/month, women 25–60; replaced Lakshmir Bhandar in June 2026) |
+| Tamil Nadu | Kalaignar Magalir Urimai Thogai (₹1,000/month; the promised ₹2,500 hasn't started) |
+| Karnataka | Gruha Lakshmi (₹2,000/month) · *check:* Yuva Nidhi (₹3,000/₹1,500 for unemployed graduates/diploma) |
+
+The app asks **which state** (or picks it up from a city: "Lucknow se hoon"), asks **woman or man** only where a
+women's scheme exists in that state (or infers it from Hindi verbs like "karti hoon"), and asks **"want to start a
+business?"** only for non-farmers aged 18–60. Other states get central schemes and an honest "your state's schemes
+aren't in the app yet, ask at a CSC".
+
+**Left out on purpose (checked 9 Nov 2026):** PMFME (extension ended 30 Sep 2026, no renewal yet) and Stand-Up India
+(ended March 2025; a revamp announced in March 2026 hasn't launched). Rajasthan's farmer top-up and the UP/Rajasthan
+old-age pension amounts are left out because sources disagree on the amount.
 
 ## Honest limits
 
 - **Screening, not a decision.** Rules are simplified. The app always says to confirm at a CSC, bank or portal.
-- **Central schemes only.** No state schemes yet; that's the obvious next step.
+- **State schemes for 8 states only**, 1–2 flagship schemes each. State schemes change often (renamed after elections,
+  amounts raised), so they need re-checking more often than central ones.
 - **Bigha is approximated at 0.25 ha.** It varies a lot by state.
 - **8 of the 10 languages are beta:** AI-translated, not yet checked by native speakers. Fix wording in `langs/<lang>.py`.
 - **Punjabi is usually heard as Hindi in Auto mode** (very similar speech). Pick Punjabi in the menu.
@@ -134,3 +158,10 @@ e-Shram · Atal Pension Yojana · PMJJBY · PMSBY · Sukanya Samriddhi · Ayushm
 - Mudra (Shishu / Kishor / Tarun / Tarun Plus up to ₹20 lakh): MoF notification, Oct 2024
 - Sukanya Samriddhi (girl under 10, ₹250–₹1.5 lakh/yr, 15 yrs deposit, matures at 21, max 2 daughters): India Post / DEA
 - Helplines: PM-KISAN 155261 (pmkisan.gov.in), e-Shram 14434 (eshram.gov.in), Ayushman 14555 (NHA)
+- Added 9 Nov 2026 (current reports and official portals): PMEGP active in 2026-27 (KVIC tranche Oct 2026; 15–35%,
+  ₹50 lakh / ₹20 lakh caps) · KCC ₹5 lakh limit (Budget 2025), 7%/4% on up to ₹3 lakh, collateral-free ₹2 lakh (PIB) ·
+  PMFBY 2% / 1.5% / 5% · Udyam and DPIIT recognition free · PMFME ended 30 Sep 2026 · Stand-Up India ended Mar 2025
+  (FM in Lok Sabha, Mar 2026) · Ladki Bahin ₹1,500 (Aug 2026 instalment) · Namo Shetkari ₹6,000 · Ladli Behna ₹1,500
+  (Sep 2026 instalment) · Annapurna Bhandar ₹3,000 (new WB govt, June 2026) · KMUT ₹1,000 (TN CMO, May 2026) ·
+  Gruha Lakshmi ₹2,000 · Yuva Nidhi ₹3,000/₹1,500 · Bihar Mahila Rozgar ₹10,000 + ₹2 lakh (cabinet, Aug 2025) ·
+  Bihar pension ₹1,100 · UP CM-YUVA ₹5 lakh interest-free (21–40) · Kanya Sumangala ₹25,000 · Rajasthan MAA ₹25 lakh

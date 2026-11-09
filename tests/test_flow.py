@@ -13,19 +13,31 @@ def ids(res):
     return [s["id"] for s in res.get("eligible", [])]
 
 
+# Questions added later (state, gender, business) get a neutral answer so these older scripts still work:
+# "don't know" leaves the state blank (central schemes only), and "no" to starting a business.
+AUTO = {"state": "pata nahi", "gender": "pata nahi", "biz": "nahi"}
+
+
+def _auto(r, lang):
+    while not r["done"] and r["state"].get("asked") in AUTO:
+        r = dialog.turn(r["state"], AUTO[r["state"]["asked"]], lang)
+    return r
+
+
 def run(turns, lang="hi"):
     r = dialog.turn({}, "", lang)
     for t in turns:
+        r = _auto(r, lang)
         assert not r["done"], f"finished early before: {t}"
         r = dialog.turn(r["state"], t, lang)
-    return r
+    return _auto(r, lang)
 
 
 # ---------------------------------------------------------------- NLU
 
 def test_hinglish_free_form():
     g = nlu.extract("Main 35 saal ka hoon, kirana ki dukaan hai, 15 hazaar mahine kamata hoon, tax nahi bharta")
-    assert g == {"occupation": "shopkeeper", "age": 35, "income_month": 15000, "itax": False}
+    assert g == {"occupation": "shopkeeper", "age": 35, "income_month": 15000, "itax": False, "gender": "m"}  # kamata
 
 
 def test_devanagari_free_form():

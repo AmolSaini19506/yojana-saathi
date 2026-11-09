@@ -18,6 +18,7 @@ import nlu      # noqa: E402
 import schemes  # noqa: E402
 
 PACKS = langs.PACK_IDS
+STATE_LANG = {"MH": "mr", "WB": "bn", "TN": "ta", "KA": "kn"}   # state schemes are translated into the state's language
 UI_KEYS = ["tap", "answer", "think", "speak", "listen", "heard", "ask", "nothing", "eligible", "check", "where", "docs",
            "note", "why", "explain", "wa", "copy", "copied", "back", "talking", "explain_me", "rec", "share_head",
            "share_also", "share_tail", "sug", "and", "beta"]
@@ -58,6 +59,8 @@ def test_pack_complete(lang):
     assert len(p.UI["sug"]) == 5
     assert set(WHY_KEYS) <= set(p.WHY) and "{age}" in p.WHY["age"] and "{inc}" in p.WHY["income"]
     for s in schemes.SCHEMES + schemes.MAYBE:
+        if s.get("state") and STATE_LANG.get(s["state"]) != lang:
+            continue              # another state's scheme: shown in English to this language's speakers
         name, benefit, speak = p.SCHEMES[s["id"]]
         assert name and benefit and speak, s["id"]
 
@@ -66,8 +69,18 @@ def test_pack_complete(lang):
 def test_pack_facts_match_hindi(lang):
     """Same schemes, same question types as the verified Hindi facts; placeholders only where they can be filled."""
     p = langs.pack(lang)
-    assert set(p.KB) == set(kb.KB)
+    import kb_more
+    import schemes
+    by_id = {s["id"]: s for s in schemes.SCHEMES + schemes.MAYBE}
     for sid, entry in kb.KB.items():
+        if sid in kb_more.KB_MORE:
+            st = by_id[sid].get("state")
+            if st and STATE_LANG.get(st) != lang:
+                assert sid not in p.KB or {"explain", "apply", "docs"} <= set(p.KB[sid])
+                continue
+            # schemes added 9 Nov 2026: the core questions must be answerable in every language
+            assert {"explain", "apply", "docs", "money"} <= set(p.KB[sid]), (lang, sid)
+            continue
         assert set(p.KB[sid]) == set(entry["hi"]), (sid, set(entry["hi"]) ^ set(p.KB[sid]))
         for intent, text in p.KB[sid].items():
             for ph in re.findall(r"\{(\w+)\}", text):

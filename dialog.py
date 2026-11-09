@@ -7,6 +7,7 @@ Then we only ask for what's still missing, and stop as soon as we can decide.
 import langs
 import nlu
 import schemes
+import states
 
 # What to say for each slot. `show` is displayed, `say` is spoken by Timbre.
 Q = {
@@ -31,6 +32,16 @@ Q = {
         "itax": {"show": "Kya aap income tax bharte hain?", "say": "क्या आप इनकम टैक्स भरते हैं?"},
         "epf": {"show": "Kya aapka PF katta hai, ya ESIC card hai?",
                 "say": "क्या आपकी सैलरी से पीएफ कटता है, या ईएसआईसी कार्ड है?"},
+        "state": {"show": "Aap kis rajya mein rehte hain? Jaise UP, Bihar, Maharashtra.",
+                  "say": "आप किस राज्य में रहते हैं? जैसे यूपी, बिहार, महाराष्ट्र।"},
+        "gender": {"show": "Kya aap mahila hain ya purush? Kuch yojanayein sirf mahilaon ke liye hain.",
+                   "say": "क्या आप महिला हैं या पुरुष? कुछ योजनाएँ सिर्फ़ महिलाओं के लिए हैं।"},
+        "biz": {"show": "Kya aap apna naya kaam-dhandha shuru karna chahte hain?",
+                "say": "क्या आप अपना नया काम-धंधा शुरू करना चाहते हैं?"},
+        "state_note": {"show": "{state} ki rajya yojanayein abhi app mein nahi hain, isliye yeh kendra sarkar ki yojanayein "
+                               "hain. Rajya ki yojanaon ke liye nazdeeki CSC par poochhiye.",
+                       "say": "{state} की राज्य योजनाएँ अभी ऐप में नहीं हैं, इसलिए ये केंद्र सरकार की योजनाएँ हैं। राज्य की "
+                              "योजनाओं के लिए नज़दीकी सीएससी केंद्र पर पूछिए।"},
         "daughter_u10": {"show": "Kya ghar mein 10 saal se chhoti beti hai?",
                          "say": "क्या घर में दस साल से छोटी बेटी है?"},
         "retry": {"show": "Maaf kijiye, samajh nahi aaya. ", "say": "माफ़ कीजिए, समझ नहीं आया। "},
@@ -73,6 +84,15 @@ Q = {
         "itax": {"show": "Do you pay income tax?", "say": "Do you pay income tax?"},
         "epf": {"show": "Is PF deducted from your salary, or do you have an ESIC card?",
                 "say": "Is PF deducted from your salary, or do you have an ESIC card?"},
+        "state": {"show": "Which state do you live in?", "say": "Which state do you live in?"},
+        "gender": {"show": "Are you a woman or a man? Some schemes are only for women.",
+                   "say": "Are you a woman or a man? Some schemes are only for women."},
+        "biz": {"show": "Do you want to start a new business of your own?",
+                "say": "Do you want to start a new business of your own?"},
+        "state_note": {"show": "We don't have {state}'s own schemes in the app yet, so these are central government "
+                               "schemes. Ask at your nearest CSC about state schemes.",
+                       "say": "We don't have {state}'s own schemes in the app yet, so these are central government "
+                              "schemes. Ask at your nearest CSC about state schemes."},
         "daughter_u10": {"show": "Do you have a daughter younger than 10?",
                          "say": "Do you have a daughter younger than ten?"},
         "retry": {"show": "Sorry, I didn't catch that. ", "say": "Sorry, I didn't catch that. "},
@@ -119,14 +139,14 @@ def qt(lang, key):
 
 
 MAX_RETRIES = 1        # re-ask a slot once, then move on
-YES_NO_SLOTS = {"itax", "epf", "daughter_u10"}
+YES_NO_SLOTS = {"itax", "epf", "daughter_u10", "biz"}
 EXPLAINABLE = {"itax", "epf"}   # jargon people often ask about; Q["x_itax"] / Q["x_epf"] explain it
 MAX_SPOKEN = 3         # speak the top 3 schemes (keeps the voice reply short), show all on screen
 
 
 def needed_slots(p: dict):
     """Which slots still matter, in the order we'd ask them."""
-    slots = ["age", "occupation"]
+    slots = ["age", "occupation", "state"]
     occ = p.get("occupation")
     if occ == "farmer":
         slots.append("land_ha")
@@ -140,6 +160,12 @@ def needed_slots(p: dict):
         slots.append("epf")
     if age is None or 18 <= age <= 60:
         slots.append("daughter_u10")
+    # only where a women's scheme exists in that state (Ladki Bahin, Gruha Lakshmi, Annapurna Bhandar ...)
+    if p.get("state") in schemes.WOMEN_SCHEME_STATES and (age is None or age >= 18):
+        slots.append("gender")
+    # start a business? (PMEGP, Udyam, Startup India, UP's CM-YUVA)
+    if occ not in ("govt_employee", "farmer") and (age is None or 18 <= age <= 60):
+        slots.append("biz")
     return slots
 
 
@@ -234,10 +260,16 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
 
     eligible, maybe = schemes.match(profile, lang)
     state.update(profile=profile, asked=None, retries=retries)
+    note_show = note_say = ""
+    st = profile.get("state")
+    if st and st not in states.COVERED:
+        ns_, ny_ = qt(lang, "state_note")
+        nm = states.name(st, lang)
+        note_show, note_say = "\n\n" + ns_.format(state=nm), " " + ny_.format(state=nm)
     if not eligible:
         ns, ny = qt(lang, "none")
-        say = ny + " " + " ".join(m["speak"] for m in maybe)
-        return {"state": state, "heard": got, "show": ns, "say": say.strip(),
+        say = ny + " " + " ".join(m["speak"] for m in maybe) + note_say
+        return {"state": state, "heard": got, "show": ns + note_show, "say": say.strip(),
                 "done": True, "eligible": [], "maybe": maybe, "profile": profile, "lang": lang}
 
     n = len(eligible)
@@ -245,6 +277,6 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     if n > MAX_SPOKEN:
         spoken += " " + qt(lang, "more")[1]
     (fs, fy), (os_, oy) = qt(lang, "found"), qt(lang, "outro")
-    say = f'{fy.format(n=spoken_num(n, lang))} {spoken} {oy}'
-    return {"state": state, "heard": got, "show": fs.format(n=n) + "\n\n" + os_,
+    say = f'{fy.format(n=spoken_num(n, lang))} {spoken} {oy}{note_say}'
+    return {"state": state, "heard": got, "show": fs.format(n=n) + "\n\n" + os_ + note_show,
             "say": say, "done": True, "eligible": eligible, "maybe": maybe, "profile": profile, "lang": lang}

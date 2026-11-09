@@ -15,6 +15,7 @@ import unicodedata
 from functools import lru_cache
 
 import langs
+import states
 
 # ---------------------------------------------------------------- helpers
 
@@ -302,8 +303,57 @@ CASH_KEYS = [_nfc(k) for k in ["cash", "kaish", "nakad", "naqad", "haath mein", 
 FIRST_ONLY_YES = {_nfc(w) for w in ("ਹਾਂ", "ਹਾਂਜੀ")}
 
 
+# ---------------------------------------------------------------- gender (asked only when a women's scheme could apply)
+# Always clear, even inside a longer answer:
+FEMALE_SURE = [_nfc(k) for k in ["mahila", "aurat", "woman", "female", "lady", "housewife", "homemaker", "widow",
+                                 "vidhwa", "grihini", "karti hoon", "karti hu", "karti hun", "kamati hoon", "kamati hu",
+                                 "rehti hoon", "rehti hu", "महिला", "औरत", "विधवा", "गृहिणी", "करती हूँ", "करती हूं",
+                                 "कमाती हूँ", "कमाती हूं", "रहती हूँ", "रहती हूं", "कमावते", "இல்லத்தரசி",
+                                 "গৃহবধূ", "গৃহিণী"]]
+MALE_SURE = [_nfc(k) for k in ["karta hoon", "karta hu", "karta hun", "kamata hoon", "kamata hu", "rehta hoon",
+                               "rehta hu", "करता हूँ", "करता हूं", "कमाता हूँ", "कमाता हूं", "रहता हूँ", "रहता हूं",
+                               "कमावतो"]]
+# Only as an answer to "are you a woman or a man?" (some also mean "daughter" / "is"):
+FEMALE_ANSWER = [_nfc(k) for k in ["stree", "ladki", "aurat", "female", "woman", "f", "स्त्री", "लड़की", "बाई",
+                                   "பெண்", "মহিলা", "নারী", "মেয়ে", "স্ত্রী", "स्त्री", "સ્ત્રી", "મહિલા", "બહેન", "ਔਰਤ",
+                                   "ਇਸਤਰੀ", "ਮਹਿਲਾ", "ਜ਼ਨਾਨੀ", "స్త్రీ", "మహిళ", "ఆడ", "ಮಹಿಳೆ", "ಹೆಣ್ಣು", "ಸ್ತ್ರೀ",
+                                   "സ്ത്രീ", "വനിത", "പെണ്ണ്"]]
+MALE_ANSWER = [_nfc(k) for k in ["purush", "aadmi", "mard", "male", "man", "m", "ladka", "पुरुष", "आदमी", "मर्द",
+                                 "लड़का", "ஆண்", "পুরুষ", "ছেলে", "पुरुष", "પુરુષ", "ભાઈ", "ਆਦਮੀ", "ਮਰਦ", "ਪੁਰਸ਼",
+                                 "పురుష", "మగ", "ಪುರುಷ", "ಗಂಡು", "പുരുഷ"]]
+
+
+def detect_gender(text, lang="hi", expecting=False):
+    t = normalize(text)
+    if any(find_kw(t, k) for k in FEMALE_SURE):
+        return "f"
+    if any(find_kw(t, k) for k in MALE_SURE):
+        return "m"
+    if expecting:
+        toks = tokens(t)
+        if any(tok.startswith(k) for tok in toks for k in FEMALE_ANSWER if len(k) > 1) or set(toks) & {"f"}:
+            return "f"
+        if any(tok.startswith(k) for tok in toks for k in MALE_ANSWER if len(k) > 1) or set(toks) & {"m"}:
+            return "m"
+    return None
+
+
+# ---------------------------------------------------------------- wants to start / grow a business
+BIZ_KEYS = [_nfc(k) for k in ["business", "dhandha", "dhanda", "kaam", "kaarobar", "karobar", "dukaan", "dukan",
+                              "udyog", "startup", "start up", "shuru", "kholna", "kholni", "factory", "unit",
+                              "धंधा", "काम", "कारोबार", "व्यापार", "व्यवसाय", "दुकान", "उद्योग", "शुरू", "खोलना", "खोलनी"]]
+BIZ_INTRO = [_nfc(k) for k in ["shuru karna chahta", "shuru karna chahti", "shuru karni hai", "shuru karna hai",
+                               "kholna chahta", "kholna chahti", "kholni hai", "kholna hai", "start a business",
+                               "start my own", "start my business", "open a shop", "naya kaam", "naya dhandha",
+                               "naya business", "apna business", "apna kaam shuru", "apna dhandha", "शुरू करना चाहता",
+                               "शुरू करना चाहती", "शुरू करना है", "खोलना चाहता", "खोलना चाहती", "खोलना है",
+                               "नया काम", "नया धंधा", "अपना काम शुरू", "अपना धंधा"]]
+
+
 def _topic_keys(slot, lang):
     V = vocab(lang)
+    if slot == "biz":
+        return BIZ_KEYS
     if slot == "epf":
         return PF_KEYS + list(V["pf"])
     if slot == "itax":
@@ -482,6 +532,16 @@ def extract(text: str, expecting: str | None = None, lang: str = "hi") -> dict:
         out["occupation"] = occ
         if trade:
             out["trade"] = trade
+    st = states.find_state(text, expecting == "state")
+    if st:
+        out["state"] = st
+    g = detect_gender(text, lang, expecting == "gender")
+    if g:
+        out["gender"] = g
+    if occ == "homemaker" and "gender" not in out:
+        out["gender"] = "f"
+    if any(k in t for k in BIZ_INTRO):
+        out["biz"] = True
 
     for n in nums:
         if n["unit"] == "age" and 14 <= n["value"] <= 110 and "age" not in out:
@@ -523,7 +583,7 @@ def extract(text: str, expecting: str | None = None, lang: str = "hi") -> dict:
                        r"शून्य|कुछ नहीं|कमाई नहीं", t) or any(z in t for z in V["zero_income"]) \
                 or parse_yes_no(text, lang) is False:
             out["income_month"] = 0
-    elif expecting in ("itax", "epf", "daughter_u10") and expecting not in out:
+    elif expecting in ("itax", "epf", "daughter_u10", "biz") and expecting not in out:
         if expecting == "epf" and any(k in t for k in CASH_KEYS):
             out["epf"] = False                       # "मुझे cash मिलता है": paid in cash, so no PF / ESIC
         else:

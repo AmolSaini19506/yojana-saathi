@@ -76,6 +76,7 @@
   .maybe .ask{border-color:var(--saffron);color:#a7650f}
   .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--green);color:#fff;margin-bottom:6px}
   .maybe .tag{background:var(--saffron)}
+  .tag.state,.maybe .tag.state{background:#3d5a80}
   footer{margin-top:22px;font-size:12.5px;color:var(--muted);line-height:1.5}
   .err{color:#a5281b}
 </style>
@@ -146,7 +147,7 @@ const T = {
         nothing:"Kuch sunai nahi diya, dobara boliye.", eligible:"Aap yogya lag rahe hain", check:"Check karein",
         where:"Kahan", docs:"Kagaz", note:"Dhyan dein", why:"Kyun", explain:"🗣️ Samjhaiye aur poochhiye",
         wa:"WhatsApp pe bhejiye", copy:"Copy", copied:"Copy ho gaya ✓", back:"← Sab yojanayein",
-        talking:"Baat ho rahi hai:", explain_me:"Samjhaiye:", rec:"Boliye… khatam hone par dobara tap karein",
+        talking:"Baat ho rahi hai:", state_scheme:"Rajya sarkar", explain_me:"Samjhaiye:", rec:"Boliye… khatam hone par dobara tap karein",
         share_head:"🇮🇳 *Yojana Saathi* ne yeh sarkari yojanayein dhoondhi:", share_also:"Check karein",
         share_tail:"📄 Aadhaar aur bank passbook lekar nazdeeki CSC ya bank jaiye.\n⚠️ Yeh shuruaati jaanch hai, final confirm CSC/bank par karein.",
         sug:[["Kahan apply karein?","kahan apply karun"],["Kaunse kagaz?","kaunse kagaz chahiye"],
@@ -156,17 +157,22 @@ const T = {
         nothing:"Didn't hear anything, try again.", eligible:"Looks eligible", check:"Worth checking",
         where:"Where", docs:"Documents", note:"Note", why:"Why", explain:"🗣️ Explain & ask questions",
         wa:"Send on WhatsApp", copy:"Copy", copied:"Copied ✓", back:"← All schemes",
-        talking:"Talking about:", explain_me:"Explain:", rec:"Listening… tap again when done",
+        talking:"Talking about:", state_scheme:"State govt", explain_me:"Explain:", rec:"Listening… tap again when done",
         share_head:"🇮🇳 *Yojana Saathi* found these government schemes:", share_also:"Also check",
         share_tail:"📄 Take Aadhaar and bank passbook to the nearest CSC or bank.\n⚠️ This is a first check; confirm at a CSC or bank.",
         sug:[["Where to apply?","where do I apply"],["Which documents?","which documents do I need"],
              ["How much?","how much will I get"],["What does it cost?","how much do I have to pay"],["Helpline","helpline number"]] },
 };
+const STATE_NAMES = {UP:"Uttar Pradesh", BR:"Bihar", MH:"Maharashtra", MP:"Madhya Pradesh", RJ:"Rajasthan",
+  WB:"West Bengal", TN:"Tamil Nadu", KA:"Karnataka", GJ:"Gujarat", PB:"Punjab", HR:"Haryana", DL:"Delhi", KL:"Kerala",
+  AP:"Andhra Pradesh", TG:"Telangana", OD:"Odisha", JH:"Jharkhand", CG:"Chhattisgarh", UK:"Uttarakhand",
+  HP:"Himachal Pradesh", JK:"Jammu & Kashmir", AS:"Assam", GA:"Goa"};
 const t = k => (T[lang] && T[lang][k] !== undefined) ? T[lang][k] : T.en[k];
 const EN_SLOT = {
   age: v => `age ${v}`, occupation: v => v.replace(/_/g," "), trade: v => v.replace(/_/g," "),
   land_ha: v => `land ~${(v/0.4047).toFixed(1)} acre`, income_month: v => `₹${Number(v).toLocaleString("en-IN")}/month`,
   itax: v => v ? "pays tax" : "no tax", epf: v => v ? "PF" : "no PF", daughter_u10: v => v ? "daughter <10" : "no daughter <10",
+  state: v => STATE_NAMES[v] || v, gender: v => v === "f" ? "woman" : "man", biz: v => v ? "new business" : "no new business",
 };
 
 // switch the conversation's language (auto-detected from speech, or picked in the menu)
@@ -188,6 +194,7 @@ const SLOT_LABEL = {
   income_month: v => `₹${Number(v).toLocaleString("en-IN")}/mahina`,
   itax: v => v ? "tax bharte hain" : "tax nahi", epf: v => v ? "PF hai" : "PF nahi",
   daughter_u10: v => v ? "beti <10" : "beti <10 nahi",
+  state: v => STATE_NAMES[v] || v, gender: v => v === "f" ? "mahila" : "purush", biz: v => v ? "naya kaam" : "naya kaam nahi",
 };
 
 // ---------------------------------------------------------------- UI helpers
@@ -346,7 +353,7 @@ function renderResults() {
   box.appendChild(share);
   const card = (s, maybe) => {
     const el = document.createElement("div"); el.className = "scheme" + (maybe ? " maybe" : ""); el.dataset.id = s.id;
-    el.innerHTML = `<span class="tag">${maybe ? t("check") : t("eligible")}</span>
+    el.innerHTML = `<span class="tag">${maybe ? t("check") : t("eligible")}</span>${s.state ? ` <span class="tag state">🏛️ ${t("state_scheme")}: ${STATE_NAMES[s.state] || s.state}</span>` : ""}
       <h3>${s.name}<span>${s.name_local || s.name_hi}${s.trade_hi ? " · " + s.trade_hi : ""}</span></h3>
       <div class="benefit">${s.benefit_local || s.benefit}</div>
       ${s.why ? `<div class="why">✓ ${t("why")}: ${s.why}</div>` : ""}

@@ -60,7 +60,7 @@ def test_dont_know_moves_on(text):
 
 def test_dont_know_does_not_hide_a_real_answer():
     st = dialog.turn({}, "", "hi")["state"]
-    r = dialog.turn(st, "main 30 saal ka hoon, company mein naukri karta hoon", "hi")
+    r = dialog.turn(st, "main 30 saal ka hoon, lucknow mein company mein naukri karta hoon", "hi")
     assert r["state"]["asked"] == "income_month"
     r2 = dialog.turn(r["state"], "pata nahi, shayad 12 hazaar", "hi")
     assert r2["state"]["profile"]["income_month"] == 12000

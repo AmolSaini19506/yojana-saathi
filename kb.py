@@ -424,3 +424,9 @@ INTENTS = [
     ("explain", ["samjhao", "samjhaiye", "batao", "bataiye", "kya hai", "explain", "dobara", "phir se", "detail",
                  "समझाइए", "समझाओ", "बताइए", "बताओ", "क्या है", "फिर से", "दोबारा", "what is", "tell me"]),
 ]
+
+# business / farming / state schemes added 9 Nov 2026 (see kb_more.py)
+from kb_more import KB_MORE, SCHEME_NAMES_MORE  # noqa: E402
+
+KB.update(KB_MORE)
+SCHEME_NAMES += SCHEME_NAMES_MORE

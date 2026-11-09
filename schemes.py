@@ -6,6 +6,8 @@ These are simplified screening rules, not a legal eligibility decision: every re
 tells the user to confirm at a CSC, bank or the official portal.
 """
 import langs
+import more_schemes
+import states
 
 UNORGANISED = {"street_vendor", "labourer", "artisan", "other_self_employed"}
 NON_FARM_BUSINESS = {"shopkeeper", "street_vendor", "artisan", "other_self_employed"}
@@ -240,6 +242,11 @@ def _fragments(p, lang):
         "no_pf": "आपका पीएफ़ नहीं कटता" if hi else "you're not in PF or ESIC",
         "daughter": "आपकी बेटी दस साल से छोटी है" if hi else "you have a daughter under ten",
         "senior": "आपकी उम्र सत्तर साल या ज़्यादा है" if hi else "you are seventy or older",
+        "senior60": "आपकी उम्र साठ साल या ज़्यादा है" if hi else "you are sixty or older",
+        "woman": ("आप महिला हैं" if hi else "you are a woman") if p.get("gender") == "f" else None,
+        "biz": ("आप नया काम शुरू करना चाहते हैं" if hi else "you want to start a business") if p.get("biz") else None,
+        "state": (f"आप {states.name(p.get('state'), 'hi')} में रहते हैं" if hi
+                  else f"you live in {states.name(p.get('state'), 'en')}") if p.get("state") else None,
     }
     if occ == "shopkeeper":
         f["unorganised"] = "आप छोटा धंधा करते हैं" if hi else "you run a small business"
@@ -256,7 +263,9 @@ WHY_KEYS = {
     "pm_sym": ["unorganised", "age", "income", "no_pf"], "eshram": ["unorganised", "age", "no_tax"],
     "apy": ["age", "no_tax"], "pmjjby": ["age"], "pmsby": ["age"], "sukanya": ["daughter"],
     "vay_vandana": ["senior"], "pmjay": ["low_income"],
+    **more_schemes.WHY_KEYS,
 }
+WOMEN_SCHEME_STATES = more_schemes.WOMEN_SCHEME_STATES
 
 
 def _pack_fragments(p, pk):
@@ -264,7 +273,10 @@ def _pack_fragments(p, pk):
     W = pk.WHY
     age, inc, occ = p.get("age"), p.get("income_month"), p.get("occupation")
     f = {k: W.get(k) for k in ("farmer", "land", "small_land", "no_tax", "vendor", "artisan", "business",
-                               "unorganised", "no_pf", "daughter", "senior")}
+                               "unorganised", "no_pf", "daughter", "senior", "senior60")}
+    f["woman"] = W.get("woman") if p.get("gender") == "f" else None
+    f["biz"] = W.get("biz") if p.get("biz") else None
+    f["state"] = W["state"].format(state=states.name(p.get("state"), "en")) if (p.get("state") and W.get("state"))         else None
     f["age"] = W["age"].format(age=age) if age is not None else None
     f["income"] = f["low_income"] = W["income"].format(inc=f"{inc:,}") if inc is not None else None
     if occ == "shopkeeper":
@@ -279,7 +291,10 @@ def _pack_fragments(p, pk):
 def why(sid, profile, lang="hi"):
     pk = langs.pack(lang)
     f = _pack_fragments(profile, pk) if pk else _fragments(profile, lang)
-    parts = [f[k] for k in WHY_KEYS.get(sid, []) if f.get(k)]
+    keys = WHY_KEYS.get(sid, [])
+    if sid == "udyam" and profile.get("occupation") not in more_schemes.OWN_BUSINESS:
+        keys = ["biz"]                                  # registering a business they're about to start
+    parts = [f[k] for k in keys if f.get(k)]
     if not parts:
         return ""
     joiner = pk.UI["and"] if pk else (" और " if lang == "hi" else " and ")
@@ -296,8 +311,10 @@ def match(profile: dict, lang: str = "hi"):
             out["trade_hi"] = TRADE_HI[profile["trade"]]
         out["why"] = why(s["id"], profile, lang)
         # fields in the conversation's language: name_local / benefit_local on the card, speak for Timbre
-        if pk:
+        if pk and s["id"] in pk.SCHEMES:
             out["name_local"], out["benefit_local"], out["speak"] = pk.SCHEMES[s["id"]]
+        elif pk:                                        # state scheme of another state: English text
+            out["name_local"], out["benefit_local"], out["speak"] = "", s["benefit"], s["speak_en"]
         elif lang == "hi":
             out["name_local"], out["benefit_local"], out["speak"] = s["name_hi"], s["benefit_hi"], s["speak_hi"]
         else:
@@ -316,8 +333,9 @@ def match(profile: dict, lang: str = "hi"):
                 out["note_local"] = note
         return out
 
-    eligible = [public(s) for s in SCHEMES if _safe(s["rule"], profile)]
-    maybe = [public(s) for s in MAYBE if _safe(s["rule"], profile)]
+    # the person's own state schemes first (usually cash every month), then central ones
+    eligible = [public(s) for s in sorted(SCHEMES, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
+    maybe = [public(s) for s in sorted(MAYBE, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
     # if someone got APY *and* a matched-contribution pension, keep both; they stack
     return eligible, maybe
 
@@ -327,3 +345,8 @@ def _safe(rule, profile):
         return bool(rule(profile))
     except Exception:
         return False
+
+
+# business / farming central schemes and state flagship schemes (see more_schemes.py)
+SCHEMES += more_schemes.CENTRAL + more_schemes.STATE
+MAYBE += more_schemes.CENTRAL_MAYBE + more_schemes.STATE_MAYBE

@@ -78,8 +78,12 @@ def _spell(num, lang):
 
 
 def _facts(sid, lang):
+    """Facts in the conversation's language; a scheme not translated into that language falls back to English."""
     p = langs.pack(lang)
-    return p.KB[sid] if p else KB[sid][lang]
+    if p and sid in p.KB:
+        return p.KB[sid]
+    entry = KB.get(sid, {})
+    return entry.get(lang) or entry.get("en") or {}
 
 
 def _lines(lang):
