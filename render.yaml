@@ -1,8 +1,9 @@
 # One-click deploy on Render: New → Blueprint → pick this repo → paste GNANI_API_KEY when asked.
 services:
   - type: web
-    name: yojana-saathi
+    name: yojana-saathi-sg
     runtime: python
+    region: singapore      # closest Render region to India: ~0.13 s per request vs ~0.31 s from Oregon
     plan: free
     buildCommand: pip install -r requirements.txt
     # threaded workers so the live Prisma WebSocket and normal requests run side by side
@@ -12,6 +13,6 @@ services:
       - key: GNANI_API_KEY
         sync: false          # Render asks you for it; it never goes into GitHub
       - key: RATE_PER_HOUR
-        value: "80"
+        value: "80"          # STT calls per visitor per hour; TTS gets 4x (see app.py)
       - key: PYTHON_VERSION
         value: "3.12.7"

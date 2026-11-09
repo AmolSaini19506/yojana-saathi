@@ -4,6 +4,8 @@
 
 Built for the Great Indian AI Internship Challenge on Gnani AI's speech models.
 
+**Live demo:** https://yojana-saathi-sg.onrender.com (free plan: the first visit after a quiet spell takes ~50 s to wake up)
+
 ```
  You speak ──► Prisma v3.0 live stream (hands-free; detects when you stop talking)
                  │          (falls back to tap-to-record + Prisma REST)
@@ -49,9 +51,11 @@ Open **http://localhost:5000** in Chrome, tap anywhere, then talk.
 Vercel can't keep the live Prisma connection open, so hands-free mode wouldn't work there. Render runs everything.
 
 1. Create a **new GitHub repo** and upload this folder. `.gitignore` keeps your `.env` (and key) out of it.
-2. Go to **render.com** → sign in with GitHub → **New → Blueprint** → pick the repo. It reads `render.yaml`.
+2. Go to **render.com** → sign in with GitHub → **New → Blueprint** → pick the repo (or paste its public URL).
+   It reads `render.yaml` (free plan, Singapore region, the closest to India).
 3. When it asks for `GNANI_API_KEY`, paste your key. Click **Apply**.
-4. In 3–5 minutes you get a link like `https://yojana-saathi.onrender.com`. HTTPS means the mic works on phones too.
+4. In 3–5 minutes you get a link like `https://yojana-saathi-sg.onrender.com`. HTTPS means the mic works on phones too.
+5. Deployed from a public repo URL? Pushes don't auto-deploy: use **Manual Deploy → Deploy latest commit**.
 
 Notes:
 - The free plan sleeps after ~15 minutes idle; the first visit then takes ~50 seconds to wake up.
