@@ -278,22 +278,57 @@ NEG, POS = {_nfc(w) for w in NEG}, {_nfc(w) for w in POS}
 
 # "है" / "hai" / "ji" also appear in questions ("वो क्या होता है?"), so on their own they only count as "yes"
 # when the person isn't asking something.
-WEAK_POS = {_nfc(w) for w in ("hai", "है", "ji", "जी")}
+WEAK_POS = {_nfc(w) for w in (
+    "hai", "है", "ji", "जी",
+    # "is / has / there is" in the other languages: also present in answers that are NOT a yes
+    # ("મને રોકડ મળે છે" = "I get cash"), so on their own they only count in short answers or with the topic word
+    "છે", "ਹੈ", "ਹੈਗਾ", "ਹੈਗੀ", "आहे", "ಇದೆ", "ಇದ್ದಾರೆ", "ಇದ್ದಾಳೆ", "ఉంది", "ఉన్నారు", "ఉన్నాడు", "ആണ്", "ഉണ്ട്",
+    "আছে", "இருக்கு", "இருக்கிறது", "இருக்கிறாள்", "இருக்கா")}
 QUESTION_WORDS = {_nfc(w) for w in ("kya", "kyaa", "क्या", "what", "whats", "kaun", "kaunsa", "कौन", "कौनसा", "kaise",
                                     "कैसे", "kyun", "kyon", "क्यों", "why", "how", "which", "matlab", "मतलब")}
 
 
-def parse_yes_no(text: str, lang: str = "hi"):
+# words that show the answer is about the question asked (so "PF कटता है" / "बेटी है" count as yes)
+DAUGHTER_KEYS = [_nfc(k) for k in ["beti", "bitiya", "ladki", "daughter", "girl", "बेटी", "बिटिया", "लड़की", "लडकी",
+                                   "மகள்", "মেয়ে", "मुलगी", "દીકરી", "ਧੀ", "ਬੇਟੀ", "కూతురు", "ಮಗಳು", "മകൾ"]]
+# paid in cash -> no PF / ESIC
+CASH_KEYS = [_nfc(k) for k in ["cash", "kaish", "nakad", "naqad", "haath mein", "hath mein", "कैश", "नकद", "नक़द",
+                               "हाथ में", "ரொக்கம்", "கேஷ்", "নগদ", "ক্যাশ", "रोख", "कॅश", "રોકડ", "કેશ", "ਨਕਦ", "ਕੈਸ਼",
+                               "నగదు", "క్యాష్", "ನಗದು", "ಕ್ಯಾಶ್", "പണമായി", "ക്യാഷ്"]]
+
+
+# Words that mean "yes" only at the start of an answer. Punjabi "ਹਾਂ" is "yes" but also "am"
+# ("ਕੰਮ ਕਰਦਾ ਹਾਂ" = "I work"), so "ਹਾਂ, PF ਕੱਟਦਾ ਹੈ" is a yes but "... ਕਰਦਾ ਹਾਂ" is not.
+FIRST_ONLY_YES = {_nfc(w) for w in ("ਹਾਂ", "ਹਾਂਜੀ")}
+
+
+def _topic_keys(slot, lang):
+    V = vocab(lang)
+    if slot == "epf":
+        return PF_KEYS + list(V["pf"])
+    if slot == "itax":
+        return TAX_KEYS + list(V["tax"])
+    if slot == "daughter_u10":
+        return DAUGHTER_KEYS
+    return []
+
+
+def parse_yes_no(text: str, lang: str = "hi", slot: str | None = None):
+    """True / False / None. `slot` = the yes/no question just asked: then a weak word like "है" only counts
+    in a short answer ("हाँ है", "beti hai") or when the answer mentions the topic ("PF कटता है")."""
     V = vocab(lang)
     t = normalize(text)
-    toks = set(tokens(t))
+    seq = tokens(t)
+    toks = set(seq)
     if toks & NEG or toks & V["no"] or any(s in t for s in V["no_sub"]):
         return False
-    strong = (toks & (POS - WEAK_POS)) or (toks & V["yes"])
+    yes_words = V["yes"] - WEAK_POS - (FIRST_ONLY_YES if not seq or seq[0] not in FIRST_ONLY_YES else set())
+    strong = (toks & (POS - WEAK_POS)) or (toks & yes_words)
     if strong:
         return True
-    if toks & WEAK_POS and not (toks & QUESTION_WORDS or "?" in (text or "")):
-        return True
+    if toks & (WEAK_POS | V["yes"]) and not (toks & QUESTION_WORDS or "?" in (text or "")):
+        if slot is None or len(tokens(t)) <= 3 or any(k in t for k in _topic_keys(slot, lang)):
+            return True
     return None
 
 
@@ -317,7 +352,7 @@ def clarify(text: str, lang: str = "hi"):
     if any(k in t for k in WHAT_KEYS) or any(k in t for k in V["what"]):
         return "what"
     toks = set(tokens(t))
-    if ("?" in (text or "") or toks & QUESTION_WORDS) and not ((toks & (POS - WEAK_POS)) or (toks & V["yes"])
+    if ("?" in (text or "") or toks & QUESTION_WORDS) and not ((toks & (POS - WEAK_POS)) or (toks & (V["yes"] - WEAK_POS))
                                                               or toks & NEG or toks & V["no"]):
         return "what"             # a question with no yes/no in it
     return None
@@ -489,7 +524,10 @@ def extract(text: str, expecting: str | None = None, lang: str = "hi") -> dict:
                 or parse_yes_no(text, lang) is False:
             out["income_month"] = 0
     elif expecting in ("itax", "epf", "daughter_u10") and expecting not in out:
-        yn = parse_yes_no(text, lang)
-        if yn is not None:
-            out[expecting] = yn
+        if expecting == "epf" and any(k in t for k in CASH_KEYS):
+            out["epf"] = False                       # "मुझे cash मिलता है": paid in cash, so no PF / ESIC
+        else:
+            yn = parse_yes_no(text, lang, slot=expecting)
+            if yn is not None:
+                out[expecting] = yn
     return out

@@ -302,6 +302,18 @@ def match(profile: dict, lang: str = "hi"):
             out["name_local"], out["benefit_local"], out["speak"] = s["name_hi"], s["benefit_hi"], s["speak_hi"]
         else:
             out["name_local"], out["benefit_local"], out["speak"] = s["name_hi"], s["benefit"], s["speak_en"]
+        # "Where / Documents / Note" on the card in the conversation's language, from the same verified facts the
+        # Samjhaiye chat uses (kb.py / the language pack). English keeps the short English fields above.
+        if lang != "en":
+            import ask                                  # local import: ask.py doesn't depend on schemes.py
+            facts = ask._facts(s["id"], lang)
+            if facts.get("apply"):
+                out["apply_local"] = ask._fill(facts["apply"], s["id"], lang)[0]
+            if facts.get("docs"):
+                out["docs_local"] = facts["docs"]
+            note = facts.get("not") or facts.get("who")
+            if note:
+                out["note_local"] = note
         return out
 
     eligible = [public(s) for s in SCHEMES if _safe(s["rule"], profile)]

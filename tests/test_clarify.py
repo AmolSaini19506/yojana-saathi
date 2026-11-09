@@ -98,3 +98,45 @@ def test_packs_explain_and_dont_know(lang, what, dk):
     assert r["state"]["asked"] == "epf" and r["show"].startswith(p.Q["x_epf"]) and "epf" not in r["state"]["profile"]
     r = dialog.turn(st, dk, lang)
     assert r["state"]["profile"]["epf"] is None and r["show"].startswith(p.Q["ok_skip"])
+
+
+# ---------------------------------------------------------------- bug seen live: "मुझे cash मिलता है" saved as "PF hai"
+@pytest.mark.parametrize("text,lang,expected", [
+    ("मुझे cash मिलता है।", "hi", False),           # paid in cash -> no PF
+    ("salary haath mein milti hai", "hi", False),
+    ("મને રોકડ મળે છે", "gu", False),
+    ("எனக்கு ரொக்கம் தான் கிடைக்கும்", "ta", False),
+    ("PF कटता है", "hi", True), ("हाँ है", "hi", True), ("है", "hi", True), ("હા, PF કપાય છે", "gu", True),
+    ("यह कर्मचारी की factory है।", "hi", None),     # not an answer: ask again rather than guess "yes"
+    ("ਮੈਂ ਫੈਕਟਰੀ ਵਿੱਚ ਕੰਮ ਕਰਦਾ ਹਾਂ ਉੱਥੇ ਬਹੁਤ ਲੋਕ ਹੈ", "pa", None),
+])
+def test_pf_answer(text, lang, expected):
+    assert nlu.extract(text, expecting="epf", lang=lang).get("epf") is expected
+
+
+@pytest.mark.parametrize("text,lang", [("ghar mein ek beti hai", "hi"), ("हाँ, मेरी एक बेटी है", "hi"),
+                                       ("வீட்டில் ஒரு மகள் இருக்கிறாள்", "ta"), ("ఉంది", "te")])
+def test_daughter_yes_long_answers(text, lang):
+    assert nlu.extract(text, expecting="daughter_u10", lang=lang).get("daughter_u10") is True
+
+
+def test_screenshot_conversation_keeps_cash_worker_schemes():
+    st = {"profile": {"age": 30, "occupation": "labourer", "income_month": 12000, "itax": False},
+          "asked": "epf", "retries": {}}
+    r = dialog.turn(st, "मुझे cash मिलता है।", "hi")
+    assert r["state"]["profile"]["epf"] is False
+    while not r["done"]:
+        r = dialog.turn(r["state"], "nahi", "hi")
+    ids = [s["id"] for s in r["eligible"]]
+    assert "eshram" in ids and "pm_sym" in ids, ids
+
+
+# ---------------------------------------------------------------- scheme cards in the conversation's language
+@pytest.mark.parametrize("lang", [x for x in langs.ALL if x != "en"])
+def test_card_fields_in_users_language(lang):
+    import schemes
+    e, _ = schemes.match({"age": 30, "occupation": "labourer", "income_month": 12000, "itax": False, "epf": False}, lang)
+    for c in e:
+        assert c["apply_local"] and c["docs_local"] and c["note_local"], (lang, c["id"])
+        assert "{web}" not in c["apply_local"] and "{helpline}" not in c["apply_local"]
+        assert langs.script_counts(c["docs_local"])["latin"] < len(c["docs_local"]) / 2      # not English

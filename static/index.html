@@ -350,7 +350,7 @@ function renderResults() {
       <h3>${s.name}<span>${s.name_local || s.name_hi}${s.trade_hi ? " · " + s.trade_hi : ""}</span></h3>
       <div class="benefit">${s.benefit_local || s.benefit}</div>
       ${s.why ? `<div class="why">✓ ${t("why")}: ${s.why}</div>` : ""}
-      <dl><dt>${t("where")}</dt><dd>${s.apply}</dd><dt>${t("docs")}</dt><dd>${s.docs}</dd><dt>${t("note")}</dt><dd>${s.note}</dd></dl>
+      <dl><dt>${t("where")}</dt><dd>${s.apply_local || s.apply}</dd><dt>${t("docs")}</dt><dd>${s.docs_local || s.docs}</dd><dt>${t("note")}</dt><dd>${s.note_local || s.note}</dd></dl>
       <button class="ask">${t("explain")}</button>`;
     el.querySelector(".ask").onclick = () => explain(s.id);
     box.appendChild(el);
@@ -363,11 +363,11 @@ function renderResults() {
 function shareText() {
   let s = t("share_head") + "\n\n";
   results.eligible.forEach((c, i) => {
-    s += `${i + 1}. *${c.name}* (${c.name_local || c.name_hi})\n   ${c.benefit_local || c.benefit}\n   📍 ${c.apply}\n`;
+    s += `${i + 1}. *${c.name}* (${c.name_local || c.name_hi})\n   ${c.benefit_local || c.benefit}\n   📍 ${c.apply_local || c.apply}\n`;
     if (c.why) s += `   ✓ ${c.why}\n`;
     s += "\n";
   });
-  results.maybe.forEach(c => { s += `🔎 ${t("share_also")}: *${c.name}*: ${c.apply}\n\n`; });
+  results.maybe.forEach(c => { s += `🔎 ${t("share_also")}: *${c.name}*: ${c.apply_local || c.apply}\n\n`; });
   return s + t("share_tail");
 }
 
