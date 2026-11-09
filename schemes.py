@@ -268,7 +268,7 @@ WHY_KEYS = {
 WOMEN_SCHEME_STATES = more_schemes.WOMEN_SCHEME_STATES
 
 
-def _pack_fragments(p, pk):
+def _pack_fragments(p, pk, lang="en"):
     """Same reasons as _fragments(), from a language pack's WHY templates."""
     W = pk.WHY
     age, inc, occ = p.get("age"), p.get("income_month"), p.get("occupation")
@@ -276,7 +276,8 @@ def _pack_fragments(p, pk):
                                "unorganised", "no_pf", "daughter", "senior", "senior60")}
     f["woman"] = W.get("woman") if p.get("gender") == "f" else None
     f["biz"] = W.get("biz") if p.get("biz") else None
-    f["state"] = W["state"].format(state=states.name(p.get("state"), "en")) if (p.get("state") and W.get("state"))         else None
+    f["state"] = (W["state"].format(state=states.name(p.get("state"), lang))
+                  if (p.get("state") and W.get("state")) else None)
     f["age"] = W["age"].format(age=age) if age is not None else None
     f["income"] = f["low_income"] = W["income"].format(inc=f"{inc:,}") if inc is not None else None
     if occ == "shopkeeper":
@@ -290,7 +291,7 @@ def _pack_fragments(p, pk):
 
 def why(sid, profile, lang="hi"):
     pk = langs.pack(lang)
-    f = _pack_fragments(profile, pk) if pk else _fragments(profile, lang)
+    f = _pack_fragments(profile, pk, lang) if pk else _fragments(profile, lang)
     keys = WHY_KEYS.get(sid, [])
     if sid == "udyam" and profile.get("occupation") not in more_schemes.OWN_BUSINESS:
         keys = ["biz"]                                  # registering a business they're about to start

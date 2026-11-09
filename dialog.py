@@ -264,8 +264,8 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     st = profile.get("state")
     if st and st not in states.COVERED:
         ns_, ny_ = qt(lang, "state_note")
-        nm = states.name(st, lang)
-        note_show, note_say = "\n\n" + ns_.format(state=nm), " " + ny_.format(state=nm)
+        note_show = "\n\n" + ns_.format(state=states.name(st, lang, spoken=False))
+        note_say = " " + ny_.format(state=states.name(st, lang))
     if not eligible:
         ns, ny = qt(lang, "none")
         say = ny + " " + " ".join(m["speak"] for m in maybe) + note_say

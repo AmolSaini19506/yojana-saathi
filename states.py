@@ -92,8 +92,24 @@ def find_state(text, expecting=False):
     return None
 
 
-def name(code, lang="en"):
+# State names in the other scripts (home states of each language, plus the covered states where common)
+NATIVE = {
+    "ta": {"TN": "தமிழ்நாடு", "KA": "கர்நாடகா", "KL": "கேரளா", "MH": "மகாராஷ்டிரா", "AP": "ஆந்திரப் பிரதேசம்"},
+    "bn": {"WB": "পশ্চিমবঙ্গ", "BR": "বিহার", "AS": "আসাম", "OD": "ওড়িশা", "JH": "ঝাড়খণ্ড", "UP": "উত্তরপ্রদেশ"},
+    "kn": {"KA": "ಕರ್ನಾಟಕ", "MH": "ಮಹಾರಾಷ್ಟ್ರ", "TN": "ತಮಿಳುನಾಡು", "AP": "ಆಂಧ್ರಪ್ರದೇಶ", "TG": "ತೆಲಂಗಾಣ"},
+    "te": {"AP": "ఆంధ్రప్రదేశ్", "TG": "తెలంగాణ", "KA": "కర్ణాటక", "TN": "తమిళనాడు", "MH": "మహారాష్ట్ర"},
+    "ml": {"KL": "കേരളം", "TN": "തമിഴ്നാട്", "KA": "കർണാടക"},
+    "gu": {"GJ": "ગુજરાત", "MH": "મહારાષ્ટ્ર", "RJ": "રાજસ્થાન", "MP": "મધ્ય પ્રદેશ"},
+    "pa": {"PB": "ਪੰਜਾਬ", "HR": "ਹਰਿਆਣਾ", "DL": "ਦਿੱਲੀ", "RJ": "ਰਾਜਸਥਾਨ", "UP": "ਉੱਤਰ ਪ੍ਰਦੇਸ਼"},
+}
+
+
+def name(code, lang="en", spoken=True):
+    """State name for text in `lang`. Hindi on-screen text is Roman Hinglish, so it gets the English name
+    (spoken=False); everything Timbre reads gets the name in that language's script."""
     if code not in STATES:
         return ""
     en, hi, _ = STATES[code]
-    return hi if lang in ("hi", "mr") else en
+    if lang == "mr" or (lang == "hi" and spoken):
+        return hi
+    return NATIVE.get(lang, {}).get(code, en)

@@ -136,3 +136,13 @@ def test_new_questions_exist_in_every_language(lang):
         show, say = dialog.qt(lang, key)
         assert show and say
     assert "{state}" in dialog.qt(lang, "state_note")[0]
+
+
+def test_state_names_in_each_language():
+    assert states.name("TN", "ta") == "தமிழ்நாடு" and states.name("WB", "bn") == "পশ্চিমবঙ্গ"
+    assert states.name("GJ", "hi") == "गुजरात" and states.name("GJ", "hi", spoken=False) == "Gujarat"
+    r = talk("Main 35 saal ka hoon, Ahmedabad mein dukaan hai, 15 hazaar mahine", {})
+    assert "Gujarat ki rajya" in r["show"] and "गुजरात की राज्य" in r["say"]
+    p = {"age": 40, "occupation": "artisan", "gender": "f", "income_month": 10000, "itax": False, "state": "TN"}
+    e, _ = schemes.match(p, "ta")
+    assert "தமிழ்நாடு" in e[0]["why"]
