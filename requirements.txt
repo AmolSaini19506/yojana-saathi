@@ -1,0 +1,7 @@
+flask>=3.0
+requests>=2.31
+# hands-free live mode (optional; app falls back to tap-to-record without these)
+flask-sock>=0.7
+websockets>=13
+# production server (Render / Railway)
+gunicorn>=22

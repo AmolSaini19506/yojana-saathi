@@ -1,0 +1,17 @@
+# One-click deploy on Render: New → Blueprint → pick this repo → paste GNANI_API_KEY when asked.
+services:
+  - type: web
+    name: yojana-saathi
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # threaded workers so the live Prisma WebSocket and normal requests run side by side
+    startCommand: gunicorn app:app -k gthread --threads 16 -w 1 -b 0.0.0.0:$PORT --timeout 120
+    healthCheckPath: /api/health
+    envVars:
+      - key: GNANI_API_KEY
+        sync: false          # Render asks you for it; it never goes into GitHub
+      - key: RATE_PER_HOUR
+        value: "80"
+      - key: PYTHON_VERSION
+        value: "3.12.7"

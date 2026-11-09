@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yojana Saathi · योजना साथी</title>
+<style>
+  :root{
+    --bg:#f6f1e7; --card:#fffdf8; --ink:#1f2a24; --muted:#5d6b63; --line:#e4dccb;
+    --green:#1f6b4a; --green-2:#2f8a62; --saffron:#e08a1e; --soft:#eef5ef; --warn:#fff4e2; --wa:#1fa855;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Noto Sans","Noto Sans Devanagari","Noto Sans Bengali","Noto Sans Gurmukhi","Noto Sans Gujarati",
+       "Noto Sans Tamil","Noto Sans Telugu","Noto Sans Kannada","Noto Sans Malayalam",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h1{margin:0;font-size:26px;letter-spacing:-.3px}
+  h1 small{display:block;font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:2px}
+  .langs select{appearance:none;-webkit-appearance:none;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235d6b63'/%3E%3C/svg%3E") no-repeat right 12px center;
+                border:1px solid var(--line);border-radius:999px;padding:8px 32px 8px 14px;font-size:14px;color:var(--ink);cursor:pointer;max-width:100%}
+  .langs select:focus{outline:2px solid var(--green-2)}
+  .beta{display:none;margin-top:10px;font-size:12.5px;line-height:1.45;color:#8a5a12;background:var(--warn);border:1px solid #f1d6a8;border-radius:10px;padding:7px 10px}
+  .beta.on{display:block}
+  .badge{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--green);background:var(--soft);
+         border:1px solid #cfe3d6;border-radius:999px;padding:4px 10px;margin-top:10px}
+  .chat{margin-top:18px;display:flex;flex-direction:column;gap:10px;min-height:120px}
+  .msg{max-width:88%;padding:11px 14px;border-radius:16px;line-height:1.5;font-size:16px;white-space:pre-wrap}
+  .bot{background:var(--card);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+  .me{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .me.live{opacity:.75}
+  .me .meta{color:#cfe8da}
+  .meta{display:block;font-size:11.5px;color:var(--muted);margin-top:5px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{font-size:12px;background:var(--soft);color:var(--green);border:1px solid #cfe3d6;border-radius:999px;padding:2px 9px}
+  .controls{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 78%,transparent);padding:16px 0 6px;margin-top:10px}
+  .focusbar{display:none;align-items:center;justify-content:space-between;gap:8px;background:var(--green);color:#fff;
+            border-radius:14px;padding:9px 12px;margin-bottom:10px;font-size:14.5px}
+  .focusbar.on{display:flex}
+  .focusbar button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:999px;padding:5px 11px;cursor:pointer;font-size:13px}
+  .suggest{display:none;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+  .suggest.on{display:flex}
+  .suggest button{border:1px solid #cfe3d6;background:var(--soft);color:var(--green);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer}
+  .microw{display:flex;flex-direction:column;align-items:center;gap:8px}
+  #mic{width:84px;height:84px;border-radius:50%;border:0;background:var(--green);color:#fff;cursor:pointer;
+       box-shadow:0 6px 18px rgba(31,107,74,.35);display:grid;place-items:center;transition:transform .1s}
+  #mic:active{transform:scale(.96)}
+  #mic svg{width:36px;height:36px}
+  #mic.rec{background:#c0392b;animation:pulse 1.2s infinite}
+  #mic.busy{background:#9aa79f;cursor:wait;box-shadow:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}70%{box-shadow:0 0 0 18px rgba(192,57,43,0)}100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}}
+  #status{font-size:14px;color:var(--muted);min-height:20px;text-align:center}
+  .opts{display:flex;gap:14px;justify-content:center;font-size:12.5px;color:var(--muted)}
+  .opts label{display:flex;gap:5px;align-items:center;cursor:pointer}
+  .typerow{display:flex;gap:8px;margin-top:10px}
+  .typerow input{flex:1;padding:11px 13px;border-radius:12px;border:1px solid var(--line);font-size:15px;background:var(--card)}
+  .typerow button,.ghost{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:14px}
+  .results{margin-top:14px;display:grid;gap:10px;padding-bottom:40px}
+  .sharebar{display:flex;gap:8px;flex-wrap:wrap}
+  .sharebar button{flex:1;min-width:150px;padding:11px;border-radius:12px;border:0;font-size:14.5px;cursor:pointer}
+  .wa{background:var(--wa);color:#fff}
+  .copy{background:var(--card);border:1px solid var(--line)!important;color:var(--ink)}
+  .scheme{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--green);border-radius:14px;padding:13px 15px}
+  .scheme.maybe{border-left-color:var(--saffron);background:var(--warn)}
+  .scheme.active{outline:3px solid var(--green-2)}
+  .scheme h3{margin:0;font-size:17px}
+  .scheme h3 span{font-weight:500;color:var(--muted);font-size:14px;margin-left:6px}
+  .scheme .benefit{margin:6px 0 6px;font-size:15.5px}
+  .scheme .why{font-size:13.5px;color:var(--green);background:var(--soft);border-radius:8px;padding:6px 9px;margin-bottom:8px}
+  .maybe .why{color:#8a5a12;background:#fdebcf}
+  .scheme dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:3px 10px;font-size:13.5px;color:var(--muted)}
+  .scheme dt{font-weight:600;color:var(--ink)}
+  .scheme dd{margin:0}
+  .scheme .ask{margin-top:10px;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--green);background:#fff;
+               color:var(--green);font-weight:600;font-size:14.5px;cursor:pointer}
+  .maybe .ask{border-color:var(--saffron);color:#a7650f}
+  .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--green);color:#fff;margin-bottom:6px}
+  .maybe .tag{background:var(--saffron)}
+  footer{margin-top:22px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .err{color:#a5281b}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Yojana Saathi <small>योजना साथी · Bol ke jaaniye, aapke liye kaunsi sarkari yojana hai · 10 bhashayein</small></h1>
+      <div class="badge">🎙️ Speech-to-text: Gnani Prisma · 🔊 Voice: Gnani Timbre</div>
+    </div>
+    <label class="langs" aria-label="Language">
+      <select id="langsel">
+        <option value="auto">🌐 Auto · koi bhi bhasha</option>
+        <option value="hi">हिंदी / Hinglish</option>
+        <option value="en">English</option>
+      </select>
+    </label>
+  </header>
+  <div id="beta" class="beta" role="note"></div>
+
+  <div id="chat" class="chat" aria-live="polite"></div>
+  <div id="results" class="results"></div>
+
+  <div class="controls">
+    <div id="focusbar" class="focusbar"><span id="focusname"></span><button id="unfocus">← Sab yojanayein</button></div>
+    <div id="suggest" class="suggest"></div>
+    <div class="microw">
+      <button id="mic" aria-label="Tap to speak">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+      </button>
+      <div id="status">Tap karke boliye · Tap to speak</div>
+      <div class="opts"><label id="hfwrap" style="display:none"><input type="checkbox" id="handsfree" checked> Hands-free (live Prisma)</label></div>
+    </div>
+    <div class="typerow">
+      <input id="text" placeholder="Ya yahan likhiye… (or type here)" autocomplete="off">
+      <button id="send">Bhejo</button>
+      <button id="restart" class="ghost" title="Start over">↺</button>
+    </div>
+  </div>
+
+  <footer>
+    Yeh sirf ek shuruaati jaanch hai. Final eligibility CSC, bank ya sarkari portal par confirm karein.
+    This is a screening tool, not an official decision. Demo uses only made-up voices and data.
+  </footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let lang = "hi", state = {}, busy = false, currentAudio = null;
+let auto = true, langKnown = false, lastDetected = null;  // auto: answer in whatever language the person speaks
+let LANGS = {hi:{code:"hi-IN"}, en:{code:"en-IN"}};
+let health = {}, results = null, focus = null;          // results = {eligible, maybe} once the checker finishes
+
+const T = {
+  hi: { tap:"Tap karke boliye", answer:"Tap karke jawab dijiye", think:"Soch raha hoon…", speak:"Bol raha hoon… 🔊",
+        listen:"Sun raha hoon… boliye", heard:"Samajh raha hoon (Prisma)…", ask:"Kuch bhi poochhiye, ya kisi yojana pe 'Samjhaiye' dabaiye",
+        nothing:"Kuch sunai nahi diya, dobara boliye.", eligible:"Aap yogya lag rahe hain", check:"Check karein",
+        where:"Kahan", docs:"Kagaz", note:"Dhyan dein", why:"Kyun", explain:"🗣️ Samjhaiye aur poochhiye",
+        wa:"WhatsApp pe bhejiye", copy:"Copy", copied:"Copy ho gaya ✓", back:"← Sab yojanayein",
+        talking:"Baat ho rahi hai:", explain_me:"Samjhaiye:", rec:"Boliye… khatam hone par dobara tap karein",
+        share_head:"🇮🇳 *Yojana Saathi* ne yeh sarkari yojanayein dhoondhi:", share_also:"Check karein",
+        share_tail:"📄 Aadhaar aur bank passbook lekar nazdeeki CSC ya bank jaiye.\n⚠️ Yeh shuruaati jaanch hai, final confirm CSC/bank par karein.",
+        sug:[["Kahan apply karein?","kahan apply karun"],["Kaunse kagaz?","kaunse kagaz chahiye"],
+             ["Kitna milega?","kitna paisa milega"],["Kitna jama karna?","kitna jama karna padega"],["Helpline","helpline number"]] },
+  en: { tap:"Tap to speak", answer:"Tap to answer", think:"Thinking…", speak:"Speaking… 🔊",
+        listen:"Listening… go ahead", heard:"Transcribing (Prisma)…", ask:"Ask anything, or tap 'Explain' on a scheme",
+        nothing:"Didn't hear anything, try again.", eligible:"Looks eligible", check:"Worth checking",
+        where:"Where", docs:"Documents", note:"Note", why:"Why", explain:"🗣️ Explain & ask questions",
+        wa:"Send on WhatsApp", copy:"Copy", copied:"Copied ✓", back:"← All schemes",
+        talking:"Talking about:", explain_me:"Explain:", rec:"Listening… tap again when done",
+        share_head:"🇮🇳 *Yojana Saathi* found these government schemes:", share_also:"Also check",
+        share_tail:"📄 Take Aadhaar and bank passbook to the nearest CSC or bank.\n⚠️ This is a first check; confirm at a CSC or bank.",
+        sug:[["Where to apply?","where do I apply"],["Which documents?","which documents do I need"],
+             ["How much?","how much will I get"],["What does it cost?","how much do I have to pay"],["Helpline","helpline number"]] },
+};
+const t = k => (T[lang] && T[lang][k] !== undefined) ? T[lang][k] : T.en[k];
+const EN_SLOT = {
+  age: v => `age ${v}`, occupation: v => v.replace(/_/g," "), trade: v => v.replace(/_/g," "),
+  land_ha: v => `land ~${(v/0.4047).toFixed(1)} acre`, income_month: v => `₹${Number(v).toLocaleString("en-IN")}/month`,
+  itax: v => v ? "pays tax" : "no tax", epf: v => v ? "PF" : "no PF", daughter_u10: v => v ? "daughter <10" : "no daughter <10",
+};
+
+// switch the conversation's language (auto-detected from speech, or picked in the menu)
+function applyLang(l) {
+  if (!l || !LANGS[l]) return;
+  if (l !== lang) { lang = l; document.documentElement.lang = l; }
+  const b = $("#beta"), info = LANGS[l];
+  b.classList.toggle("on", !!info.beta);
+  b.textContent = info.beta ? `🧪 ${info.ui.beta}  ·  Beta: translated by AI, not yet checked by a native speaker. Amounts and rules are the same verified facts.` : "";
+  $("#unfocus").textContent = t("back");
+  if (focus) setFocus(focus);
+}
+
+const SLOT_LABEL = {
+  age: v => `umar ${v}`, occupation: v => ({farmer:"kisan", shopkeeper:"dukaandaar", street_vendor:"thela/rehdi",
+    labourer:"mazdoor", artisan:"karigar", salaried_private:"private naukri", govt_employee:"sarkari naukri",
+    homemaker:"grihini", student:"student", unemployed:"berozgar"}[v] || v),
+  trade: v => v.replace(/_/g," "), land_ha: v => `zameen ~${(v/0.4047).toFixed(1)} acre`,
+  income_month: v => `₹${Number(v).toLocaleString("en-IN")}/mahina`,
+  itax: v => v ? "tax bharte hain" : "tax nahi", epf: v => v ? "PF hai" : "PF nahi",
+  daughter_u10: v => v ? "beti <10" : "beti <10 nahi",
+};
+
+// ---------------------------------------------------------------- UI helpers
+function addMsg(text, who, extra) {
+  const d = document.createElement("div");
+  d.className = "msg " + who; d.textContent = text;
+  if (extra) d.appendChild(extra);
+  $("#chat").appendChild(d);
+  d.scrollIntoView({behavior:"smooth", block:"end"});
+  return d;
+}
+function chips(obj) {
+  const keys = Object.keys(obj || {}).filter(k => SLOT_LABEL[k] && obj[k] !== null);
+  if (!keys.length) return null;
+  const L = lang === "hi" ? SLOT_LABEL : EN_SLOT;
+  const w = document.createElement("div"); w.className = "chips";
+  keys.forEach(k => { const c = document.createElement("span"); c.className = "chip"; c.textContent = "✓ " + L[k](obj[k]); w.appendChild(c); });
+  return w;
+}
+function setStatus(s, err) { $("#status").innerHTML = err ? `<span class="err">${s}</span>` : s; }
+function setMic(mode) { const m = $("#mic"); m.classList.remove("rec","busy"); if (mode) m.classList.add(mode); }
+const allCards = () => results ? [...(results.eligible||[]), ...(results.maybe||[])] : [];
+const nameOf = id => (allCards().find(c => c.id === id) || {}).name || id;
+
+function setFocus(id) {
+  focus = id;
+  $("#focusbar").classList.toggle("on", !!id);
+  $("#suggest").classList.toggle("on", !!id);
+  $("#focusname").textContent = id ? `💬 ${t("talking")} ${nameOf(id)}` : "";
+  $("#unfocus").textContent = t("back");
+  document.querySelectorAll(".scheme").forEach(el => el.classList.toggle("active", el.dataset.id === id));
+  const sg = $("#suggest"); sg.innerHTML = "";
+  if (id) t("sug").forEach(([label, q]) => {
+    const b = document.createElement("button"); b.textContent = label;
+    b.onclick = () => { if (!busy) { stopListening(true); addMsg(label, "me"); handleUserText(q); } };
+    sg.appendChild(b);
+  });
+}
+
+// ---------------------------------------------------------------- voice out: Timbre (browser voice only as fallback)
+async function speak(text) {
+  if (!text) return;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  setStatus(t("speak"));
+  try {
+    const r = await fetch("/api/tts", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text, lang})});
+    if (r.status === 200) {
+      currentAudio = new Audio(URL.createObjectURL(await r.blob()));
+      await new Promise(res => { currentAudio.onended = res; currentAudio.onerror = res; currentAudio.play().catch(res); });
+      return;
+    }
+    if (r.status !== 204) console.warn("Timbre error", await r.text());
+  } catch (e) { console.warn(e); }
+  if ("speechSynthesis" in window) await new Promise(res => {
+    const u = new SpeechSynthesisUtterance(text); u.lang = (LANGS[lang] || {}).code || "hi-IN"; u.onend = res; u.onerror = res; speechSynthesis.speak(u);
+  });
+}
+function stopSpeaking() { if (currentAudio) currentAudio.pause(); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+
+// ---------------------------------------------------------------- brain: checker turns, then scheme Q&A
+async function handleUserText(text, bubble) {
+  if (busy) return;
+  stopListening(true);                                // typed text / chip tapped while mic was open: drop the mic
+  busy = true; setMic("busy"); setStatus(t("think"));
+  let reply;
+  if (!results) {                                     // still answering the checker's questions
+    const before = JSON.stringify(state.profile || {});
+    const r = await fetch("/api/turn", {method:"POST", headers:{"Content-Type":"application/json"},
+                                        body: JSON.stringify({state, text, lang, auto, detected: lastDetected})});
+    reply = await r.json(); state = reply.state;
+    if (reply.lang) { applyLang(reply.lang); langKnown = true; }
+    const prev = JSON.parse(before), fresh = {};
+    Object.keys(state.profile || {}).forEach(k => { if (JSON.stringify(state.profile[k]) !== JSON.stringify(prev[k])) fresh[k] = state.profile[k]; });
+    const c = chips(fresh); if (c && bubble) bubble.appendChild(c);
+    addMsg(reply.show, "bot");
+    if (reply.done) { results = {eligible: reply.eligible || [], maybe: reply.maybe || []}; renderResults(); }
+  } else {                                            // asking about schemes
+    reply = await askAbout(text);
+  }
+  await speak(reply.say);
+  lastDetected = null;
+  busy = false; setMic();
+  setStatus(results ? t("ask") : t("answer"));
+  maybeAutoListen();
+}
+
+async function askAbout(text, forceFocus) {
+  const cards = allCards().map(c => ({id:c.id, name:c.name, why:c.why}));
+  const r = await fetch("/api/ask", {method:"POST", headers:{"Content-Type":"application/json"},
+                                     body: JSON.stringify({text, lang, auto, detected: text ? lastDetected : null,
+                                                           focus: forceFocus || focus, eligible: cards})});
+  const j = await r.json();
+  if (j.lang) applyLang(j.lang);
+  setFocus(j.focus);
+  addMsg(j.show, "bot");
+  return j;
+}
+
+async function explain(id) {
+  if (busy) return;
+  stopSpeaking(); stopListening(true);
+  busy = true; setMic("busy");
+  setFocus(id);
+  addMsg(`${t("explain_me")} ${nameOf(id)}`, "me");
+  const j = await askAbout("", id);
+  window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});
+  await speak(j.say);
+  busy = false; setMic(); setStatus(t("ask"));
+  maybeAutoListen();
+}
+
+// ---------------------------------------------------------------- results + share
+function renderResults() {
+  const box = $("#results"); box.innerHTML = "";
+  const share = document.createElement("div"); share.className = "sharebar";
+  share.innerHTML = `<button class="wa">🟢 ${t("wa")}</button><button class="copy">📋 ${t("copy")}</button>`;
+  share.querySelector(".wa").onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText()), "_blank");
+  share.querySelector(".copy").onclick = async e => {
+    try { await navigator.clipboard.writeText(shareText()); e.target.textContent = t("copied"); } catch { e.target.textContent = "✗"; }
+  };
+  box.appendChild(share);
+  const card = (s, maybe) => {
+    const el = document.createElement("div"); el.className = "scheme" + (maybe ? " maybe" : ""); el.dataset.id = s.id;
+    el.innerHTML = `<span class="tag">${maybe ? t("check") : t("eligible")}</span>
+      <h3>${s.name}<span>${s.name_local || s.name_hi}${s.trade_hi ? " · " + s.trade_hi : ""}</span></h3>
+      <div class="benefit">${s.benefit_local || s.benefit}</div>
+      ${s.why ? `<div class="why">✓ ${t("why")}: ${s.why}</div>` : ""}
+      <dl><dt>${t("where")}</dt><dd>${s.apply}</dd><dt>${t("docs")}</dt><dd>${s.docs}</dd><dt>${t("note")}</dt><dd>${s.note}</dd></dl>
+      <button class="ask">${t("explain")}</button>`;
+    el.querySelector(".ask").onclick = () => explain(s.id);
+    box.appendChild(el);
+  };
+  results.eligible.forEach(s => card(s, false));
+  results.maybe.forEach(s => card(s, true));
+  box.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function shareText() {
+  let s = t("share_head") + "\n\n";
+  results.eligible.forEach((c, i) => {
+    s += `${i + 1}. *${c.name}* (${c.name_local || c.name_hi})\n   ${c.benefit_local || c.benefit}\n   📍 ${c.apply}\n`;
+    if (c.why) s += `   ✓ ${c.why}\n`;
+    s += "\n";
+  });
+  results.maybe.forEach(c => { s += `🔎 ${t("share_also")}: *${c.name}*: ${c.apply}\n\n`; });
+  return s + t("share_tail");
+}
+
+// ---------------------------------------------------------------- voice in, mode A: hands-free streaming (Prisma WebSocket)
+let live = null;   // {ws, ctx, stream, proc, text, bubble, timer, idle, committing}
+
+function maybeAutoListen() {
+  if (health.streaming && $("#handsfree").checked && (!results || focus)) startListening();
+}
+
+function floatTo16k(input, rate) {
+  const ratio = rate / 16000, n = Math.floor(input.length / ratio), out = new Int16Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = input[Math.floor(i * ratio)];
+    out[i] = Math.max(-32768, Math.min(32767, x * 32767));
+  }
+  return out;
+}
+
+async function startStreaming() {
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${proto}://${location.host}/ws/stt?lang=${lang}&auto=${auto ? 1 : 0}&known=${langKnown ? 1 : 0}`);
+  ws.binaryType = "arraybuffer";
+  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error("ws")); setTimeout(() => rej(new Error("timeout")), 6000); });
+  const stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}});
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = ctx.createMediaStreamSource(stream);
+  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  let pending = new Int16Array(0);
+  proc.onaudioprocess = e => {
+    if (ws.readyState !== 1) return;
+    const pcm = floatTo16k(e.inputBuffer.getChannelData(0), ctx.sampleRate);
+    const merged = new Int16Array(pending.length + pcm.length); merged.set(pending); merged.set(pcm, pending.length);
+    let off = 0;
+    while (merged.length - off >= 512) { ws.send(merged.slice(off, off + 512).buffer); off += 512; }   // 1024-byte frames
+    pending = merged.slice(off);
+  };
+  src.connect(proc); proc.connect(ctx.destination);
+  live = {ws, ctx, stream, proc, text: "", bubble: null, timer: null, idle: null, committing: false};
+  live.idle = setTimeout(() => { if (live && !live.text) { stopListening(true); setStatus(t("nothing"), true); } }, 12000);
+  ws.onmessage = ev => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if (!live) return;
+    if (m.type === "speech_start") { clearTimeout(live.timer); setStatus(t("listen")); }
+    else if (m.type === "processing") setStatus(t("heard"));
+    else if (m.type === "transcript" && m.text) {
+      live.text = (live.text + " " + m.text).trim();
+      if (!live.bubble) { live.bubble = addMsg("", "me live"); }
+      live.bubble.firstChild ? (live.bubble.firstChild.nodeValue = live.text) : live.bubble.prepend(document.createTextNode(live.text));
+      if (m.detected_language_code) lastDetected = m.detected_language_code;
+      live.meta = `Prisma live${m.detected_language_code ? " · " + m.detected_language_code : ""}${m.latency ? " · " + Math.round(m.latency) + " ms" : ""}`;
+      clearTimeout(live.timer);
+      live.timer = setTimeout(finishListening, live.committing ? 100 : 1300);   // short pause after a phrase = end of turn
+    } else if (m.type === "error") { console.warn("Prisma:", m.message); setStatus("Prisma: " + m.message, true); }
+  };
+  ws.onclose = () => { if (live && live.ws === ws) finishListening(); };
+}
+
+function stopListening(discard) {
+  if (!live) return;
+  const L = live; live = null;
+  clearTimeout(L.timer); clearTimeout(L.idle);
+  try { L.proc.disconnect(); L.ctx.close(); } catch {}
+  L.stream.getTracks().forEach(tr => tr.stop());
+  try { L.ws.close(); } catch {}
+  setMic();
+  if (discard && L.bubble) L.bubble.remove();         // user switched to typing/tapping: drop the half-heard phrase
+  return L;
+}
+
+async function finishListening() {
+  const L = stopListening();
+  if (!L) return;
+  if (busy) { if (L.bubble) L.bubble.remove(); return; }
+  if (!L.text) { setStatus(t("nothing"), true); return; }
+  L.bubble.classList.remove("live");
+  const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = L.meta || "Prisma live"; L.bubble.appendChild(meta);
+  await handleUserText(L.text, L.bubble);
+}
+
+async function startListening() {
+  if (busy || live) return;
+  stopSpeaking();
+  try {
+    await startStreaming();
+    setMic("rec"); setStatus(t("listen"));
+  } catch (e) {
+    console.warn("streaming unavailable, using tap-to-record", e);
+    stopListening(true);
+    health.streaming = false; $("#hfwrap").style.display = "none";
+    startRec();
+  }
+}
+
+// ---------------------------------------------------------------- voice in, mode B: tap-to-record -> WAV -> Prisma REST
+let rec = null, chunks = [], stopTimer = null;
+
+async function toWav16k(blob) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const decoded = await ctx.decodeAudioData(await blob.arrayBuffer()); ctx.close();
+  const rate = 16000, off = new OfflineAudioContext(1, Math.ceil(decoded.duration * rate), rate);
+  const src = off.createBufferSource(); src.buffer = decoded; src.connect(off.destination); src.start();
+  const pcm = (await off.startRendering()).getChannelData(0);
+  const out = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const w = (o, s) => [...s].forEach((c, i) => out.setUint8(o + i, c.charCodeAt(0)));
+  w(0,"RIFF"); out.setUint32(4, 36 + pcm.length*2, true); w(8,"WAVE"); w(12,"fmt ");
+  out.setUint32(16,16,true); out.setUint16(20,1,true); out.setUint16(22,1,true); out.setUint32(24,rate,true);
+  out.setUint32(28,rate*2,true); out.setUint16(32,2,true); out.setUint16(34,16,true); w(36,"data"); out.setUint32(40,pcm.length*2,true);
+  for (let i = 0; i < pcm.length; i++) { const s = Math.max(-1, Math.min(1, pcm[i])); out.setInt16(44 + i*2, s < 0 ? s*0x8000 : s*0x7fff, true); }
+  return new Blob([out], {type:"audio/wav"});
+}
+
+async function startRec() {
+  stopSpeaking();
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}}); }
+  catch (e) { setStatus("Mic permission nahi mili. Neeche likh kar bhi jawab de sakte hain.", true); return; }
+  chunks = []; rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  rec.onstop = async () => {
+    stream.getTracks().forEach(tr => tr.stop()); clearTimeout(stopTimer);
+    setMic("busy"); setStatus(t("heard"));
+    try {
+      const fd = new FormData(); fd.append("audio", await toWav16k(new Blob(chunks, {type: rec.mimeType})), "speech.wav"); fd.append("lang", lang); fd.append("auto", auto ? "1" : "0"); fd.append("known", langKnown ? "1" : "0");
+      const r = await fetch("/api/stt", {method:"POST", body: fd}); const j = await r.json();
+      if (!r.ok) throw new Error(typeof j.error === "string" ? j.error : JSON.stringify(j.error));
+      if (!j.transcript) { setMic(); setStatus(t("nothing"), true); return; }
+      lastDetected = j.detected || null;
+      const meta = document.createElement("span"); meta.className = "meta";
+      meta.textContent = `Prisma${j.model ? " " + j.model.replace("prisma-","") : ""}${j.detected ? " · " + j.detected : ""}${j.latency ? " · " + Number(j.latency).toFixed(2) + "s" : ""}`;
+      await handleUserText(j.transcript, addMsg(j.transcript, "me", meta));
+    } catch (e) { setMic(); setStatus("Error: " + e.message, true); }
+  };
+  rec.start(); setMic("rec"); setStatus(t("rec"));
+  stopTimer = setTimeout(() => rec && rec.state === "recording" && rec.stop(), 25000);   // Prisma REST max is 30 s
+}
+
+// ---------------------------------------------------------------- wiring
+$("#mic").onclick = () => {
+  if (busy) return;
+  if (live) {                                   // tap while streaming = "I'm done": commit and wait for the last phrase
+    live.committing = true;
+    try { live.ws.send(JSON.stringify({type:"commit"})); } catch {}
+    clearTimeout(live.timer); live.timer = setTimeout(finishListening, 2500);
+    setMic("busy"); setStatus(t("heard"));
+    return;
+  }
+  if (rec && rec.state === "recording") { rec.stop(); return; }
+  health.streaming ? startListening() : startRec();
+};
+$("#send").onclick = async () => {
+  const v = $("#text").value.trim(); if (!v || busy) return;
+  stopListening(true); $("#text").value = "";
+  await handleUserText(v, addMsg(v, "me"));
+};
+$("#text").addEventListener("keydown", e => { if (e.key === "Enter") $("#send").click(); });
+$("#unfocus").onclick = async () => {
+  if (busy) return;
+  stopListening(true); setFocus(null);
+  setStatus(t("ask"));
+};
+$("#restart").onclick = () => !busy && start();
+$("#langsel").onchange = e => {
+  const v = e.target.value;
+  auto = v === "auto";
+  if (!auto) applyLang(v);
+  started = true;
+  if (!busy) start(); else e.target.value = auto ? "auto" : lang;
+};
+
+async function start() {
+  stopSpeaking(); stopListening(true);
+  state = {}; results = null; setFocus(null); langKnown = !auto; lastDetected = null;
+  $("#chat").innerHTML = ""; $("#results").innerHTML = "";
+  busy = true; setMic("busy");
+  const r = await fetch("/api/turn", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({state:{}, text:"", lang})});
+  const j = await r.json(); state = j.state;
+  addMsg(j.show, "bot");
+  await speak(j.say);
+  busy = false; setMic(); setStatus(t("answer"));
+  maybeAutoListen();
+}
+
+fetch("/api/langs").then(r => r.json()).then(list => {
+  const sel = $("#langsel");
+  list.forEach(l => {
+    LANGS[l.id] = l;
+    if (l.ui) T[l.id] = l.ui;
+    if (!sel.querySelector(`option[value="${l.id}"]`)) {
+      const o = document.createElement("option"); o.value = l.id;
+      o.textContent = `${l.name} · ${l.en_name}${l.beta ? " (beta)" : ""}`; sel.appendChild(o);
+    }
+  });
+}).catch(() => {});
+
+fetch("/api/health").then(r => r.json()).then(h => {
+  health = h;
+  if (h.streaming) $("#hfwrap").style.display = "flex";
+}).catch(() => {});
+
+// browsers block audio until the user interacts, so the first tap anywhere starts the conversation
+let started = false;
+document.addEventListener("click", e => {
+  if (started || e.target.closest(".langs")) return;   // opening the language menu doesn't start; picking one does
+  started = true;
+  start();
+}, {capture:true});
+addMsg("Shuru karne ke liye kahin bhi tap kijiye 👆 Apni bhasha mein boliye.  ·  Tap anywhere to begin, and speak in your own language.", "bot");
+</script>
+</body>
+</html>
