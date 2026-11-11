@@ -5,6 +5,7 @@ Rules checked against official / news sources in Nov 2026 (see README "Sources")
 These are simplified screening rules, not a legal eligibility decision: every result
 tells the user to confirm at a CSC, bank or the official portal.
 """
+import catalog
 import langs
 import more_schemes
 import states
@@ -245,6 +246,18 @@ def _fragments(p, lang):
         "senior60": "आपकी उम्र साठ साल या ज़्यादा है" if hi else "you are sixty or older",
         "woman": ("आप महिला हैं" if hi else "you are a woman") if p.get("gender") == "f" else None,
         "biz": ("आप नया काम शुरू करना चाहते हैं" if hi else "you want to start a business") if p.get("biz") else None,
+        "rural": ("आप गाँव में रहते हैं" if hi else "you live in a village") if p.get("rural") else None,
+        "bpl": ("आपके पास बीपीएल राशन कार्ड है" if hi else "you have a BPL ration card") if p.get("bpl") else None,
+        "no_pucca": ("आपके पास पक्का मकान नहीं है" if hi else "your family has no pucca house") if p.get("pucca") is False else None,
+        "own_house": ("आपका अपना मकान है" if hi else "you own your house") if p.get("pucca") else None,
+        "no_lpg": ("आपके घर में गैस कनेक्शन नहीं है" if hi else "your home has no gas connection") if p.get("lpg") is False else None,
+        "maternity": ("आप गर्भवती हैं या हाल में माँ बनी हैं" if hi else "you are pregnant or have just had a baby") if p.get("maternity") else None,
+        "widow": ("आप विधवा हैं" if hi else "you are a widow") if p.get("widow") else None,
+        "disabled": ("आपके पास दिव्यांगता प्रमाण पत्र है" if hi else "you have a disability certificate") if p.get("disabled") else None,
+        "student": ("आप पढ़ाई कर रहे हैं" if hi else "you are a student") if occ == "student" else None,
+        "college": ("आप कॉलेज में पढ़ते हैं" if hi else "you are in college") if p.get("study") == "college" else None,
+        "category": ((f"आप {p.get('category', '').upper()} वर्ग से हैं" if hi else f"you are from the {p.get('category', '').upper()} category")
+                     if p.get("category") in ("sc", "st", "obc") else None),
         "state": (f"आप {states.name(p.get('state'), 'hi')} में रहते हैं" if hi
                   else f"you live in {states.name(p.get('state'), 'en')}") if p.get("state") else None,
     }
@@ -264,6 +277,7 @@ WHY_KEYS = {
     "apy": ["age", "no_tax"], "pmjjby": ["age"], "pmsby": ["age"], "sukanya": ["daughter"],
     "vay_vandana": ["senior"], "pmjay": ["low_income"],
     **more_schemes.WHY_KEYS,
+    **catalog.WHY_KEYS,
 }
 WOMEN_SCHEME_STATES = more_schemes.WOMEN_SCHEME_STATES
 
@@ -315,6 +329,8 @@ def match(profile: dict, lang: str = "hi", open_ids=()):
         # fields in the conversation's language: name_local / benefit_local on the card, speak for Timbre
         if pk and s["id"] in pk.SCHEMES:
             out["name_local"], out["benefit_local"], out["speak"] = pk.SCHEMES[s["id"]]
+        elif pk and lang in s.get("local", {}):
+            out["name_local"], out["benefit_local"], out["speak"] = s["local"][lang]
         elif pk:                                        # state scheme of another state: English text
             out["name_local"], out["benefit_local"], out["speak"] = "", s["benefit"], s["speak_en"]
         elif lang == "hi":
@@ -354,3 +370,6 @@ def _safe(rule, profile):
 # business / farming central schemes and state flagship schemes (see more_schemes.py)
 SCHEMES += more_schemes.CENTRAL + more_schemes.STATE
 MAYBE += more_schemes.CENTRAL_MAYBE + more_schemes.STATE_MAYBE
+# pensions, housing, maternity, students, rural work and more states (see catalog.py)
+SCHEMES += catalog.CENTRAL + catalog.STATE
+MAYBE += catalog.CENTRAL_CHECK + catalog.STATE_CHECK

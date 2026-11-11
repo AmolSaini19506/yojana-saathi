@@ -18,7 +18,7 @@ def talk(intro, answers, lang="hi"):
     r = dialog.turn({}, "", lang)
     r = dialog.turn(r["state"], intro, lang)
     asked_seen = []
-    for _ in range(12):
+    for _ in range(30):
         if r["done"]:
             break
         slot = r["state"]["asked"]

@@ -430,3 +430,9 @@ from kb_more import KB_MORE, SCHEME_NAMES_MORE  # noqa: E402
 
 KB.update(KB_MORE)
 SCHEME_NAMES += SCHEME_NAMES_MORE
+
+# schemes added from 11 Nov 2026: their facts are built from the scheme cards (see catalog.py)
+import catalog  # noqa: E402
+
+KB.update(catalog.kb_entries())
+SCHEME_NAMES += catalog.scheme_names()

@@ -61,6 +61,9 @@ def test_pack_complete(lang):
     for s in schemes.SCHEMES + schemes.MAYBE:
         if s.get("state") and STATE_LANG.get(s["state"]) != lang:
             continue              # another state's scheme: shown in English to this language's speakers
+        if s.get("catalog"):      # schemes added from 11 Nov 2026 carry their own translations (catalog.py `local`)
+            assert lang not in s.get("local", {}) or all(s["local"][lang]), s["id"]
+            continue
         name, benefit, speak = p.SCHEMES[s["id"]]
         assert name and benefit and speak, s["id"]
 
@@ -72,7 +75,11 @@ def test_pack_facts_match_hindi(lang):
     import kb_more
     import schemes
     by_id = {s["id"]: s for s in schemes.SCHEMES + schemes.MAYBE}
+    import catalog
+    new_ids = {s["id"] for s in catalog.all_entries()}
     for sid, entry in kb.KB.items():
+        if sid in new_ids:
+            continue              # facts built from the scheme card in Hindi and English (catalog.kb_entries)
         if sid in kb_more.KB_MORE:
             st = by_id[sid].get("state")
             if st and STATE_LANG.get(st) != lang:
@@ -101,7 +108,7 @@ def test_sample_person(lang):
     # whole conversation in that language ends with PM-KISAN
     r = dialog.turn({}, "", lang)
     r = dialog.turn(r["state"], intro, lang)
-    for _ in range(6):
+    for _ in range(25):
         if r["done"]:
             break
         r = dialog.turn(r["state"], no, lang)

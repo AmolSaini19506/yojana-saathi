@@ -36,7 +36,15 @@ DOMAIN = {
 PRIORITY = ["land_ha", "income_month", "itax", "epf", "gender", "rural", "study", "bpl", "daughter_u10", "pucca", "lpg",
             "maternity", "widow", "disabled", "category", "biz"]
 
-MAX_FOLLOWUPS = 9               # questions after age / work / state
+MAX_FOLLOWUPS = 8               # questions after age / work / state
+
+# Ask these only once the other detail is known: income decides whether income tax is even a question, and
+# maternity / widowhood are only asked of women.
+NEEDS_FIRST = {"itax": "income_month", "maternity": "gender", "widow": "gender"}
+
+# Personal details that are true for few people: when more than one of them still matters they are asked together,
+# as one question ("are you a widow, pregnant, or do you have a disability certificate?").
+SPECIAL = ("widow", "maternity", "disabled")
 MAX_DEPTH = 7                   # unknown details explored per rule
 
 
@@ -55,8 +63,8 @@ GATES = {
     "daughter_u10": lambda p: _age_between(p, 18, 60),
     "biz": lambda p: p.get("occupation") not in ("govt_employee", "farmer") and _age_between(p, 18, 60),
     "epf": lambda p: _age_between(p, 16, 59) and p.get("occupation") in WAGE_OR_SELF,
-    "maternity": lambda p: p.get("gender") == "f" and _age_between(p, 18, 45),
-    "widow": lambda p: p.get("gender") == "f" and _age_between(p, 18, 200),
+    "maternity": lambda p: p.get("gender") != "m" and _age_between(p, 18, 45),
+    "widow": lambda p: p.get("gender") != "m" and _age_between(p, 18, 200),
     "study": lambda p: p.get("occupation") == "student",
     "land_ha": lambda p: p.get("occupation") == "farmer",
 }
@@ -151,22 +159,30 @@ def status(rules: dict, p: dict):
     return decided, open_
 
 
-def next_slot(rules: dict, p: dict, asked_followups: int = 0):
-    """The next detail to ask about, or None when we can show results."""
+def next_slot(rules: dict, p: dict, asked_followups: int = 0, weights: dict | None = None):
+    """The next detail to ask about, or None when we can show results. Returns "special" for the combined
+    personal question. weights: {scheme id: importance}; schemes we can only say "check this" about count less."""
     for s in CORE:
         if s not in p:
             return s
-    if asked_followups >= MAX_FOLLOWUPS:
+    left = MAX_FOLLOWUPS - asked_followups
+    if left <= 0:
         return None
     _, open_ = status(rules, p)
     score = {}
-    for deps in open_.values():
+    for sid, deps in open_.items():
         for s in deps:
             if s not in p:
-                score[s] = score.get(s, 0) + 1
+                score[s] = score.get(s, 0) + (weights or {}).get(sid, 1)
     if not score:
         return None
+    specials = [s for s in SPECIAL if s in score]
+    if len(specials) > 1:                       # counts as one question
+        score["special"] = sum(score.pop(s) for s in specials)
     rank = {s: i for i, s in enumerate(PRIORITY)}
-    if len(score) <= MAX_FOLLOWUPS - asked_followups:
-        return min(score, key=lambda s: rank.get(s, 99))        # room for all of them: ask in a natural order
-    return max(score, key=lambda s: (score[s], -rank.get(s, 99)))   # short on questions: the most useful one first
+    rank["special"] = rank["widow"]
+    # keep the questions that matter most, then ask those in a natural order
+    keep = sorted(score, key=lambda s: (-score[s], rank.get(s, 99)))[:left]
+    slot = min(keep, key=lambda s: rank.get(s, 99))
+    first = NEEDS_FIRST.get(slot) or ("gender" if slot == "special" and "gender" not in p else None)
+    return first if first and first not in p else slot

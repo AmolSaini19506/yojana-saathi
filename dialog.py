@@ -58,6 +58,10 @@ Q = {
                      "say": "कुछ योजनाएँ एससी, एसटी या ओबीसी वर्ग के लिए हैं। आप किस वर्ग से हैं: एससी, एसटी, ओबीसी या सामान्य? "
                             "न बताना चाहें तो छोड़िए बोल दीजिए।"},
         "study": {"show": "आप स्कूल में पढ़ते हैं, या कॉलेज में?", "say": "आप स्कूल में पढ़ते हैं, या कॉलेज में?"},
+        "special": {"show": "एक और बात: क्या आप विधवा हैं, गर्भवती हैं, या आपके पास दिव्यांगता का प्रमाण पत्र है? "
+                            "जो लागू हो वो बताइए, वरना 'नहीं' बोलिए।",
+                    "say": "एक और बात: क्या आप विधवा हैं, गर्भवती हैं, या आपके पास दिव्यांगता का प्रमाण पत्र है? "
+                           "जो लागू हो वो बताइए, वरना नहीं बोलिए।"},
         "saved": {"show": "आपको साल में लगभग ₹{amt} मिल सकते हैं।", "say": "आपको साल में लगभग {amt} रुपये मिल सकते हैं।"},
         "docs_all": {"show": "इन सब योजनाओं के लिए एक ही बार में ये कागज़ ले जाइए: {docs}।",
                      "say": "इन सबके लिए ये कागज़ साथ ले जाइए: {docs}।"},
@@ -126,6 +130,10 @@ Q = {
                      "say": "Some schemes are for SC, ST or OBC families. Which are you: SC, ST, OBC or General? "
                             "Say skip if you'd rather not say."},
         "study": {"show": "Are you studying in school, or in college?", "say": "Are you studying in school, or in college?"},
+        "special": {"show": "One more thing: are you a widow, pregnant, or do you have a disability certificate? "
+                            "Tell me which applies, or say no.",
+                    "say": "One more thing: are you a widow, pregnant, or do you have a disability certificate? "
+                           "Tell me which applies, or say no."},
         "saved": {"show": "You could get about ₹{amt} a year.", "say": "You could get about {amt} rupees a year."},
         "docs_all": {"show": "For all of these, take these papers once: {docs}.", "say": "For all of these, take these papers: {docs}."},
         "daughter_u10": {"show": "Do you have a daughter younger than 10?",
@@ -186,7 +194,8 @@ def rules():
 
 def next_slot(p: dict, asked_followups: int = 0):
     """The next detail to ask about (see engine.py), or None when the results can't change any more."""
-    return engine.next_slot(rules(), p, asked_followups)
+    weights = {s["id"]: 0.4 for s in schemes.MAYBE}          # "check this" schemes matter less than sure ones
+    return engine.next_slot(rules(), p, asked_followups, weights)
 
 
 def _apply_inferences(p: dict):
@@ -248,6 +257,14 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
         if ages and got.get("daughter_u10") is not False:
             got["daughter_u10"] = min(ages) < 10
         got.pop("age", None)
+    if asked == "special":
+        # one question for widow / pregnant / disability certificate: what they name is true, the rest is not;
+        # a plain "no" clears all three; a plain "yes" asks again which one
+        named = [s for s in engine.SPECIAL if got.get(s) is True]
+        if named or nlu.parse_yes_no(text or "", lang) is False:
+            for s in engine.SPECIAL:
+                profile.setdefault(s, s in named)
+            profile["special"] = True
     for k, v in got.items():
         if k.startswith("_"):
             continue
