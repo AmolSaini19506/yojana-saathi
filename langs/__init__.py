@@ -26,6 +26,13 @@ PACK_IDS = [x for x in PACK_IDS if importlib.util.find_spec(f"langs.{x}")]      
 PACKS = {lang: importlib.import_module(f"langs.{lang}") for lang in PACK_IDS}
 ALL = ["hi", "en"] + PACK_IDS
 
+# questions added later for all packs at once (see more_q.py)
+from . import more_q  # noqa: E402
+
+for _lang, _p in PACKS.items():
+    for _k, _v in more_q.Q.get(_lang, {}).items():
+        _p.Q.setdefault(_k, _v)
+
 
 def pack(lang):
     """The language-pack module for lang, or None for hi / en (which live in the main modules)."""

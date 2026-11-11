@@ -43,6 +43,24 @@ Q = {
                                "राज्य की योजनाओं के लिए नज़दीकी CSC पर पूछिए।",
                        "say": "{state} की राज्य योजनाएँ अभी ऐप में नहीं हैं, इसलिए ये केंद्र सरकार की योजनाएँ हैं। राज्य की "
                               "योजनाओं के लिए नज़दीकी सीएससी केंद्र पर पूछिए।"},
+        "rural": {"show": "आप गाँव में रहते हैं, या शहर या कस्बे में?", "say": "आप गाँव में रहते हैं, या शहर या कस्बे में?"},
+        "bpl": {"show": "क्या आपके पास BPL, अंत्योदय या प्राथमिकता वाला राशन कार्ड है?",
+                "say": "क्या आपके पास बीपीएल, अंत्योदय या प्राथमिकता वाला राशन कार्ड है?"},
+        "pucca": {"show": "क्या आपके परिवार के पास अपना पक्का मकान है?", "say": "क्या आपके परिवार के पास अपना पक्का मकान है?"},
+        "lpg": {"show": "क्या आपके घर में गैस कनेक्शन है?", "say": "क्या आपके घर में गैस कनेक्शन है?"},
+        "maternity": {"show": "क्या आप गर्भवती हैं, या पिछले कुछ महीनों में आपको बच्चा हुआ है?",
+                      "say": "क्या आप गर्भवती हैं, या पिछले कुछ महीनों में आपको बच्चा हुआ है?"},
+        "widow": {"show": "कुछ योजनाएँ विधवा महिलाओं के लिए हैं। क्या आप विधवा हैं?",
+                  "say": "कुछ योजनाएँ विधवा महिलाओं के लिए हैं। क्या आप विधवा हैं?"},
+        "disabled": {"show": "क्या आपके पास दिव्यांगता का प्रमाण पत्र है?", "say": "क्या आपके पास दिव्यांगता का प्रमाण पत्र है?"},
+        "category": {"show": "कुछ योजनाएँ SC, ST या OBC वर्ग के लिए हैं। आप किस वर्ग से हैं: SC, ST, OBC या सामान्य? "
+                             "न बताना चाहें तो 'छोड़िए' बोल दीजिए।",
+                     "say": "कुछ योजनाएँ एससी, एसटी या ओबीसी वर्ग के लिए हैं। आप किस वर्ग से हैं: एससी, एसटी, ओबीसी या सामान्य? "
+                            "न बताना चाहें तो छोड़िए बोल दीजिए।"},
+        "study": {"show": "आप स्कूल में पढ़ते हैं, या कॉलेज में?", "say": "आप स्कूल में पढ़ते हैं, या कॉलेज में?"},
+        "saved": {"show": "आपको साल में लगभग ₹{amt} मिल सकते हैं।", "say": "आपको साल में लगभग {amt} रुपये मिल सकते हैं।"},
+        "docs_all": {"show": "इन सब योजनाओं के लिए एक ही बार में ये कागज़ ले जाइए: {docs}।",
+                     "say": "इन सबके लिए ये कागज़ साथ ले जाइए: {docs}।"},
         "daughter_u10": {"show": "क्या घर में 10 साल से छोटी बेटी है?",
                          "say": "क्या घर में दस साल से छोटी बेटी है?"},
         "retry": {"show": "माफ़ कीजिए, समझ नहीं आया। ", "say": "माफ़ कीजिए, समझ नहीं आया। "},
@@ -94,6 +112,22 @@ Q = {
                                "schemes. Ask at your nearest CSC about state schemes.",
                        "say": "We don't have {state}'s own schemes in the app yet, so these are central government "
                               "schemes. Ask at your nearest CSC about state schemes."},
+        "rural": {"show": "Do you live in a village, or in a town or city?", "say": "Do you live in a village, or in a town or city?"},
+        "bpl": {"show": "Do you have a BPL, Antyodaya or priority ration card?",
+                "say": "Do you have a BPL, Antyodaya or priority ration card?"},
+        "pucca": {"show": "Does your family own a pucca house?", "say": "Does your family own a pucca house?"},
+        "lpg": {"show": "Is there an LPG gas connection in your home?", "say": "Is there an LPG gas connection in your home?"},
+        "maternity": {"show": "Are you pregnant, or have you had a baby in the last few months?",
+                      "say": "Are you pregnant, or have you had a baby in the last few months?"},
+        "widow": {"show": "Some schemes are for widows. Are you a widow?", "say": "Some schemes are for widows. Are you a widow?"},
+        "disabled": {"show": "Do you have a disability certificate?", "say": "Do you have a disability certificate?"},
+        "category": {"show": "Some schemes are for SC, ST or OBC families. Which are you: SC, ST, OBC or General? "
+                             "Say 'skip' if you'd rather not say.",
+                     "say": "Some schemes are for SC, ST or OBC families. Which are you: SC, ST, OBC or General? "
+                            "Say skip if you'd rather not say."},
+        "study": {"show": "Are you studying in school, or in college?", "say": "Are you studying in school, or in college?"},
+        "saved": {"show": "You could get about ₹{amt} a year.", "say": "You could get about {amt} rupees a year."},
+        "docs_all": {"show": "For all of these, take these papers once: {docs}.", "say": "For all of these, take these papers: {docs}."},
         "daughter_u10": {"show": "Do you have a daughter younger than 10?",
                          "say": "Do you have a daughter younger than ten?"},
         "retry": {"show": "Sorry, I didn't catch that. ", "say": "Sorry, I didn't catch that. "},
@@ -132,15 +166,15 @@ def spoken_num(n, lang):
 def qt(lang, key):
     """(show, say) for one of the lines above, in any language."""
     p = langs.pack(lang)
-    if p:
+    if p and key in p.Q:
         line = p.Q[key]
         return line, line                 # language packs: same text on screen and in voice
-    d = Q[lang][key]
+    d = Q[lang if lang in Q else "en"][key]   # a line a pack doesn't have yet is shown in English
     return d.get("show", d.get("say", "")), d.get("say", d.get("show", ""))
 
 
 MAX_RETRIES = 1        # re-ask a slot once, then move on
-YES_NO_SLOTS = {"itax", "epf", "daughter_u10", "biz"}
+YES_NO_SLOTS = {"itax", "epf", "daughter_u10", "biz", "bpl", "pucca", "lpg", "maternity", "widow", "disabled"}
 EXPLAINABLE = {"itax", "epf"}   # jargon people often ask about; Q["x_itax"] / Q["x_epf"] explain it
 MAX_SPOKEN = 3         # speak the top 3 schemes (keeps the voice reply short), show all on screen
 

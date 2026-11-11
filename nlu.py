@@ -388,7 +388,8 @@ WHAT_KEYS = [_nfc(k) for k in ["kya hota", "kya hoti", "kya hai ye", "kya hai ye
                                "what's", "what does", "what do you mean", "meaning", "didn't understand", "dont understand",
                                "don't understand", "क्या होता", "क्या होती", "क्या है ये", "क्या है यह", "ये क्या", "यह क्या",
                                "मतलब", "समझ नहीं", "समझा नहीं", "समझी नहीं"]]
-DONTKNOW_KEYS = [_nfc(k) for k in ["pata nahi", "pata nahin", "pata nai", "nahi pata", "nahin pata", "maloom nahi",
+DONTKNOW_KEYS = [_nfc(k) for k in ["skip", "chhodiye", "chhodo", "chodiye", "rehne do", "nahi batana", "छोड़िए", "छोड़ो",
+                                   "रहने दो", "नहीं बताना", "pata nahi", "pata nahin", "pata nai", "nahi pata", "nahin pata", "maloom nahi",
                                    "malum nahi", "don't know", "dont know", "do not know", "not sure", "no idea",
                                    "पता नहीं", "नहीं पता", "मालूम नहीं", "नहीं मालूम", "पता नही"]]
 
@@ -515,6 +516,92 @@ NO_LAND = [_nfc(x) for x in ["zameen nahi", "jameen nahi", "khet nahi", "no land
            "zameen nahin", "bina zameen", "batai", "बटाई", "kiraye ki zameen"]]
 
 
+# ---------------------------------------------------------------- details added 11 Nov 2026 (wider scheme list)
+YES_NO_EXTRA = ("bpl", "pucca", "lpg", "maternity", "widow", "disabled")
+WIDOW_KEYS = [_nfc(k) for k in ["vidhwa", "vidhva", "widow", "विधवा", "pati nahi rahe", "pati guzar", "husband died",
+                                "husband passed", "पति नहीं रहे", "पति गुज़र", "पति गुजर", "বিধবা", "વિધવા", "ವಿಧವೆ", "വിധവ",
+                                "ਵਿਧਵਾ", "விதவை", "కైம்பெண்", "వితంతువు"]]
+DISABLED_KEYS = [_nfc(k) for k in ["viklang", "divyang", "handicap", "disabled", "disability", "apahij", "विकलांग",
+                                   "दिव्यांग", "अपाहिज", "প্রতিবন্ধী", "દિવ્યાંગ", "ಅಂಗವಿಕಲ", "ഭിന്നശേഷി", "ਦਿਵਿਆਂਗ", "ਅਪਾਹਜ",
+                                   "மாற்றுத்திறனாளி", "దివ్యాంగ", "వికలాంగ"]]
+PREGNANT_KEYS = [_nfc(k) for k in ["pregnant", "garbhvati", "garbhwati", "pet se", "expecting a baby", "गर्भवती", "पेट से",
+                                   "অন্তঃসত্ত্বা", "ગર્ભવતી", "ಗರ್ಭಿಣಿ", "ഗർഭിണി", "गरोदर", "ਗਰਭਵਤੀ", "கர்ப்ப",
+                                   "గర్భవతి", "గర్భిణి"]]
+VILLAGE_KEYS = [_nfc(k) for k in ["gaon", "gaanv", "gaav", "village", "dehat", "gram panchayat", "गाँव", "गांव", "देहात",
+                                  "ग्राम"]]
+TOWN_KEYS = [_nfc(k) for k in ["shehar", "shahar", "sheher", "city", "town", "kasba", "kasbe", "nagar", "metro", "शहर",
+                               "कस्बा", "कस्बे", "नगर"]]
+KACCHA_KEYS = [_nfc(k) for k in ["kaccha", "kachcha", "kacha", "jhopdi", "jhuggi", "kiraye", "kiraya", "rent", "rented",
+                                 "कच्चा", "कच्चे", "झोपड़ी", "झुग्गी", "किराए", "किराये"]]
+NO_LPG_KEYS = [_nfc(k) for k in ["chulha", "chulhe", "lakdi", "चूल्हा", "चूल्हे", "लकड़ी"]]
+CATEGORY_KEYS = {
+    "sc": ["anusuchit jati", "scheduled caste", "dalit", "harijan", "अनुसूचित जाति", "दलित", "एससी"],
+    "st": ["anusuchit janjati", "scheduled tribe", "adivasi", "tribal", "अनुसूचित जनजाति", "आदिवासी", "एसटी"],
+    "obc": ["pichhda", "pichda", "pichhra", "backward", "पिछड़ा", "पिछड़े", "पिछड़ी", "ओबीसी"],
+    "gen": ["general", "samanya", "unreserved", "सामान्य", "जनरल"],
+}
+CATEGORY_KEYS = {c: [_nfc(k) for k in v] for c, v in CATEGORY_KEYS.items()}
+CATEGORY_TOKENS = {"sc": "sc", "s.c": "sc", "st": "st", "s.t": "st", "obc": "obc", "o.b.c": "obc", "ebc": "obc",
+                   "bc": "obc", "gen": "gen", "open": "gen"}       # only as an answer to the category question
+SCHOOL_KEYS = [_nfc(k) for k in ["school", "class", "kaksha", "dasvi", "barahvi", "10th", "11th", "12th", "9th", "स्कूल",
+                                 "कक्षा", "दसवीं", "बारहवीं"]]
+COLLEGE_KEYS = [_nfc(k) for k in ["college", "degree", "graduation", "graduate", "b.a", "bsc", "b.sc", "bcom", "b.com",
+                                  "btech", "b.tech", "iti", "diploma", "polytechnic", "university", "masters", "कॉलेज",
+                                  "डिग्री", "यूनिवर्सिटी", "आईटीआई", "डिप्लोमा", "ग्रेजुएशन"]]
+
+
+def _extra_words(kind):
+    """Words for the new questions in the 8 pack languages (langs/more_q.py), valid whatever the conversation's language."""
+    from langs import more_q
+    return [_nfc(w) for w in more_q.WORDS[kind]]
+
+
+def detect_extra(text: str, expecting: str | None = None, lang: str = "hi") -> dict:
+    """The details added for the wider scheme list: village/town, house, gas, maternity, widow, disability, category,
+    school/college. Clear statements count anywhere ("main vidhwa hoon"); bare yes/no only for the question asked."""
+    out = {}
+    t = normalize(text)
+
+    def has(keys):
+        return any(find_kw(t, k) for k in keys)
+
+    if has(WIDOW_KEYS) and expecting != "widow":
+        out["widow"], out["gender"] = True, "f"
+    if has(DISABLED_KEYS) and expecting != "disabled":
+        out["disabled"] = True
+    if has(PREGNANT_KEYS) and expecting != "maternity":
+        out["maternity"], out["gender"] = True, "f"
+    if has(VILLAGE_KEYS) or (expecting == "rural" and has(_extra_words("village"))):
+        out["rural"] = True
+    elif expecting == "rural" and (has(TOWN_KEYS) or has(_extra_words("town"))):
+        out["rural"] = False
+    for cat, keys in CATEGORY_KEYS.items():
+        if has(keys) and (expecting == "category" or cat != "gen"):
+            out["category"] = cat
+    if expecting == "category" and "category" not in out:
+        for tok in tokens(t):
+            if tok in CATEGORY_TOKENS:
+                out["category"] = CATEGORY_TOKENS[tok]
+                break
+        else:
+            if has(_extra_words("general")):
+                out["category"] = "gen"
+    if expecting == "study":
+        if has(COLLEGE_KEYS) or has(_extra_words("college")):
+            out["study"] = "college"
+        elif has(SCHOOL_KEYS) or has(_extra_words("school")):
+            out["study"] = "school"
+    if expecting == "pucca" and has(KACCHA_KEYS):
+        out["pucca"] = False
+    if expecting == "lpg" and has(NO_LPG_KEYS):
+        out["lpg"] = False
+    if expecting in YES_NO_EXTRA and expecting not in out:
+        yn = parse_yes_no(text, lang, slot=expecting)
+        if yn is not None:
+            out[expecting] = yn
+    return out
+
+
 # ---------------------------------------------------------------- main entry
 
 def extract(text: str, expecting: str | None = None, lang: str = "hi") -> dict:
@@ -590,4 +677,6 @@ def extract(text: str, expecting: str | None = None, lang: str = "hi") -> dict:
             yn = parse_yes_no(text, lang, slot=expecting)
             if yn is not None:
                 out[expecting] = yn
+    for k, v in detect_extra(text, expecting, lang).items():
+        out.setdefault(k, v)
     return out
