@@ -160,7 +160,7 @@ STATE = [
         "note": "One woman per family, through JEEViKA self-help groups.",
     },
     {
-        "id": "br_vridhjan", "state": "BR",
+        "id": "br_vridhjan", "state": "BR", "replaces": ["old_age_pension"],
         "name": "Vridhjan Pension (Bihar)",
         "name_hi": "मुख्यमंत्री वृद्धजन पेंशन योजना",
         "benefit": "₹1,100 a month pension for everyone aged 60 and above",

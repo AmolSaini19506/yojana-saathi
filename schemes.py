@@ -255,6 +255,7 @@ def _fragments(p, lang):
         "widow": ("आप विधवा हैं" if hi else "you are a widow") if p.get("widow") else None,
         "disabled": ("आपके पास दिव्यांगता प्रमाण पत्र है" if hi else "you have a disability certificate") if p.get("disabled") else None,
         "student": ("आप पढ़ाई कर रहे हैं" if hi else "you are a student") if occ == "student" else None,
+        "school_kids": ("आपके बच्चे स्कूल जाते हैं" if hi else "you have school-going children") if p.get("school_kids") else None,
         "college": ("आप कॉलेज में पढ़ते हैं" if hi else "you are in college") if p.get("study") == "college" else None,
         "category": ((f"आप {p.get('category', '').upper()} वर्ग से हैं" if hi else f"you are from the {p.get('category', '').upper()} category")
                      if p.get("category") in ("sc", "st", "obc") else None),
@@ -354,7 +355,12 @@ def match(profile: dict, lang: str = "hi", open_ids=()):
     # the person's own state schemes first (usually cash every month), then central ones
     eligible = [public(s) for s in sorted(SCHEMES, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
     maybe = [public(s) for s in sorted(MAYBE, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
-    got = {s["id"] for s in eligible} | {s["id"] for s in maybe}
+    # a state's own pension card stands in for the general one, so the same money is not listed twice
+    by_id = {s["id"]: s for s in SCHEMES + MAYBE}
+    shadowed = {r for s in eligible for r in by_id[s["id"]].get("replaces", [])}
+    eligible = [s for s in eligible if s["id"] not in shadowed]
+    maybe = [s for s in maybe if s["id"] not in shadowed]
+    got = {s["id"] for s in eligible} | {s["id"] for s in maybe} | shadowed
     maybe += [dict(public(s), open=True) for s in SCHEMES + MAYBE if s["id"] in open_ids and s["id"] not in got]
     # if someone got APY *and* a matched-contribution pension, keep both; they stack
     return eligible, maybe

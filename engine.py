@@ -30,10 +30,12 @@ DOMAIN = {
     "disabled": YES_NO,         # has a disability certificate (40% or more)
     "category": ["sc", "st", "obc", "gen"],
     "study": ["school", "college", "none"],   # what a student is studying
+    "school_kids": YES_NO,      # has children who go to school
 }
 
 # When several details tie, ask in this order: what people expect to be asked first, personal questions last.
-PRIORITY = ["land_ha", "income_month", "itax", "epf", "gender", "rural", "study", "bpl", "daughter_u10", "pucca", "lpg",
+PRIORITY = ["land_ha", "income_month", "itax", "epf", "gender", "rural", "study", "bpl", "daughter_u10", "school_kids",
+            "pucca", "lpg",
             "maternity", "widow", "disabled", "category", "biz"]
 
 MAX_FOLLOWUPS = 8               # questions after age / work / state
@@ -66,6 +68,7 @@ GATES = {
     "maternity": lambda p: p.get("gender") != "m" and _age_between(p, 18, 45),
     "widow": lambda p: p.get("gender") != "m" and _age_between(p, 18, 200),
     "study": lambda p: p.get("occupation") == "student",
+    "school_kids": lambda p: _age_between(p, 22, 60),
     "land_ha": lambda p: p.get("occupation") == "farmer",
 }
 

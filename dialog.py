@@ -58,6 +58,7 @@ Q = {
                      "say": "कुछ योजनाएँ एससी, एसटी या ओबीसी वर्ग के लिए हैं। आप किस वर्ग से हैं: एससी, एसटी, ओबीसी या सामान्य? "
                             "न बताना चाहें तो छोड़िए बोल दीजिए।"},
         "study": {"show": "आप स्कूल में पढ़ते हैं, या कॉलेज में?", "say": "आप स्कूल में पढ़ते हैं, या कॉलेज में?"},
+        "school_kids": {"show": "क्या आपके घर में स्कूल जाने वाले बच्चे हैं?", "say": "क्या आपके घर में स्कूल जाने वाले बच्चे हैं?"},
         "special": {"show": "एक और बात: क्या आप विधवा हैं, गर्भवती हैं, या आपके पास दिव्यांगता का प्रमाण पत्र है? "
                             "जो लागू हो वो बताइए, वरना 'नहीं' बोलिए।",
                     "say": "एक और बात: क्या आप विधवा हैं, गर्भवती हैं, या आपके पास दिव्यांगता का प्रमाण पत्र है? "
@@ -130,6 +131,7 @@ Q = {
                      "say": "Some schemes are for SC, ST or OBC families. Which are you: SC, ST, OBC or General? "
                             "Say skip if you'd rather not say."},
         "study": {"show": "Are you studying in school, or in college?", "say": "Are you studying in school, or in college?"},
+        "school_kids": {"show": "Do you have children who go to school?", "say": "Do you have children who go to school?"},
         "special": {"show": "One more thing: are you a widow, pregnant, or do you have a disability certificate? "
                             "Tell me which applies, or say no.",
                     "say": "One more thing: are you a widow, pregnant, or do you have a disability certificate? "
@@ -182,7 +184,8 @@ def qt(lang, key):
 
 
 MAX_RETRIES = 1        # re-ask a slot once, then move on
-YES_NO_SLOTS = {"itax", "epf", "daughter_u10", "biz", "bpl", "pucca", "lpg", "maternity", "widow", "disabled"}
+YES_NO_SLOTS = {"itax", "epf", "daughter_u10", "biz", "bpl", "pucca", "lpg", "maternity", "widow", "disabled",
+                "school_kids"}
 EXPLAINABLE = {"itax", "epf"}   # jargon people often ask about; Q["x_itax"] / Q["x_epf"] explain it
 MAX_SPOKEN = 3         # speak the top 3 schemes (keeps the voice reply short), show all on screen
 
@@ -298,7 +301,7 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     state.update(profile=profile, asked=None, retries=retries)
     note_show = note_say = ""
     st = profile.get("state")
-    if st and st not in states.COVERED:
+    if st and st not in states.COVERED and not any(s.get("state") for s in eligible + maybe):
         ns_, ny_ = qt(lang, "state_note")
         note_show = "\n\n" + ns_.format(state=states.name(st, lang))
         note_say = " " + ny_.format(state=states.name(st, lang))

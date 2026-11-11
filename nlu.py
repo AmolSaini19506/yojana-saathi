@@ -517,7 +517,7 @@ NO_LAND = [_nfc(x) for x in ["zameen nahi", "jameen nahi", "khet nahi", "no land
 
 
 # ---------------------------------------------------------------- details added 11 Nov 2026 (wider scheme list)
-YES_NO_EXTRA = ("bpl", "pucca", "lpg", "maternity", "widow", "disabled")
+YES_NO_EXTRA = ("bpl", "pucca", "lpg", "maternity", "widow", "disabled", "school_kids")
 WIDOW_KEYS = [_nfc(k) for k in ["vidhwa", "vidhva", "widow", "विधवा", "pati nahi rahe", "pati guzar", "husband died",
                                 "husband passed", "पति नहीं रहे", "पति गुज़र", "पति गुजर", "বিধবা", "વિધવા", "ವಿಧವೆ", "വിധവ",
                                 "ਵਿਧਵਾ", "விதவை", "కైம்பெண்", "వితంతువు"]]

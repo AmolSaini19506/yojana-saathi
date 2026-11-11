@@ -63,7 +63,9 @@ STATES = {
     "AS": ("Assam", "असम", ["assam", "असम", "guwahati", "गुवाहाटी", "অসম", "আসাম", "গুয়াহাটি"]),
     "GA": ("Goa", "गोवा", ["goa", "गोवा", "panaji"]),
 }
-COVERED = {"UP", "BR", "MH", "MP", "RJ", "WB", "TN", "KA"}
+COVERED = {"UP", "BR", "MH", "MP", "RJ", "WB", "TN", "KA",
+           "TG", "AP", "PB", "DL", "OD", "JH", "CG", "AS", "HP", "HR"}             # added 11 Nov 2026
+# Gujarat has one scheme in the app (for schoolgirls), so people there are still told that its schemes are mostly missing.
 AMBIGUOUS = {"UP": ["up", "यूपी"], "MP": ["mp", "एमपी"]}       # only as a bare answer to "which state?"
 
 _L = "a-zऀ-ൿ"

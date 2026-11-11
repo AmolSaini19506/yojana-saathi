@@ -476,8 +476,7 @@ CENTRAL_CHECK = [
     },
 ]
 
-STATE = []
-STATE_CHECK = []
+from catalog_states import STATE, STATE_CHECK  # noqa: E402  (state schemes: see catalog_states.py)
 
 
 # ---------------------------------------------------------------- documents, for the one combined list of papers
