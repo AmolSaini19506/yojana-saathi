@@ -549,6 +549,28 @@ def cash(sid):
     return OLD_CASH.get(sid, 0)
 
 
+def doc_label(tag, lang="en"):
+    """Name of a document in the conversation's language (English where a beta pack has no word for it yet)."""
+    en, hi = DOCS[tag]
+    if lang == "hi":
+        return hi
+    if lang == "en":
+        return en
+    from langs import more_q
+    return more_q.DOCS.get(lang, {}).get(tag, en)
+
+
+def papers(ids, lang="en"):
+    """The one combined list of documents for a set of schemes, most common first, as (tags, labels)."""
+    tags_ = [t for t in DOCS if any(t in tags(i) for i in ids)]
+    return tags_, [doc_label(t, lang) for t in tags_]
+
+
+def yearly_cash(ids):
+    """Fixed money per year across these schemes. Loans, insurance cover, subsidies and one-time amounts don't count."""
+    return sum(cash(i) for i in ids)
+
+
 def kb_entries():
     """Facts for the follow-up chat, built from the cards above (same shape as kb.KB)."""
     out = {}

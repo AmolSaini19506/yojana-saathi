@@ -4,6 +4,7 @@ Conversation flow. Stateless on the server: the browser sends back `state` every
 Turn 1: open question ("tell me about yourself"). One sentence can fill several slots.
 Then we only ask for what's still missing, and stop as soon as we can decide.
 """
+import catalog
 import engine
 import langs
 import nlu
@@ -59,6 +60,10 @@ Q = {
                             "न बताना चाहें तो छोड़िए बोल दीजिए।"},
         "study": {"show": "आप स्कूल में पढ़ते हैं, या कॉलेज में?", "say": "आप स्कूल में पढ़ते हैं, या कॉलेज में?"},
         "school_kids": {"show": "क्या आपके घर में स्कूल जाने वाले बच्चे हैं?", "say": "क्या आपके घर में स्कूल जाने वाले बच्चे हैं?"},
+        "member_intro": {"show": "ठीक है, अब परिवार के अगले सदस्य के बारे में बताइए: उनकी उम्र, वो क्या काम करते हैं, और "
+                                 "महीने की कमाई। आगे के सवालों के जवाब उन्हीं की तरफ़ से दीजिए।",
+                         "say": "ठीक है, अब परिवार के अगले सदस्य के बारे में बताइए: उनकी उम्र, वो क्या काम करते हैं, और "
+                                "महीने की कमाई। आगे के सवालों के जवाब उन्हीं की तरफ़ से दीजिए।"},
         "special": {"show": "एक और बात: क्या आप विधवा हैं, गर्भवती हैं, या आपके पास दिव्यांगता का प्रमाण पत्र है? "
                             "जो लागू हो वो बताइए, वरना 'नहीं' बोलिए।",
                     "say": "एक और बात: क्या आप विधवा हैं, गर्भवती हैं, या आपके पास दिव्यांगता का प्रमाण पत्र है? "
@@ -132,6 +137,10 @@ Q = {
                             "Say skip if you'd rather not say."},
         "study": {"show": "Are you studying in school, or in college?", "say": "Are you studying in school, or in college?"},
         "school_kids": {"show": "Do you have children who go to school?", "say": "Do you have children who go to school?"},
+        "member_intro": {"show": "Okay, now tell me about the next person in your family: their age, what work they "
+                                 "do, and what they earn in a month. Answer the next questions for them.",
+                         "say": "Okay, now tell me about the next person in your family: their age, what work they "
+                                "do, and what they earn in a month. Answer the next questions for them."},
         "special": {"show": "One more thing: are you a widow, pregnant, or do you have a disability certificate? "
                             "Tell me which applies, or say no.",
                     "say": "One more thing: are you a widow, pregnant, or do you have a disability certificate? "
@@ -209,6 +218,24 @@ def _count(state: dict, slot):
     """Count follow-up questions (after age / work / state) so the conversation stays short."""
     if slot and slot not in engine.CORE and slot != state.get("asked"):
         state["nq"] = state.get("nq", 0) + 1
+
+
+# Details that belong to the household, kept when the app moves on to the next family member.
+SHARED = ("state", "rural", "bpl", "pucca", "lpg")
+
+
+def next_member(state: dict, lang: str = "hi") -> dict:
+    """Start checking for another person in the same family: same home, new person."""
+    lang = langs.valid(lang)
+    old = (state or {}).get("profile") or {}
+    profile = {k: old[k] for k in SHARED if k in old}
+    new = {"profile": profile, "asked": "intro", "retries": {}, "member": (state or {}).get("member", 1) + 1}
+    show, say = qt(lang, "member_intro")
+    return {"state": new, "show": show, "say": say, "done": False, "lang": lang, "member": new["member"]}
+
+
+def _money(n, lang):
+    return f"{n:,}"
 
 
 def turn(state: dict, text: str, lang: str = "hi") -> dict:
@@ -316,6 +343,17 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     if n > MAX_SPOKEN:
         spoken += " " + qt(lang, "more")[1]
     (fs, fy), (os_, oy) = qt(lang, "found"), qt(lang, "outro")
-    say = f'{fy.format(n=spoken_num(n, lang))} {spoken} {oy}{note_say}'
-    return {"state": state, "heard": got, "show": fs.format(n=n) + "\n\n" + os_ + note_show,
-            "say": say, "done": True, "eligible": eligible, "maybe": maybe, "profile": profile, "lang": lang}
+    ids_ = [s["id"] for s in eligible]
+    # money that is fixed and yearly, and one list of papers for everything
+    cash_year = catalog.yearly_cash(ids_)
+    doc_tags, doc_labels = catalog.papers(ids_, lang)
+    saved_show = saved_say = docs_show = ""
+    if cash_year:
+        (ss, sy) = qt(lang, "saved")
+        saved_show, saved_say = "\n\n" + ss.format(amt=_money(cash_year, lang)), " " + sy.format(amt=cash_year)
+    if doc_labels:
+        docs_show = "\n\n" + qt(lang, "docs_all")[0].format(docs=", ".join(doc_labels))
+    say = f'{fy.format(n=spoken_num(n, lang))} {spoken}{saved_say} {oy}{note_say}'
+    return {"state": state, "heard": got, "show": fs.format(n=n) + saved_show + docs_show + "\n\n" + os_ + note_show,
+            "say": say, "done": True, "eligible": eligible, "maybe": maybe, "profile": profile, "lang": lang,
+            "cash_year": cash_year, "docs_all": doc_labels, "member": state.get("member", 1)}

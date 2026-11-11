@@ -374,6 +374,15 @@ def turn():
     return jsonify(with_speech(out, out.get("lang") or lang))
 
 
+@app.post("/api/member")
+def member():
+    """Family mode: start checking for another person in the same household. Body: {state, lang}."""
+    j = request.get_json(force=True) or {}
+    lang = langs.valid(j.get("lang") or "hi")
+    out = dialog.next_member(j.get("state") or {}, lang)
+    return jsonify(with_speech(out, lang))
+
+
 if __name__ == "__main__":
     print(f"Gnani key loaded: {bool(API_KEY)}  |  STT {STT_MODEL or 'prisma-v2.5'}  |  TTS {TTS_MODEL}/{TTS_VOICE}")
     print("Hands-free streaming:", "ON" if STREAMING_LIB else "OFF (pip install flask-sock websockets)")
