@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import ask     # noqa: E402
+from helpers import talk  # noqa: E402
 import dialog  # noqa: E402
 import nlu     # noqa: E402
 
@@ -87,7 +88,8 @@ def test_yes_no():
 # ---------------------------------------------------------------- full conversations
 
 def test_farmer_flow():
-    r = run(["Main 34 saal ka kisan hoon", "do acre", "8 hazaar", "haan ek beti hai 6 saal ki"])
+    r = talk("Main 34 saal ka kisan hoon", {"land_ha": "do acre", "income_month": "8 hazaar",
+                                            "daughter_u10": "haan ek beti hai 6 saal ki"})
     assert r["done"]
     got = ids(r)
     for want in ["pm_kisan", "pm_kmy", "apy", "pmjjby", "pmsby", "sukanya"]:
@@ -95,26 +97,26 @@ def test_farmer_flow():
 
 
 def test_shopkeeper_one_shot():
-    r = run(["Main 35 saal ka hoon, kirana ki dukaan hai, 15 hazaar mahine kamata hoon", "nahi"])
+    r = talk("Main 35 saal ka hoon, kirana ki dukaan hai, 15 hazaar mahine kamata hoon")
     assert r["done"], r["show"]
     got = ids(r)
     assert "mudra" in got and "eshram" in got and "apy" in got and "sukanya" not in got
 
 
 def test_street_vendor_flow():
-    r = run(["28 saal, sabzi ka thela lagata hoon, 12000 mahina", "nahi", "nahi"])
+    r = talk("28 saal, sabzi ka thela lagata hoon, 12000 mahina")
     got = ids(r)
     assert {"pm_svanidhi", "pm_sym", "mudra", "eshram", "apy"} <= set(got), got
 
 
 def test_senior_flow_english():
-    r = run(["I am 72 years old and I am a homemaker", "nothing"], lang="en")
+    r = talk("I am 72 years old and I am a homemaker", {"income_month": "nothing"}, lang="en")
     assert r["done"]
     assert "vay_vandana" in ids(r) and "apy" not in ids(r)
 
 
 def test_tax_payer_excluded():
-    r = run(["40 saal, private naukri, 90 hazaar mahina", "haan tax bharta hoon", "haan PF katta hai", "nahi"])
+    r = talk("40 saal, private naukri, 90 hazaar mahina", {"itax": "haan tax bharta hoon", "epf": "haan PF katta hai"})
     got = ids(r)
     assert "apy" not in got and "pm_sym" not in got and "pmjjby" in got
 
@@ -172,7 +174,7 @@ def test_ask_web_spoken_not_spelled():
 
 
 def test_why_reasons():
-    r = run(["Main 34 saal ka kisan hoon, mahine ke 8 hazaar", "do acre", "nahi"])
+    r = talk("Main 34 saal ka kisan hoon, mahine ke 8 hazaar", {"land_ha": "do acre"})
     why = {s["id"]: s["why"] for s in r["eligible"]}
     assert "किसान" in why["pm_kisan"] and "34" in why["pm_kmy"]
 

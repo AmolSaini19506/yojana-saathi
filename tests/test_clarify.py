@@ -13,17 +13,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import dialog  # noqa: E402
 import langs   # noqa: E402
 import nlu     # noqa: E402
+from helpers import until  # noqa: E402
 
 
 def at_slot(slot, lang="hi"):
-    """A conversation that has just asked `slot` (a salaried 30-year-old earning 60,000, so PF and tax get asked)."""
-    r = dialog.turn({}, "", lang)
-    r = dialog.turn(r["state"], "main 30 saal ka hoon, company mein naukri karta hoon, 60 hazaar mahina", lang)
-    for _ in range(4):
-        if r["state"]["asked"] == slot:
-            return r
-        r = dialog.turn(r["state"], "nahi", lang)
-    raise AssertionError(f"never asked {slot}: {r['state']}")
+    """A conversation that has just asked `slot`: a 30-year-old daily-wage worker earning 60,000, so both income tax
+    and PF get asked (the e-Shram card depends on them)."""
+    return until(slot, "main 30 saal ka mazdoor hoon, 60 hazaar mahina", lang=lang)
 
 
 def test_screenshot_case_pf_question_is_not_yes():
@@ -60,8 +56,7 @@ def test_dont_know_moves_on(text):
 
 def test_dont_know_does_not_hide_a_real_answer():
     st = dialog.turn({}, "", "hi")["state"]
-    r = dialog.turn(st, "main 30 saal ka hoon, lucknow mein company mein naukri karta hoon", "hi")
-    assert r["state"]["asked"] == "income_month"
+    r = until("income_month", "main 30 saal ka hoon, lucknow mein company mein naukri karta hoon")
     r2 = dialog.turn(r["state"], "pata nahi, shayad 12 hazaar", "hi")
     assert r2["state"]["profile"]["income_month"] == 12000
 

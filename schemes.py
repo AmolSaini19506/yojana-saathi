@@ -302,8 +302,9 @@ def why(sid, profile, lang="hi"):
     return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + joiner + parts[-1]
 
 
-def match(profile: dict, lang: str = "hi"):
-    """Return (eligible, maybe) lists of public scheme dicts, each with a `why` reason."""
+def match(profile: dict, lang: str = "hi", open_ids=()):
+    """Return (eligible, maybe) lists of public scheme dicts, each with a `why` reason.
+    open_ids: schemes whose answer still depends on something we didn't ask; they are listed under "maybe"."""
     pk = langs.pack(lang)
 
     def public(s):
@@ -337,6 +338,8 @@ def match(profile: dict, lang: str = "hi"):
     # the person's own state schemes first (usually cash every month), then central ones
     eligible = [public(s) for s in sorted(SCHEMES, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
     maybe = [public(s) for s in sorted(MAYBE, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
+    got = {s["id"] for s in eligible} | {s["id"] for s in maybe}
+    maybe += [dict(public(s), open=True) for s in SCHEMES + MAYBE if s["id"] in open_ids and s["id"] not in got]
     # if someone got APY *and* a matched-contribution pension, keep both; they stack
     return eligible, maybe
 

@@ -4,6 +4,7 @@ Conversation flow. Stateless on the server: the browser sends back `state` every
 Turn 1: open question ("tell me about yourself"). One sentence can fill several slots.
 Then we only ask for what's still missing, and stop as soon as we can decide.
 """
+import engine
 import langs
 import nlu
 import schemes
@@ -144,44 +145,24 @@ EXPLAINABLE = {"itax", "epf"}   # jargon people often ask about; Q["x_itax"] / Q
 MAX_SPOKEN = 3         # speak the top 3 schemes (keeps the voice reply short), show all on screen
 
 
-def needed_slots(p: dict):
-    """Which slots still matter, in the order we'd ask them."""
-    slots = ["age", "occupation", "state"]
-    occ = p.get("occupation")
-    if occ == "farmer":
-        slots.append("land_ha")
-    slots.append("income_month")
-    inc = p.get("income_month")
-    if not (inc is not None and inc * 12 <= 500000):   # ≤ ₹5 lakh a year owes no income tax under either regime
-        slots.append("itax")
-    age = p.get("age")
-    if occ in ("salaried_private", "labourer", "other_self_employed", "street_vendor", "artisan") \
-            and (age is None or age <= 59):
-        slots.append("epf")
-    if age is None or 18 <= age <= 60:
-        slots.append("daughter_u10")
-    # only where a women's scheme exists in that state (Ladki Bahin, Gruha Lakshmi, Annapurna Bhandar ...)
-    if p.get("state") in schemes.WOMEN_SCHEME_STATES and (age is None or age >= 18):
-        slots.append("gender")
-    # start a business? (PMEGP, Udyam, Startup India, UP's CM-YUVA)
-    if occ not in ("govt_employee", "farmer") and (age is None or 18 <= age <= 60):
-        slots.append("biz")
-    return slots
+def rules():
+    """{scheme id: rule} for every scheme in the app, including the "check this" ones."""
+    return {s["id"]: s["rule"] for s in schemes.SCHEMES + schemes.MAYBE}
 
 
-def next_slot(p: dict):
-    for s in needed_slots(p):
-        if s not in p:
-            return s
-    return None
+def next_slot(p: dict, asked_followups: int = 0):
+    """The next detail to ask about (see engine.py), or None when the results can't change any more."""
+    return engine.next_slot(rules(), p, asked_followups)
 
 
 def _apply_inferences(p: dict):
-    inc = p.get("income_month")
-    if "itax" not in p and inc is not None and inc * 12 <= 500000:
-        p["itax"] = False
-    if p.get("occupation") == "govt_employee":
-        p.setdefault("epf", True)
+    engine.infer(p)
+
+
+def _count(state: dict, slot):
+    """Count follow-up questions (after age / work / state) so the conversation stays short."""
+    if slot and slot not in engine.CORE and slot != state.get("asked"):
+        state["nq"] = state.get("nq", 0) + 1
 
 
 def turn(state: dict, text: str, lang: str = "hi") -> dict:
@@ -207,9 +188,10 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     if clar == "dontknow":
         profile[asked] = None              # unknown: rules treat it as "not true", nobody loses eligibility
         _apply_inferences(profile)
-        nxt = next_slot(profile)
+        nxt = next_slot(profile, state.get("nq", 0))
         (ks, ky) = qt(lang, "ok_skip")
         if nxt:
+            _count(state, nxt)
             state.update(profile=profile, asked=nxt, retries=retries, explained=explained)
             qs, qy = qt(lang, nxt)
             return {"state": state, "heard": {}, "show": ks + " " + qs, "say": ky + " " + qy, "done": False,
@@ -251,14 +233,17 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
                     "say": ry.rstrip() + " " + qy, "done": False, "lang": lang}
         profile[asked] = None          # give up on this slot, rules treat None as unknown
 
-    nxt = next_slot(profile)
+    nxt = next_slot(profile, state.get("nq", 0))
     if nxt:
+        _count(state, nxt)
         state.update(profile=profile, asked=nxt, retries=retries)
         qs, qy = qt(lang, nxt)
         return {"state": state, "heard": got, "show": prefix_show + qs,
                 "say": prefix_say + qy, "done": False, "lang": lang}
 
-    eligible, maybe = schemes.match(profile, lang)
+    # schemes that still hinge on something we didn't ask (question limit reached) are shown as "check these"
+    _, still_open = engine.status(rules(), profile)
+    eligible, maybe = schemes.match(profile, lang, open_ids=set(still_open))
     state.update(profile=profile, asked=None, retries=retries)
     note_show = note_say = ""
     st = profile.get("state")
