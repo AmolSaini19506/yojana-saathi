@@ -18,6 +18,8 @@ from flask import Flask, Response, jsonify, request, send_from_directory
 
 import ask
 import dialog
+import schemes
+import states
 import langs
 
 
@@ -160,7 +162,8 @@ def langs_route():
 def health():
     return jsonify(ok=True, gnani_key=bool(API_KEY), stt_model=STT_MODEL or "prisma-v2.5",
                    tts_model=TTS_MODEL, voice=TTS_VOICE, streaming=STREAMING_LIB and bool(API_KEY),
-                   llm=all(ask.llm_config()))
+                   llm=all(ask.llm_config()),
+                   schemes=len(schemes.SCHEMES) + len(schemes.MAYBE), states=len(states.COVERED))
 
 
 @app.post("/api/stt")

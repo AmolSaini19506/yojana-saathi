@@ -287,6 +287,10 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
         if ages and got.get("daughter_u10") is not False:
             got["daughter_u10"] = min(ages) < 10
         got.pop("age", None)
+    if asked == "intro" and state.get("member", 1) > 1 and "gender" not in got:
+        rel = nlu.relation_gender(text or "")          # "meri maa ...": no need to ask whether she is a woman
+        if rel:
+            got["gender"] = rel
     if asked == "special":
         # one question for widow / pregnant / disability certificate: what they name is true, the rest is not;
         # a plain "no" clears all three; a plain "yes" asks again which one
@@ -347,13 +351,13 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     # money that is fixed and yearly, and one list of papers for everything
     cash_year = catalog.yearly_cash(ids_)
     doc_tags, doc_labels = catalog.papers(ids_, lang)
-    saved_show = saved_say = docs_show = ""
+    saved_say = ""
     if cash_year:
-        (ss, sy) = qt(lang, "saved")
-        saved_show, saved_say = "\n\n" + ss.format(amt=_money(cash_year, lang)), " " + sy.format(amt=cash_year)
-    if doc_labels:
-        docs_show = "\n\n" + qt(lang, "docs_all")[0].format(docs=", ".join(doc_labels))
+        saved_say = " " + qt(lang, "saved")[1].format(amt=cash_year)
     say = f'{fy.format(n=spoken_num(n, lang))} {spoken}{saved_say} {oy}{note_say}'
-    return {"state": state, "heard": got, "show": fs.format(n=n) + saved_show + docs_show + "\n\n" + os_ + note_show,
+    # `summary` is the same information as text, for anyone using the API without the page
+    summary = (qt(lang, "saved")[0].format(amt=_money(cash_year, lang)) + " " if cash_year else "") + \
+        (qt(lang, "docs_all")[0].format(docs=", ".join(doc_labels)) if doc_labels else "")
+    return {"state": state, "heard": got, "show": fs.format(n=n) + "\n\n" + os_ + note_show, "summary": summary.strip(),
             "say": say, "done": True, "eligible": eligible, "maybe": maybe, "profile": profile, "lang": lang,
             "cash_year": cash_year, "docs_all": doc_labels, "member": state.get("member", 1)}

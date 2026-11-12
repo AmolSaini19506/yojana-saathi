@@ -353,7 +353,9 @@ def match(profile: dict, lang: str = "hi", open_ids=()):
         return out
 
     # the person's own state schemes first (usually cash every month), then central ones
-    eligible = [public(s) for s in sorted(SCHEMES, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
+    # ... and within each group, the ones that pay fixed money every year before the rest
+    order = lambda s: (0 if s.get("state") else 1, -catalog.cash(s["id"]))      # noqa: E731
+    eligible = [public(s) for s in sorted(SCHEMES, key=order) if _safe(s["rule"], profile)]
     maybe = [public(s) for s in sorted(MAYBE, key=lambda s: 0 if s.get("state") else 1) if _safe(s["rule"], profile)]
     # a state's own pension card stands in for the general one, so the same money is not listed twice
     by_id = {s["id"]: s for s in SCHEMES + MAYBE}

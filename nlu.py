@@ -475,10 +475,14 @@ OCCUPATIONS = [
                   "delivery", "डिलीवरी", "ऑटो", "domestic", "maid", "kaamwali", "घरेलू कामगार", "safai"]),
     ("salaried_private", ["private job", "private naukri", "company", "naukri", "job karta", "job karti",
                           "salary", "office", "नौकरी", "कंपनी", "प्राइवेट"]),
-    ("homemaker", ["housewife", "homemaker", "grihini", "gharelu", "ghar sambhal", "गृहिणी", "हाउसवाइफ"]),
+    ("homemaker", ["housewife", "homemaker", "grihini", "gharelu", "ghar sambhal", "गृहिणी", "हाउसवाइफ",
+                   "ghar par rehti", "ghar pe rehti", "ghar par hi rehti", "ghar ka kaam", "घर पर रहती", "घर पर ही रहती",
+                   "घर का काम", "घर संभाल"]),
     ("student", ["student", "padhai", "padhta", "padhti", "college", "छात्र", "पढ़ाई", "पढाई", "विद्यार्थी"]),
     ("unemployed", ["berozgar", "unemployed", "koi kaam nahi", "kaam nahi", "बेरोज़गार", "बेरोजगार",
-                    "कोई काम नहीं"]),
+                    "कोई काम नहीं", "kuch nahi karta", "kuch nahi karti", "retired", "retire ho", "ghar par rehta",
+                    "ghar pe rehta", "ghar par hi rehta", "काम नहीं कर", "कुछ नहीं करत", "रिटायर", "घर पर रहते", "घर पर रहता",
+                    "not working", "don't work", "do not work"]),
 ]
 
 
@@ -600,6 +604,26 @@ def detect_extra(text: str, expecting: str | None = None, lang: str = "hi") -> d
         if yn is not None:
             out[expecting] = yn
     return out
+
+
+# Family mode: "meri maa 66 saal ki hain" already says whether the person is a woman or a man.
+RELATION_F = [_nfc(k) for k in ["maa", "mummy", "mother", "mata ji", "mataji", "patni", "wife", "biwi", "behen", "behan",
+                                "sister", "beti", "daughter", "dadi", "nani", "bahu", "saas", "chachi", "mausi", "bua",
+                                "माँ", "मां", "मम्मी", "माता", "पत्नी", "बीवी", "बहन", "बेटी", "दादी", "नानी", "बहू", "सास"]]
+RELATION_M = [_nfc(k) for k in ["pita", "papa", "father", "pitaji", "pati", "husband", "bhai", "brother", "beta", "son",
+                                "dada", "nana", "sasur", "chacha", "mama", "पिता", "पापा", "पति", "भाई", "बेटा", "दादा",
+                                "नाना", "ससुर", "चाचा", "मामा"]]
+
+
+def relation_gender(text: str):
+    """'f' / 'm' when the sentence names a relative ("meri maa", "mere pitaji"), else None."""
+    toks = set(tokens(normalize(text)))
+    t = normalize(text)
+    if toks & set(RELATION_F) or any(" " in k and k in t for k in RELATION_F):
+        return "f"
+    if toks & set(RELATION_M) or any(" " in k and k in t for k in RELATION_M):
+        return "m"
+    return None
 
 
 # ---------------------------------------------------------------- main entry

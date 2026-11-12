@@ -182,6 +182,47 @@
   .card .ask:active{transform:scale(.97);transition-duration:.06s}
   .card.maybe .ask{background:var(--orange-soft);color:var(--orange-text)}
 
+  /* summary on top of a person's results: yearly money, one list of papers, share */
+  .member{margin:18px 4px -4px;font-size:20px;font-weight:700;letter-spacing:-.01em}
+  .summary{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);padding:16px}
+  .summary .money{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .summary .money b{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-.02em;color:var(--accent-text);font-variant-numeric:tabular-nums}
+  .summary .money span{font-size:15px;color:var(--label2)}
+  .summary .fine{margin-top:4px;font-size:12.5px;line-height:1.45;color:var(--label3);letter-spacing:0}
+  .summary h4{margin:14px 0 8px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--label2)}
+  .summary .money + h4{margin-top:16px;padding-top:14px;border-top:.5px solid var(--sep)}
+  .summary h4:first-child{margin-top:0}
+  .papers{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+  .papers li{font-size:14.5px;line-height:1.3;background:var(--fill2);border-radius:10px;padding:6px 10px;letter-spacing:0}
+  .summary .share{margin-top:14px}
+  .family{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;margin-top:4px;padding:10px 14px;
+          border:1.5px dashed var(--sep);border-radius:var(--r-card);background:transparent;color:var(--accent-text);
+          font-size:16px;font-weight:600;line-height:1.3;cursor:pointer;transition:transform .35s var(--spring),background .2s}
+  .family:active{transform:scale(.98);transition-duration:.06s;background:var(--accent-soft)}
+  .total{margin-top:4px;padding:14px 16px;border-radius:var(--r-card);background:var(--accent-soft);color:var(--accent-text);
+         font-size:17px;font-weight:600;line-height:1.35}
+  .total b{font-variant-numeric:tabular-nums}
+
+  /* compact cards (11 Nov): details and the Explain button share one row; long lists fold */
+  .card{padding:14px 16px 4px}
+  .card .benefit{font-size:18.5px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+  .card:has(details[open]) .benefit{display:block}
+  .card .why,.card.maybe .why{margin-top:8px;padding:0;background:none;font-size:14px}
+  .card .foot{display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 10px;margin-top:10px;border-top:.5px solid var(--sep)}
+  .card .foot details{flex:1 1 0;min-width:0;margin:0}
+  .card .foot details[open]{flex-basis:100%}
+  .card .foot summary{border-top:0;justify-content:flex-start;gap:8px}
+  .card .foot summary span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card .foot .ask{flex:none;display:inline-flex;align-items:center;gap:6px;width:auto;height:34px;margin:5px 0;padding:0 13px;border-radius:999px;font-size:14.5px}
+  .card .foot details[open] ~ .ask{margin:10px 0 12px auto}
+  .card .ask svg{width:16px;height:16px;flex:none}
+  .more{width:100%;min-height:46px;border:0;border-radius:14px;background:var(--surface);box-shadow:var(--shadow);color:var(--accent-text);
+        font-size:15.5px;font-weight:600;cursor:pointer;transition:transform .35s var(--spring)}
+  .more:active{transform:scale(.98);transition-duration:.06s}
+  .models svg{width:13px;height:13px;vertical-align:-2px;margin-right:4px}
+  .welcome .ico svg{width:20px;height:20px;display:block}
+  .welcome .ico{color:var(--accent-text)}
+
   footer{margin:26px 4px 0;font-size:12.5px;color:var(--label3);line-height:1.5;letter-spacing:0}
 
   /* ------------------------------------------------------------------ bottom bar (material) */
@@ -298,15 +339,15 @@
   <header class="hero" id="hero">
     <h1>Yojana Saathi</h1>
     <p class="sub" id="w-sub"></p>
-    <div class="models"><span>🎙️ Gnani Prisma</span><span>🔊 Gnani Timbre</span><span id="w-chip"></span></div>
+    <div class="models"><span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>Gnani Prisma</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>Gnani Timbre</span><span id="w-chip"></span><span id="w-count" hidden></span></div>
     <div id="beta" class="beta" role="note"></div>
   </header>
 
   <section class="welcome" id="welcome">
     <ol>
-      <li><span class="ico">🎙️</span><div><b id="w-s1t"></b><small id="w-s1d"></small></div></li>
-      <li><span class="ico">✅</span><div><b id="w-s2t"></b><small id="w-s2d"></small></div></li>
-      <li><span class="ico">💬</span><div><b id="w-s3t"></b><small id="w-s3d"></small></div></li>
+      <li><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></span><div><b id="w-s1t"></b><small id="w-s1d"></small></div></li>
+      <li><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><b id="w-s2t"></b><small id="w-s2d"></small></div></li>
+      <li><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6.5L8 21v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg></span><div><b id="w-s3t"></b><small id="w-s3d"></small></div></li>
     </ol>
     <button class="startbtn" id="startbtn">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
@@ -377,6 +418,7 @@ let lang = initialLang(), state = {}, busy = false, currentAudio = null, speakTo
 let auto = true, langKnown = false, lastDetected = null, lastBot = null;
 let LANGS = {hi:{code:"hi-IN"}, en:{code:"en-IN"}};
 let health = {}, results = null, focus = null, handsfree = true;  // results = {eligible, maybe} once the checker finishes
+let family = [];   // results of every family member checked so far, in order; `results` is the latest (null while asking)
 
 const T = {
   hi: { tap:"टैप करके बोलिए", answer:"टैप करके जवाब दीजिए", think:"सोच रहा हूँ…", speak:"बोल रहा हूँ… बीच में बोलने के लिए माइक दबाइए",
@@ -414,6 +456,39 @@ const X = {
   ta:{fix:"மாற்று", redo:"சரி, மீண்டும் சொல்லுங்கள்", redo_say:"சரி, மீண்டும் சொல்லுங்கள்.", restart:"மீண்டும்", neterr:"இணைய சிக்கல். மீண்டும் முயலுங்கள்."},
   te:{fix:"మార్చండి", redo:"సరే, మళ్ళీ చెప్పండి", redo_say:"సరే, మళ్ళీ చెప్పండి.", restart:"మళ్ళీ", neterr:"నెట్‌వర్క్ సమస్య. మళ్ళీ ప్రయత్నించండి."},
 };
+// Strings added 11 Nov 2026: yearly amount, list of papers, family (beta translations in the 8 pack languages)
+const X2 = {
+  hi:{per_year:"साल में लगभग", fine:"सिर्फ़ तय नकद रकम गिनी गई है। लोन, बीमा और एक बार की रकम इसमें नहीं हैं।", papers:"एक ही बार में ये कागज़ ले जाइए",
+      family:"परिवार के किसी और सदस्य के लिए देखिए", member:"सदस्य", total:"पूरे परिवार के लिए साल में लगभग", n_schemes:"योजनाएँ", n_states:"राज्य"},
+  en:{per_year:"about, every year", fine:"Only fixed cash is counted. Loans, insurance cover and one-time amounts are not.", papers:"Take these papers once, for everything",
+      family:"Check for another family member", member:"Person", total:"For the whole family, about", n_schemes:"schemes", n_states:"states"},
+  bn:{per_year:"বছরে প্রায়", fine:"শুধু নির্দিষ্ট নগদ টাকা ধরা হয়েছে। ঋণ, বিমা ও এককালীন টাকা ধরা হয়নি।", papers:"একবারে এই কাগজগুলো নিয়ে যান",
+      family:"পরিবারের আর একজনের জন্য দেখুন", member:"সদস্য", total:"পুরো পরিবারের জন্য বছরে প্রায়", n_schemes:"প্রকল্প", n_states:"রাজ্য"},
+  gu:{per_year:"વર્ષે લગભગ", fine:"ફક્ત નિશ્ચિત રોકડ રકમ ગણી છે. લોન, વીમો અને એક વખતની રકમ આમાં નથી.", papers:"એક જ વાર આ કાગળો લઈ જાઓ",
+      family:"પરિવારના બીજા સભ્ય માટે જુઓ", member:"સભ્ય", total:"આખા પરિવાર માટે વર્ષે લગભગ", n_schemes:"યોજનાઓ", n_states:"રાજ્યો"},
+  kn:{per_year:"ವರ್ಷಕ್ಕೆ ಸುಮಾರು", fine:"ನಿಗದಿತ ನಗದು ಮಾತ್ರ ಎಣಿಸಲಾಗಿದೆ. ಸಾಲ, ವಿಮೆ ಮತ್ತು ಒಂದೇ ಬಾರಿಯ ಮೊತ್ತ ಸೇರಿಲ್ಲ.", papers:"ಒಂದೇ ಬಾರಿ ಈ ದಾಖಲೆಗಳನ್ನು ತೆಗೆದುಕೊಂಡು ಹೋಗಿ",
+      family:"ಕುಟುಂಬದ ಇನ್ನೊಬ್ಬರಿಗಾಗಿ ನೋಡಿ", member:"ಸದಸ್ಯ", total:"ಇಡೀ ಕುಟುಂಬಕ್ಕೆ ವರ್ಷಕ್ಕೆ ಸುಮಾರು", n_schemes:"ಯೋಜನೆಗಳು", n_states:"ರಾಜ್ಯಗಳು"},
+  ml:{per_year:"വർഷം ഏകദേശം", fine:"നിശ്ചിത പണം മാത്രമാണ് കണക്കാക്കിയത്. വായ്പ, ഇൻഷുറൻസ്, ഒറ്റത്തവണ തുക എന്നിവ ഇതിലില്ല.", papers:"ഒറ്റത്തവണ ഈ രേഖകൾ കൊണ്ടുപോകൂ",
+      family:"കുടുംബത്തിലെ മറ്റൊരാൾക്കായി നോക്കൂ", member:"അംഗം", total:"കുടുംബത്തിന് മൊത്തം വർഷം ഏകദേശം", n_schemes:"പദ്ധതികൾ", n_states:"സംസ്ഥാനങ്ങൾ"},
+  mr:{per_year:"वर्षाला साधारण", fine:"फक्त ठरलेली रोख रक्कम मोजली आहे. कर्ज, विमा आणि एकदाच मिळणारी रक्कम यात नाही.", papers:"एकदाच ही कागदपत्रं घेऊन जा",
+      family:"कुटुंबातल्या आणखी एका सदस्यासाठी पाहा", member:"सदस्य", total:"संपूर्ण कुटुंबासाठी वर्षाला साधारण", n_schemes:"योजना", n_states:"राज्यं"},
+  pa:{per_year:"ਸਾਲ ਦੇ ਲਗਭਗ", fine:"ਸਿਰਫ਼ ਪੱਕੀ ਨਕਦ ਰਕਮ ਗਿਣੀ ਹੈ। ਕਰਜ਼ਾ, ਬੀਮਾ ਅਤੇ ਇੱਕ ਵਾਰ ਦੀ ਰਕਮ ਇਸ ਵਿੱਚ ਨਹੀਂ।", papers:"ਇੱਕੋ ਵਾਰ ਇਹ ਕਾਗਜ਼ ਲੈ ਜਾਓ",
+      family:"ਪਰਿਵਾਰ ਦੇ ਹੋਰ ਮੈਂਬਰ ਲਈ ਦੇਖੋ", member:"ਮੈਂਬਰ", total:"ਪੂਰੇ ਪਰਿਵਾਰ ਲਈ ਸਾਲ ਦੇ ਲਗਭਗ", n_schemes:"ਯੋਜਨਾਵਾਂ", n_states:"ਰਾਜ"},
+  ta:{per_year:"ஆண்டுக்கு சுமார்", fine:"நிலையான பணம் மட்டுமே கணக்கிடப்பட்டது. கடன், காப்பீடு, ஒருமுறை தொகை சேர்க்கப்படவில்லை.", papers:"ஒரே முறை இந்த ஆவணங்களை எடுத்துச் செல்லுங்கள்",
+      family:"குடும்பத்தில் இன்னொருவருக்காகப் பாருங்கள்", member:"நபர்", total:"முழுக் குடும்பத்திற்கும் ஆண்டுக்கு சுமார்", n_schemes:"திட்டங்கள்", n_states:"மாநிலங்கள்"},
+  te:{per_year:"సంవత్సరానికి సుమారు", fine:"స్థిరమైన నగదు మాత్రమే లెక్కించాం. రుణాలు, బీమా, ఒకేసారి వచ్చే మొత్తాలు ఇందులో లేవు.", papers:"ఒకేసారి ఈ పత్రాలు తీసుకెళ్లండి",
+      family:"కుటుంబంలో మరొకరి కోసం చూడండి", member:"సభ్యుడు", total:"మొత్తం కుటుంబానికి సంవత్సరానికి సుమారు", n_schemes:"పథకాలు", n_states:"రాష్ట్రాలు"},
+};
+const X3 = {   // short button labels on the scheme cards
+  hi:{explain_short:"समझाइए", more:"और योजनाएँ दिखाइए"}, en:{explain_short:"Explain", more:"Show more schemes"},
+  bn:{explain_short:"বুঝিয়ে দিন", more:"আরও প্রকল্প দেখান"}, gu:{explain_short:"સમજાવો", more:"વધુ યોજનાઓ બતાવો"},
+  kn:{explain_short:"ವಿವರಿಸಿ", more:"ಇನ್ನಷ್ಟು ಯೋಜನೆಗಳನ್ನು ತೋರಿಸಿ"}, ml:{explain_short:"വിശദീകരിക്കൂ", more:"കൂടുതൽ പദ്ധതികൾ കാണിക്കൂ"},
+  mr:{explain_short:"समजावा", more:"आणखी योजना दाखवा"}, pa:{explain_short:"ਸਮਝਾਓ", more:"ਹੋਰ ਯੋਜਨਾਵਾਂ ਦਿਖਾਓ"},
+  ta:{explain_short:"விளக்குங்கள்", more:"மேலும் திட்டங்களைக் காட்டு"}, te:{explain_short:"వివరించండి", more:"మరిన్ని పథకాలు చూపించండి"},
+};
+const ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6.5L8 21v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
+const t2 = k => (X2[lang] || X2.en)[k] ?? (X3[lang] || X3.en)[k] ?? X2.en[k] ?? X3.en[k];
+const rupees = n => "₹" + Number(n).toLocaleString("en-IN");
 const STATE_NAMES = {UP:"Uttar Pradesh", BR:"Bihar", MH:"Maharashtra", MP:"Madhya Pradesh", RJ:"Rajasthan",
   WB:"West Bengal", TN:"Tamil Nadu", KA:"Karnataka", GJ:"Gujarat", PB:"Punjab", HR:"Haryana", DL:"Delhi", KL:"Kerala",
   AP:"Andhra Pradesh", TG:"Telangana", OD:"Odisha", JH:"Jharkhand", CG:"Chhattisgarh", UK:"Uttarakhand",
@@ -427,6 +502,10 @@ const EN_SLOT = {
   land_ha: v => `land ~${(v/0.4047).toFixed(1)} acre`, income_month: v => `₹${Number(v).toLocaleString("en-IN")}/month`,
   itax: v => v ? "pays tax" : "no tax", epf: v => v ? "PF" : "no PF", daughter_u10: v => v ? "daughter <10" : "no daughter <10",
   state: v => STATE_NAMES[v] || v, gender: v => v === "f" ? "woman" : "man", biz: v => v ? "new business" : "no new business",
+  rural: v => v ? "village" : "town / city", bpl: v => v ? "BPL ration card" : "no BPL card", pucca: v => v ? "own pucca house" : "no pucca house",
+  lpg: v => v ? "has gas" : "no gas connection", maternity: v => v ? "pregnant / new mother" : null, widow: v => v ? "widow" : null,
+  disabled: v => v ? "disability certificate" : null, category: v => v === "gen" ? "General" : String(v).toUpperCase(),
+  study: v => v === "none" ? null : v, school_kids: v => v ? "children in school" : "no school children",
 };
 const STATE_HI = {UP:"उत्तर प्रदेश", BR:"बिहार", MH:"महाराष्ट्र", MP:"मध्य प्रदेश", RJ:"राजस्थान", WB:"पश्चिम बंगाल",
   TN:"तमिलनाडु", KA:"कर्नाटक", GJ:"गुजरात", PB:"पंजाब", HR:"हरियाणा", DL:"दिल्ली", KL:"केरल", AP:"आंध्र प्रदेश",
@@ -442,6 +521,10 @@ const SLOT_LABEL = {
   itax: v => v ? "टैक्स भरते हैं" : "टैक्स नहीं", epf: v => v ? "PF है" : "PF नहीं",
   daughter_u10: v => v ? "बेटी <10" : "बेटी <10 नहीं",
   state: v => stateName(v), gender: v => v === "f" ? "महिला" : "पुरुष", biz: v => v ? "नया काम" : "नया काम नहीं",
+  rural: v => v ? "गाँव" : "शहर / कस्बा", bpl: v => v ? "BPL राशन कार्ड" : "BPL कार्ड नहीं", pucca: v => v ? "अपना पक्का मकान" : "पक्का मकान नहीं",
+  lpg: v => v ? "गैस है" : "गैस कनेक्शन नहीं", maternity: v => v ? "गर्भवती / नई माँ" : null, widow: v => v ? "विधवा" : null,
+  disabled: v => v ? "दिव्यांगता प्रमाण पत्र" : null, category: v => v === "gen" ? "सामान्य" : String(v).toUpperCase(),
+  study: v => ({school:"स्कूल", college:"कॉलेज"}[v] || null), school_kids: v => v ? "बच्चे स्कूल में" : "स्कूल के बच्चे नहीं",
 };
 
 // switch the conversation's language (auto-detected from speech, or picked in the menu)
@@ -522,6 +605,7 @@ function renderWelcome() {
                  : (W[lang] || W.en);
   for (const k of ["sub","chip","s1t","s1d","s2t","s2d","s3t","s3d","start","hint"]) { const el = $("#w-" + k); if (el) el.textContent = w[k]; }
   $("#text").placeholder = w.type;
+  showCounts();
 }
 // Picking a language fixes it for the whole conversation (Prisma listens for that language only);
 // "Auto" keeps detecting whichever of the 10 languages the person speaks.
@@ -591,7 +675,11 @@ function under(row) {
 function addChips(row, obj) {
   const keys = Object.keys(obj || {}).filter(k => SLOT_LABEL[k] && obj[k] !== null);
   const L = lang === "hi" ? SLOT_LABEL : EN_SLOT;
-  keys.forEach(k => { const c = document.createElement("span"); c.className = "chip"; c.textContent = "✓ " + L[k](obj[k]); under(row).appendChild(c); });
+  keys.forEach(k => {
+    const label = L[k](obj[k]);
+    if (!label) return;                              // "not a widow", "not pregnant" and the like aren't worth a chip
+    const c = document.createElement("span"); c.className = "chip"; c.textContent = "✓ " + label; under(row).appendChild(c);
+  });
 }
 function addMeta(row, text) { const m = document.createElement("span"); m.className = "meta"; m.textContent = text; under(row).prepend(m); }
 function setStatus(s, err) { const el = $("#status"); el.textContent = s || ""; el.classList.toggle("err", !!err); }
@@ -599,7 +687,7 @@ function setMic(mode) {
   const m = $("#mic"); m.classList.remove("rec", "busy", "speaking"); if (mode) m.classList.add(mode);
   if (mode !== "rec") m.style.setProperty("--lvl", 0);
 }
-const allCards = () => results ? [...(results.eligible||[]), ...(results.maybe||[])] : [];
+const allCards = () => family.flatMap(g => [...(g.eligible||[]), ...(g.maybe||[])]);
 const nameOf = id => (allCards().find(c => c.id === id) || {}).name || id;
 async function postJSON(url, body) {
   const r = await fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
@@ -614,7 +702,10 @@ function setFocus(id) {
   $("#suggest").classList.toggle("on", !!id);
   $("#focusname").textContent = id ? `💬 ${t("talking")} ${nameOf(id)}` : "";
   $("#unfocus").textContent = t("back");
-  document.querySelectorAll(".card").forEach(el => el.classList.toggle("active", el.dataset.id === id));
+  document.querySelectorAll(".card").forEach(el => {
+    el.classList.toggle("active", el.dataset.id === id);
+    if (el.dataset.id === id && el.hidden) { el.hidden = false; }
+  });
   const sg = $("#suggest"); sg.innerHTML = "";
   if (id) t("sug").forEach(([label, q]) => {
     const b = document.createElement("button"); b.textContent = label;
@@ -637,6 +728,7 @@ async function rewind(row, snap) {
   stopSpeaking(); stopListening(true);
   while (row.nextSibling) row.nextSibling.remove();
   row.remove();
+  family = family.filter(g => g.box && g.box.isConnected);
   state = snap.state; results = null; setFocus(null); langKnown = snap.langKnown; lastBot = snap.ask;
   if (snap.lang !== lang) applyLang(snap.lang);
   setStatus(t("redo")); toBottom();
@@ -762,7 +854,11 @@ async function handleUserText(text, row) {
       Object.keys(state.profile || {}).forEach(k => { if (JSON.stringify(state.profile[k]) !== JSON.stringify(before[k])) fresh[k] = state.profile[k]; });
       if (row) { addChips(row, fresh); attachFix(row, snap); }
       const botRow = botMsg(reply);
-      if (reply.done) { results = {eligible: reply.eligible || [], maybe: reply.maybe || []}; renderResults(botRow); }
+      if (reply.done) {
+        results = {eligible: reply.eligible || [], maybe: reply.maybe || [], cash: reply.cash_year || 0,
+                   papers: reply.docs_all || [], member: reply.member || family.length + 1};
+        family.push(results); renderResults(botRow);
+      }
     } else {                                            // asking about schemes
       reply = await askAbout(text);
       typing.remove();
@@ -803,7 +899,16 @@ async function explain(id) {
 // ---------------------------------------------------------------- results (inline in the conversation) + share
 function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function renderResults(anchorRow) {
-  const box = document.createElement("section"); box.className = "results";
+  const box = document.createElement("section"); box.className = "results"; results.box = box;
+  document.querySelectorAll(".family, .total").forEach(el => el.remove());      // they belong under the latest list
+  if (family.length > 1) {
+    const h = document.createElement("h2"); h.className = "member"; h.textContent = `${t2("member")} ${family.length}`; box.appendChild(h);
+  }
+  const sum = document.createElement("div"); sum.className = "summary";
+  if (results.cash) sum.innerHTML += `<div class="money"><b>${esc(rupees(results.cash))}</b><span>${esc(t2("per_year"))}</span></div>
+    <div class="fine">${esc(t2("fine"))}</div>`;
+  if (results.papers.length) sum.innerHTML += `<h4>${esc(t2("papers"))}</h4>
+    <ul class="papers">${results.papers.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`;
   const share = document.createElement("div"); share.className = "share";
   share.innerHTML = `<button class="wa">${esc(t("wa"))}</button><button class="copy">${esc(t("copy"))}</button>`;
   share.querySelector(".wa").onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText()), "_blank");
@@ -811,7 +916,8 @@ function renderResults(anchorRow) {
     const b = e.currentTarget;
     try { await navigator.clipboard.writeText(shareText()); b.textContent = t("copied"); } catch { b.textContent = "✗"; }
   };
-  box.appendChild(share);
+  sum.appendChild(share);
+  box.appendChild(sum);
   const section = (label, list, maybe) => {
     if (!list.length) return;
     const h = document.createElement("div"); h.className = "sect"; h.textContent = `${label} · ${list.length}`; box.appendChild(h);
@@ -824,17 +930,33 @@ function renderResults(anchorRow) {
         <h3>${esc(s.name)}</h3>${local && local !== s.name ? `<div class="local">${esc(local)}${s.trade_hi ? " · " + esc(s.trade_hi) : ""}</div>` : ""}
         <div class="benefit">${esc(s.benefit_local || s.benefit)}</div>
         ${s.why ? `<div class="why">✓ ${esc(t("why"))}: ${esc(s.why)}</div>` : ""}
-        <details><summary>${esc(t("where"))} · ${esc(t("docs"))} · ${esc(t("note"))}</summary>
+        <div class="foot"><details><summary><span>${esc(t("where"))} · ${esc(t("docs"))} · ${esc(t("note"))}</span></summary>
         <dl><div><dt>${esc(t("where"))}</dt><dd>${esc(s.apply_local || s.apply)}</dd></div>
             <div><dt>${esc(t("docs"))}</dt><dd>${esc(s.docs_local || s.docs)}</dd></div>
             <div><dt>${esc(t("note"))}</dt><dd>${esc(s.note_local || s.note)}</dd></div></dl></details>
-        <button class="ask">${esc(t("explain"))}</button>`;
+        <button class="ask" aria-label="${esc(t("explain"))}">${ICON_CHAT}<span>${esc(t2("explain_short"))}</span></button></div>`;
       el.querySelector(".ask").onclick = () => explain(s.id);
       box.appendChild(el);
     });
+    // a long list folds after the first six: the person's state schemes and yearly money come first
+    const cards = [...box.querySelectorAll(maybe ? ".card.maybe" : ".card:not(.maybe)")];
+    if (!maybe && cards.length > 7) {
+      const rest = cards.slice(6);
+      rest.forEach(c => { c.hidden = true; });
+      const b = document.createElement("button"); b.className = "more"; b.textContent = `${t2("more")} · ${rest.length}`;
+      b.onclick = () => { rest.forEach(c => { c.hidden = false; }); b.remove(); };
+      rest[0].before(b);
+    }
   };
   section(t("eligible"), results.eligible, false);
   section(t("check"), results.maybe, true);
+  const whole = family.reduce((a, g) => a + (g.cash || 0), 0);
+  if (family.length > 1 && whole) {
+    const tot = document.createElement("div"); tot.className = "total";
+    tot.innerHTML = `${esc(t2("total"))} <b>${esc(rupees(whole))}</b>`; box.appendChild(tot);
+  }
+  const fam = document.createElement("button"); fam.className = "family"; fam.textContent = "+ " + t2("family");
+  fam.onclick = startMember; box.appendChild(fam);
   chat.appendChild(box);
   // show the "found N schemes" message and the first cards, not the bottom of a long list
   (anchorRow || box).scrollIntoView({behavior: REDUCE || document.hidden ? "auto" : "smooth", block: "start"});
@@ -842,13 +964,36 @@ function renderResults(anchorRow) {
 
 function shareText() {
   let s = t("share_head") + "\n\n";
-  results.eligible.forEach((c, i) => {
-    s += `${i + 1}. *${c.name}* (${c.name_local || c.name_hi})\n   ${c.benefit_local || c.benefit}\n   📍 ${c.apply_local || c.apply}\n`;
-    if (c.why) s += `   ✓ ${c.why}\n`;
-    s += "\n";
+  family.forEach((g, n) => {
+    if (family.length > 1) s += `👤 *${t2("member")} ${n + 1}*\n`;
+    if (g.cash) s += `💰 ${t2("per_year")} *${rupees(g.cash)}*\n`;
+    if (family.length > 1 || g.cash) s += "\n";
+    g.eligible.forEach((c, i) => {
+      s += `${i + 1}. *${c.name}* (${c.name_local || c.name_hi})\n   ${c.benefit_local || c.benefit}\n   📍 ${c.apply_local || c.apply}\n`;
+      if (c.why) s += `   ✓ ${c.why}\n`;
+      s += "\n";
+    });
+    g.maybe.forEach(c => { s += `🔎 ${t("share_also")}: *${c.name}*: ${c.apply_local || c.apply}\n\n`; });
+    if (g.papers.length) s += `📄 ${t2("papers")}: ${g.papers.join(", ")}\n\n`;
   });
-  results.maybe.forEach(c => { s += `🔎 ${t("share_also")}: *${c.name}*: ${c.apply_local || c.apply}\n\n`; });
-  return s + t("share_tail");
+  return s + t("share_tail").split("\n").pop();          // the "first check, confirm at a CSC" line
+}
+
+// family: check for another person in the same home (the server keeps state, village, ration card, house and gas)
+async function startMember() {
+  if (busy) return;
+  stopSpeaking(); stopListening(true);
+  busy = true; setMic("busy"); setStatus(t("think"));
+  const typing = addTyping();
+  let j;
+  try { j = await postJSON("/api/member", {state, lang}); } catch (e) { typing.remove(); netError(); return; }
+  typing.remove();
+  document.querySelectorAll(".family").forEach(el => el.remove());
+  state = j.state; results = null; setFocus(null);
+  botMsg(j);
+  busy = false; setMic();
+  const done = await speak(j.say, willListen() ? prewarm : null, j.say_parts);
+  if (done) { setStatus(t("answer")); maybeAutoListen(); }
 }
 
 // ---------------------------------------------------------------- voice in, mode A: hands-free streaming (Prisma WebSocket)
@@ -1123,7 +1268,7 @@ async function start() {
   started = true;
   document.body.classList.add("talking");
   stopSpeaking(); stopListening(true); dropWarm();
-  state = {}; results = null; setFocus(null); langKnown = !auto; lastDetected = null; lastBot = null;
+  state = {}; results = null; family = []; setFocus(null); langKnown = !auto; lastDetected = null; lastBot = null;
   chat.innerHTML = "";
   busy = true; setMic("busy"); setStatus(t("think"));
   const typing = addTyping();
@@ -1151,7 +1296,12 @@ fetch("/api/langs").then(r => r.json()).then(list => {
   });
 }).catch(() => {});
 
-fetch("/api/health").then(r => r.json()).then(h => { health = h; }).catch(() => {});
+function showCounts() {
+  const el = $("#w-count");
+  if (!el || !health.schemes) return;
+  el.textContent = `${health.schemes} ${t2("n_schemes")} · ${health.states} ${t2("n_states")}`; el.hidden = false;
+}
+fetch("/api/health").then(r => r.json()).then(h => { health = h; showCounts(); }).catch(() => {});
 document.documentElement.lang = lang;
 renderWelcome();
 </script>
