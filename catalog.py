@@ -532,6 +532,13 @@ def all_entries():
 for _s in all_entries():
     _s["catalog"] = True
 
+# the central cards in the 8 beta languages (catalog_local.py); the spoken line is the name plus the benefit
+from catalog_local import LOCAL  # noqa: E402
+
+for _s in all_entries():
+    for _lang, (_name, _benefit) in LOCAL.get(_s["id"], {}).items():
+        _s.setdefault("local", {}).setdefault(_lang, (_name, _benefit, f"{_name}: {_benefit}."))
+
 WHY_KEYS = {s["id"]: s.get("why", []) for s in all_entries()}
 
 

@@ -223,3 +223,24 @@ def test_chat_answers_from_the_card():
     a = ask.answer("vidhwa pension ke baare mein batao", "hi", focus="free_ration",
                    eligible_ids=["free_ration", "widow_pension"], names={}, why={})
     assert a["focus"] == "widow_pension"
+
+
+def test_central_cards_translated_with_the_same_amounts():
+    import catalog_local
+    amount = r"₹\d+(?:,\d+)*(?:\.\d+)?"
+    by_id = {s["id"]: s for s in catalog.all_entries()}
+    assert set(catalog_local.LOCAL) == {s["id"] for s in catalog.CENTRAL}
+    for sid, cards in catalog_local.LOCAL.items():
+        english = set(re.findall(amount, by_id[sid]["benefit"]))
+        assert set(cards) == {"bn", "gu", "kn", "ml", "mr", "pa", "ta", "te"}, sid
+        for lang, (name, benefit) in cards.items():
+            assert name and benefit and set(re.findall(amount, benefit)) <= english, (sid, lang)
+            assert not english or re.findall(amount, benefit), (sid, lang)     # an amount in English is never dropped
+            text = re.sub(r"VB-G RAM G|UDID", "", name + benefit)
+            assert langs.script_counts(text)["latin"] == 0, (sid, lang)
+
+
+def test_translated_card_is_used():
+    e, _ = schemes.match({"age": 66, "occupation": "unemployed", "bpl": True, "state": "KL"}, "ml")
+    card = next(s for s in e if s["id"] == "old_age_pension")
+    assert "പെൻഷൻ" in card["name_local"] and "₹200" in card["benefit_local"] and card["speak"].startswith(card["name_local"])
