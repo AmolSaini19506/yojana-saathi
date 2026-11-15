@@ -323,12 +323,64 @@ MALE_ANSWER = [_nfc(k) for k in ["purush", "aadmi", "mard", "male", "man", "m", 
                                  "పురుష", "మగ", "ಪುರುಷ", "ಗಂಡು", "പുരുഷ"]]
 
 
+# Hindi (and Punjabi) speakers mark their own gender in the verb or "of" word before "hoon": "saal ka hoon",
+# "kheti karta hoon", "sabzi bechti hoon", "पढ़ती हूँ", "ਕਰਦੀ ਹਾਂ". Only first person ("hoon") counts, so
+# "meri beti 8 saal ki hai" says nothing about the speaker.
+_AM = {_nfc(w) for w in ("hoon", "hu", "hun", "hoo", "hun", "हूँ", "हूं", "हू", "हुँ", "हुं", "ਹਾਂ")}
+_G_WORDS = {
+    "m": {_nfc(w) for w in ("ka", "raha", "gaya", "ladka", "akela", "wala", "beta", "pita", "aadmi", "admi",
+                            "का", "रहा", "गया", "लड़का", "अकेला", "वाला", "बेटा", "पिता", "आदमी",
+                            "ਦਾ", "ਰਿਹਾ", "ਗਿਆ", "ਮੁੰਡਾ", "ਪੁੱਤ")},
+    "f": {_nfc(w) for w in ("ki", "rahi", "gayi", "gai", "ladki", "akeli", "wali", "beti", "mata", "maa",
+                            "की", "रही", "गई", "गयी", "लड़की", "अकेली", "वाली", "बेटी", "माता", "माँ", "मां",
+                            "ਦੀ", "ਰਹੀ", "ਗਈ", "ਕੁੜੀ", "ਧੀ")},
+}
+_G_ENDS = {"m": ("ta", "ता", "ਦਾ"), "f": ("ti", "ती", "ਦੀ")}
+# words that end like a verb but aren't one (places, surnames, nouns)
+_G_NOT = {_nfc(w) for w in ("kota", "gupta", "mehta", "bata", "pati", "jati", "jyoti", "shakti", "basti", "dharti",
+                            "kheti", "moti", "naukri", "कोटा", "गुप्ता", "मेहता", "खेती", "बस्ती", "धरती", "ज्योति")}
+_G_STOP = {_nfc(w) for w in ("se", "mein", "me", "par", "pe", "से", "में", "पर", "पे", "ਤੋਂ", "ਵਿੱਚ")}
+_EN_M = re.compile(r"\bi(?: am|'m| m) (?:a |an )?(?:man|boy|male|father|husband|guy)\b")
+_EN_F = re.compile(r"\bi(?: am|'m| m) (?:a |an )?(?:woman|girl|female|mother|wife|lady|housewife)\b")
+
+
+def _grammar_gender(t, lang):
+    found = set()
+    if _EN_M.search(t):
+        found.add("m")
+    if _EN_F.search(t):
+        found.add("f")
+    toks = tokens(t)
+    for i, tok in enumerate(toks):
+        if tok not in _AM:
+            continue
+        for w in reversed(toks[max(0, i - 4):i]):           # nearest marked word before "hoon"
+            if w in _G_STOP:
+                break
+            g = next((g for g in ("m", "f") if w in _G_WORDS[g]), None)
+            if not g and w not in _G_NOT and len(w) > 2:
+                g = next((g for g in ("m", "f") if w.endswith(_G_ENDS[g])), None)
+            if g:
+                found.add(g)
+                break
+    if lang == "mr" and "मी" in toks:                       # "मी शेती करतो" / "मी शिवणकाम करते", "वर्षांचा / वर्षांची"
+        for w in toks:
+            if len(w) > 2 and (w.endswith("तो") or w.endswith("वर्षांचा") or w.endswith("वर्षाचा")):
+                found.add("m")
+            elif len(w) > 2 and (w.endswith("ते") and w != "आहेते" or w.endswith("वर्षांची") or w.endswith("वर्षाची")):
+                found.add("f")
+    return found.pop() if len(found) == 1 else None
+
+
 def detect_gender(text, lang="hi", expecting=False):
     t = normalize(text)
     if any(find_kw(t, k) for k in FEMALE_SURE):
         return "f"
     if any(find_kw(t, k) for k in MALE_SURE):
         return "m"
+    g = _grammar_gender(t, lang)
+    if g:
+        return g
     if expecting:
         toks = tokens(t)
         if any(tok.startswith(k) for tok in toks for k in FEMALE_ANSWER if len(k) > 1) or set(toks) & {"f"}:
@@ -464,21 +516,27 @@ OCCUPATIONS = [
     ("govt_employee", ["sarkari naukri", "sarkari job", "government job", "govt job", "government employee",
                        "सरकारी नौकरी", "सरकारी कर्मचारी", "sarkari karmchari"]),
     ("street_vendor", ["thela", "thele", "rehdi", "rehri", "redi", "patri", "pheri", "footpath",
-                       "street vendor", "hawker", "ठेला", "ठेले", "रेहड़ी", "रेहडी", "फेरी", "पटरी", "khomcha"]),
+                       "street vendor", "hawker", "ठेला", "ठेले", "रेहड़ी", "रेहडी", "फेरी", "पटरी", "khomcha",
+                       "sabzi bech", "sabji bech", "subzi bech", "phal bech", "fruit bech", "chai bech", "chai ki tapri",
+                       "golgappe", "pani puri", "सब्ज़ी बेच", "सब्जी बेच", "फल बेच", "चाय बेच", "गोलगप्पे"]),
     ("farmer", ["kisan", "kisaan", "kheti", "kheti baadi", "farmer", "farming", "agriculture",
                 "किसान", "खेती", "कृषि", "kashtkar"]),
     ("shopkeeper", ["dukaan", "dukan", "kirana", "shop", "store", "vyapar", "vyapari", "trader",
-                    "business", "dhandha", "दुकान", "किराना", "व्यापार", "व्यापारी", "धंधा", "बिज़नेस", "बिजनेस"]),
+                    "business", "dhandha", "दुकान", "किराना", "व्यापार", "व्यापारी", "धंधा", "बिज़नेस", "बिजनेस",
+                    "bechta", "bechti", "bechte", "बेचता", "बेचती", "बेचते"]),
     ("labourer", ["mazdoor", "majdoor", "mazdoori", "majdoori", "labour", "labor", "dihadi", "daily wage",
                   "construction", "मज़दूर", "मजदूर", "मज़दूरी", "मजदूरी", "दिहाड़ी", "driver", "ड्राइवर",
                   "rickshaw", "रिक्शा", "auto chala", "drive an auto", "auto driver", "taxi", "cab", "e-rickshaw",
                   "delivery", "डिलीवरी", "ऑटो", "domestic", "maid", "kaamwali", "घरेलू कामगार", "safai"]),
     ("salaried_private", ["private job", "private naukri", "company", "naukri", "job karta", "job karti",
-                          "salary", "office", "नौकरी", "कंपनी", "प्राइवेट"]),
+                          "salary", "office", "नौकरी", "कंपनी", "प्राइवेट",
+                          "teacher", "shikshak", "adhyapak", "टीचर", "शिक्षक", "अध्यापक"]),
     ("homemaker", ["housewife", "homemaker", "grihini", "gharelu", "ghar sambhal", "गृहिणी", "हाउसवाइफ",
                    "ghar par rehti", "ghar pe rehti", "ghar par hi rehti", "ghar ka kaam", "घर पर रहती", "घर पर ही रहती",
                    "घर का काम", "घर संभाल"]),
-    ("student", ["student", "padhai", "padhta", "padhti", "college", "छात्र", "पढ़ाई", "पढाई", "विद्यार्थी"]),
+    ("student", ["student", "padhai", "padhta", "padhti", "padh raha", "padh rahi", "college", "school jaata",
+                 "school jaati", "छात्र", "पढ़ाई", "पढाई", "विद्यार्थी", "पढ़ता", "पढ़ती", "पढता", "पढती",
+                 "पढ़ रहा", "पढ़ रही", "कॉलेज", "कालेज", "स्कूल जाता", "स्कूल जाती"]),
     ("unemployed", ["berozgar", "unemployed", "koi kaam nahi", "kaam nahi", "बेरोज़गार", "बेरोजगार",
                     "कोई काम नहीं", "kuch nahi karta", "kuch nahi karti", "retired", "retire ho", "ghar par rehta",
                     "ghar pe rehta", "ghar par hi rehta", "काम नहीं कर", "कुछ नहीं करत", "रिटायर", "घर पर रहते", "घर पर रहता",

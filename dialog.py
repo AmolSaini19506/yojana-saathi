@@ -31,6 +31,8 @@ Q = {
                     "say": "आपके नाम पर कितनी ज़मीन है? एकड़ या बीघा में बताइए।"},
         "income_month": {"show": "महीने की कमाई लगभग कितनी है?",
                          "say": "महीने की कमाई लगभग कितनी है?"},
+        "income_family": {"show": "आपके घर की कुल महीने की कमाई लगभग कितनी है?",
+                          "say": "आपके घर की कुल महीने की कमाई लगभग कितनी है?"},
         "itax": {"show": "क्या आप इनकम टैक्स भरते हैं?", "say": "क्या आप इनकम टैक्स भरते हैं?"},
         "epf": {"show": "क्या आपकी सैलरी से PF कटता है, या ESIC कार्ड है?",
                 "say": "क्या आपकी सैलरी से पीएफ कटता है, या ईएसआईसी कार्ड है?"},
@@ -110,6 +112,8 @@ Q = {
                     "say": "How much land is in your name? Tell me in acres or bigha."},
         "income_month": {"show": "Roughly how much do you earn in a month?",
                          "say": "Roughly how much do you earn in a month?"},
+        "income_family": {"show": "Roughly how much does your whole household earn in a month?",
+                          "say": "Roughly how much does your whole household earn in a month?"},
         "itax": {"show": "Do you pay income tax?", "say": "Do you pay income tax?"},
         "epf": {"show": "Is PF deducted from your salary, or do you have an ESIC card?",
                 "say": "Is PF deducted from your salary, or do you have an ESIC card?"},
@@ -180,6 +184,17 @@ def spoken_num(n, lang):
         return str(n)                    # Timbre reads digits in every language
     words = HI_NUM if lang == "hi" else EN_NUM
     return words[n] if 0 <= n < len(words) else str(n)
+
+
+# People with no earnings of their own are asked about the household's: a student has no "salary".
+NO_OWN_INCOME = {"student", "homemaker", "unemployed"}
+
+
+def ask(lang, slot, profile):
+    """(show, say) for the question about `slot`, worded for this person."""
+    if slot == "income_month" and (profile.get("occupation") in NO_OWN_INCOME or (profile.get("age") or 0) >= 60):
+        slot = "income_family"
+    return qt(lang, slot)
 
 
 def qt(lang, key):
@@ -266,14 +281,14 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
         if nxt:
             _count(state, nxt)
             state.update(profile=profile, asked=nxt, retries=retries, explained=explained)
-            qs, qy = qt(lang, nxt)
+            qs, qy = ask(lang, nxt, profile)
             return {"state": state, "heard": {}, "show": ks + " " + qs, "say": ky + " " + qy, "done": False,
                     "lang": lang}
         text = ""                          # nothing left to ask: fall through to the results
     elif clar == "what" and asked in EXPLAINABLE and asked not in explained:
         explained.append(asked)
         state.update(profile=profile, asked=asked, retries=retries, explained=explained)
-        (xs, xy), (qs, qy) = qt(lang, "x_" + asked), qt(lang, asked)
+        (xs, xy), (qs, qy) = qt(lang, "x_" + asked), ask(lang, asked, profile)
         return {"state": state, "heard": {}, "show": xs + "\n\n" + qs, "say": xy + " " + qy, "done": False,
                 "lang": lang}
     elif clar == "what":
@@ -313,7 +328,7 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
         if retries.get(asked, 0) < MAX_RETRIES:
             retries[asked] = retries.get(asked, 0) + 1
             state.update(profile=profile, asked=asked, retries=retries)
-            (rs, ry), (qs, qy) = qt(lang, "retry"), qt(lang, asked)
+            (rs, ry), (qs, qy) = qt(lang, "retry"), ask(lang, asked, profile)
             return {"state": state, "heard": got, "show": rs.rstrip() + " " + qs,
                     "say": ry.rstrip() + " " + qy, "done": False, "lang": lang}
         profile[asked] = None          # give up on this slot, rules treat None as unknown
@@ -322,7 +337,7 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     if nxt:
         _count(state, nxt)
         state.update(profile=profile, asked=nxt, retries=retries)
-        qs, qy = qt(lang, nxt)
+        qs, qy = ask(lang, nxt, profile)
         return {"state": state, "heard": got, "show": prefix_show + qs,
                 "say": prefix_say + qy, "done": False, "lang": lang}
 
@@ -332,7 +347,8 @@ def turn(state: dict, text: str, lang: str = "hi") -> dict:
     state.update(profile=profile, asked=None, retries=retries)
     note_show = note_say = ""
     st = profile.get("state")
-    if st and st not in states.COVERED and not any(s.get("state") for s in eligible + maybe):
+    # a card left open only because we stopped asking doesn't count as having the state's schemes
+    if st and st not in states.COVERED and not any(s.get("state") and not s.get("open") for s in eligible + maybe):
         ns_, ny_ = qt(lang, "state_note")
         note_show = "\n\n" + ns_.format(state=states.name(st, lang))
         note_say = " " + ny_.format(state=states.name(st, lang))

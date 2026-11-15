@@ -90,7 +90,8 @@ def test_maharashtra_farmer_gets_farm_schemes():
     r = talk("Main 40 saal ka kisan hoon, Nashik mein, 3 acre zameen, 9 hazaar mahine", {})
     e, _ = ids(r)
     assert {"mh_namo_shetkari", "pm_kisan", "kcc", "pmfby"} <= set(e)
-    assert "biz" not in r["asked_seen"] and "gender" in r["asked_seen"]
+    # "saal ka hoon" already says he is a man, so the gender question is skipped
+    assert "biz" not in r["asked_seen"] and "gender" not in r["asked_seen"] and r["profile"]["gender"] == "m"
 
 
 def test_bihar_senior_pension():

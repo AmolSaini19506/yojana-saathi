@@ -5,6 +5,7 @@ Yojana Saathi: speak in Hindi/Hinglish/English, find government schemes you qual
 
 Run:  python app.py   then open http://localhost:5000
 """
+import hashlib
 import json
 import threading
 import os
@@ -216,6 +217,26 @@ def _audio(body: bytes, mimetype="audio/mpeg"):
 
 
 TTS_PENDING: dict = {}                       # (lang, text) -> Event, while that clip is being made
+TTS_SPEED = 0.95                             # a touch slower: easier for older listeners
+
+# The questions never change, so their voice is made once (tools/make_voice.py) and shipped in voice/. Timbre can
+# take several seconds per sentence when it is busy (2 to 6 s measured on 15 Nov 2026); a saved clip plays at once.
+# Clips made while the server runs are saved here too, until the host restarts.
+VOICE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "voice")
+
+
+def voice_file(text: str, lang: str) -> str:
+    """Where the saved clip for this exact line, voice and speed lives."""
+    h = hashlib.sha1(f"{TTS_MODEL}|{TTS_VOICE}|{TTS_SPEED}|{lang}|{text}".encode("utf-8")).hexdigest()[:20]
+    return os.path.join(VOICE_DIR, lang, h + ".mp3")
+
+
+def _remember(key, body: bytes):
+    with TTS_CACHE_LOCK:
+        TTS_CACHE[key] = body
+        TTS_CACHE.move_to_end(key)
+        while len(TTS_CACHE) > TTS_CACHE_MAX:
+            TTS_CACHE.popitem(last=False)
 
 
 def speech_parts(text: str) -> list:
@@ -242,6 +263,13 @@ def synthesize(text: str, lang: str) -> bytes:
         if key in TTS_CACHE:
             TTS_CACHE.move_to_end(key)
             return TTS_CACHE[key]
+    path = voice_file(text, lang)
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            body = f.read()
+        _remember(key, body)
+        return body
+    with TTS_CACHE_LOCK:
         ev = TTS_PENDING.get(key)
         mine = ev is None
         if mine:
@@ -255,7 +283,7 @@ def synthesize(text: str, lang: str) -> bytes:
     try:
         payload = {
             "text": text, "model": TTS_MODEL, "voice": TTS_VOICE, "language": langs.code(lang),
-            "speed": 0.95,                       # a touch slower: easier for older listeners
+            "speed": TTS_SPEED,
             # MP3 is ~6x smaller than WAV (99 KB vs 603 KB for the greeting), so it reaches the phone much sooner
             "audio_config": {"sample_rate": 24000, "container": "mp3", "bitrate": "64k"},
         }
@@ -280,10 +308,13 @@ def synthesize(text: str, lang: str) -> bytes:
                 err = r.text[:200]
             raise TimbreError(err, r.status_code if r.status_code != 200 else 502)
         if len(text) <= 400:
-            with TTS_CACHE_LOCK:
-                TTS_CACHE[key] = r.content
-                while len(TTS_CACHE) > TTS_CACHE_MAX:
-                    TTS_CACHE.popitem(last=False)
+            _remember(key, r.content)
+            try:
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "wb") as f:
+                    f.write(r.content)
+            except OSError:
+                pass                                         # read-only disk: the memory cache still works
         return r.content
     finally:
         with TTS_CACHE_LOCK:
@@ -333,7 +364,7 @@ def tts():
         return jsonify(error="empty text"), 400
     key = (lang, text)
     with TTS_CACHE_LOCK:
-        cached = key in TTS_CACHE or key in TTS_PENDING
+        cached = key in TTS_CACHE or key in TTS_PENDING or os.path.exists(voice_file(text, lang))
     if not cached and rate_limited("tts"):
         return jsonify(error="rate limited"), 429           # page falls back to the browser voice
     try:

@@ -69,7 +69,7 @@ def test_next_member_keeps_the_home_and_forgets_the_person():
     r = talk("Main 34 saal ka kisan hoon, Lucknow se", {"land_ha": "do acre", "income_month": "8 hazaar", "bpl": "haan",
                                                         "pucca": "nahi"})
     first = r["state"]["profile"]
-    assert first["state"] == "UP" and first["bpl"] is True
+    assert first["state"] == "UP" and first["rural"] is True                # a farmer lives in a village
     m = dialog.next_member(r["state"], "hi")
     p = m["state"]["profile"]
     assert m["member"] == 2 and not m["done"] and "परिवार" in m["show"]

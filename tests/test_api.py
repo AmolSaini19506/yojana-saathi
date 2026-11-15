@@ -9,7 +9,9 @@ os.environ["GNANI_API_KEY"] = "test-key"
 os.environ["TTS_WARM"] = "0"          # no background voice warm-up: keeps the call counts below exact
 
 import app as appmod  # noqa: E402
+import tempfile  # noqa: E402
 
+appmod.VOICE_DIR = tempfile.mkdtemp()  # fake audio must never land in the shipped voice/ folder
 calls = []
 
 

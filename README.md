@@ -54,10 +54,15 @@ can optionally be connected for follow-up questions, and it may only answer from
 Each scheme is a rule over the person's details. `engine.py` runs every rule with the unknown details filled in every
 possible way. If the outcome is the same every time, the scheme is decided. If not, the engine notes which details
 the outcome depends on. It then asks about the detail that the most undecided schemes depend on, in a natural order
-(land and income before personal questions), and stops when no answer could change the list or after eight
-follow-ups. Schemes still undecided at that point are shown as "worth checking". Details that are true for few people
-(widow, pregnant, disability certificate) are asked together as one question. Adding a scheme therefore never adds a
-question for people it cannot apply to.
+(land and income before personal questions), and stops when no answer could change the list or after five
+follow-ups. A detail that could only change one or two "worth checking" cards is not asked at all; those schemes are
+shown as "worth checking" instead. Details that are true for few people (widow, pregnant, disability certificate) are
+asked together as one question. Questions that cannot apply are gated out: a 20-year-old student is never asked about a
+young daughter or starting a business, and people with no earnings of their own are asked about the household's
+income. Adding a scheme therefore never adds a question for people it cannot apply to.
+
+Gender is taken from how people speak where the language marks it ("saal ka hoon", "silai karti hoon", "पढ़ती हूँ",
+"ਕਰਦੀ ਹਾਂ", "मी शेती करतो"), so the woman-or-man question is only asked when the answer isn't already clear.
 
 ## Run locally
 
@@ -155,7 +160,10 @@ workers, Kerala's schemes (the government changed in 2026), Telangana's ₹2,500
 - **Land units are approximate:** bigha ≈ 0.25 ha (Hindi), 0.134 ha (Bengali); vigha ≈ 0.16 ha (Gujarati).
 - **8 of the 10 languages are beta** (see above). **Punjabi is often heard as Hindi in Auto mode**; choosing Punjabi fixes it.
 - **One voice request at a time:** Timbre allows one active request per API key, so the server queues them and caches
-  repeated lines.
+  repeated lines. The fixed lines (greeting, questions, scheme summaries in Hindi and English) ship as ready-made
+  Timbre clips in `voice/` (`python tools/make_voice.py` makes them), so they play at once even when Timbre is slow.
+  Lines that change (amounts, the beta languages' first use) still wait for Timbre; if it takes longer than 4.5 s the
+  browser's own voice reads that line instead.
 - **The Q&A only knows the facts in the knowledge base**, by design.
 - **Demo data is made up.** No real names, Aadhaar, phone or bank numbers.
 
@@ -165,7 +173,7 @@ workers, Kerala's schemes (the government changed in 2026), Telangana's ₹2,500
 python -m pytest -q
 ```
 
-291 tests cover parsing (Hinglish, Devanagari, other scripts, number words, land units), full conversations, the
+323 tests cover parsing (Hinglish, Devanagari, other scripts, number words, land units), full conversations, the
 question engine, every scheme entry (complete, same amounts in every language), family mode, every language pack, and
 the request formats sent to Prisma and Timbre (network mocked).
 
@@ -184,6 +192,7 @@ the request formats sent to Prisma and Timbre (network mocked).
 | `ask.py` | The "समझाइए" Q&A: finds the scheme and the question, answers from the facts |
 | `langs/` | Language detection and one file per beta language |
 | `static/index.html` | The single-page app: mic streaming, chat, summary, cards, family, sharing |
+| `tools/make_voice.py`, `voice/` | Ready-made Timbre clips for the fixed lines, so questions play without waiting |
 
 ## Sources (checked November 2026)
 

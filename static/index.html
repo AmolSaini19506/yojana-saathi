@@ -794,6 +794,19 @@ function browserSpeak(text, l) {
     u.onend = res; u.onerror = res; speechSynthesis.speak(u);
   });
 }
+// Timbre can take several seconds when it is busy. After this long, the browser's own voice reads the line
+// instead of leaving silence, but only if the browser has a voice for that language.
+const TTS_WAIT_MS = 4500;
+function hasBrowserVoice(l) {
+  if (!("speechSynthesis" in window)) return false;
+  const code = ((LANGS[l] || {}).code || "hi-IN").slice(0, 2).toLowerCase();
+  return speechSynthesis.getVoices().some(v => (v.lang || "").toLowerCase().startsWith(code));
+}
+if ("speechSynthesis" in window) speechSynthesis.getVoices();      // voices load in the background
+function waitTTS(p, l) {
+  if (!hasBrowserVoice(l)) return p;
+  return Promise.race([p, new Promise(res => setTimeout(() => { mark("tts-slow"); res(null); }, TTS_WAIT_MS))]);
+}
 // Returns true if it finished, false if it was cut off (mic tapped, typed, rewound, restarted).
 // onLast runs as the last sentence starts, so the mic connection is ready the moment the voice stops.
 async function speak(text, onLast, given) {
@@ -806,7 +819,7 @@ async function speak(text, onLast, given) {
   try {
     for (let i = 0; i < parts.length; i++) {
       mark("wait-part", i);
-      const url = await next;
+      const url = await waitTTS(next, l);
       mark("got-part", i);
       if (my !== speakToken) return false;
       next = i + 1 < parts.length ? fetchTTS(parts[i + 1], l) : null;   // prefetch while this one plays

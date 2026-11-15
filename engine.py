@@ -34,11 +34,15 @@ DOMAIN = {
 }
 
 # When several details tie, ask in this order: what people expect to be asked first, personal questions last.
-PRIORITY = ["land_ha", "income_month", "itax", "epf", "gender", "rural", "study", "bpl", "daughter_u10", "school_kids",
+PRIORITY = ["land_ha", "income_month", "itax", "epf", "gender", "rural", "study", "daughter_u10", "bpl", "school_kids",
             "pucca", "lpg",
             "maternity", "widow", "disabled", "category", "biz"]
 
-MAX_FOLLOWUPS = 8               # questions after age / work / state
+MAX_FOLLOWUPS = 5               # questions after age / work / state
+
+# A question must be able to change at least one scheme we would show as a sure match (weight 1), or several
+# "worth checking" ones (weight 0.4 each). Below that, the scheme is shown as "worth checking" instead of asking.
+MIN_SCORE = 1.0
 
 # Ask these only once the other detail is known: income decides whether income tax is even a question, and
 # maternity / widowhood are only asked of women.
@@ -47,6 +51,7 @@ NEEDS_FIRST = {"itax": "income_month", "maternity": "gender", "widow": "gender"}
 # Personal details that are true for few people: when more than one of them still matters they are asked together,
 # as one question ("are you a widow, pregnant, or do you have a disability certificate?").
 SPECIAL = ("widow", "maternity", "disabled")
+RARE = 0.6                      # how much a SPECIAL detail's score counts when choosing which questions to keep
 MAX_DEPTH = 7                   # unknown details explored per rule
 
 
@@ -61,14 +66,19 @@ def _age_between(p, lo, hi):
 
 
 # A question is only worth asking when this holds; otherwise the detail is recorded as "not applicable" (None).
+def _not_student(p):
+    return p.get("occupation") != "student"
+
+
 GATES = {
-    "daughter_u10": lambda p: _age_between(p, 18, 60),
-    "biz": lambda p: p.get("occupation") not in ("govt_employee", "farmer") and _age_between(p, 18, 60),
+    # a parent of a young daughter: not a 20-year-old student
+    "daughter_u10": lambda p: _age_between(p, 22, 55) and _not_student(p),
+    "biz": lambda p: p.get("occupation") not in ("govt_employee", "farmer", "student") and _age_between(p, 18, 55),
     "epf": lambda p: _age_between(p, 16, 59) and p.get("occupation") in WAGE_OR_SELF,
     "maternity": lambda p: p.get("gender") != "m" and _age_between(p, 18, 45),
-    "widow": lambda p: p.get("gender") != "m" and _age_between(p, 18, 200),
+    "widow": lambda p: p.get("gender") != "m" and _age_between(p, 25, 200),
     "study": lambda p: p.get("occupation") == "student",
-    "school_kids": lambda p: _age_between(p, 22, 60),
+    "school_kids": lambda p: _age_between(p, 24, 60) and _not_student(p),
     "land_ha": lambda p: p.get("occupation") == "farmer",
 }
 
@@ -177,15 +187,18 @@ def next_slot(rules: dict, p: dict, asked_followups: int = 0, weights: dict | No
         for s in deps:
             if s not in p:
                 score[s] = score.get(s, 0) + (weights or {}).get(sid, 1)
-    if not score:
-        return None
     specials = [s for s in SPECIAL if s in score]
     if len(specials) > 1:                       # counts as one question
         score["special"] = sum(score.pop(s) for s in specials)
+    score = {s: v for s, v in score.items() if v >= MIN_SCORE - 1e-9}
+    if not score:
+        return None
     rank = {s: i for i, s in enumerate(PRIORITY)}
     rank["special"] = rank["widow"]
-    # keep the questions that matter most, then ask those in a natural order
-    keep = sorted(score, key=lambda s: (-score[s], rank.get(s, 99)))[:left]
+    # keep the questions that matter most, then ask those in a natural order. Details true for few people
+    # (widow, pregnant, disability) change the list for few people, so they give way when questions run short.
+    keep = sorted(score, key=lambda s: (-score[s] * (RARE if s in SPECIAL + ("special",) else 1),
+                                        rank.get(s, 99)))[:left]
     slot = min(keep, key=lambda s: rank.get(s, 99))
     first = NEEDS_FIRST.get(slot) or ("gender" if slot == "special" and "gender" not in p else None)
     return first if first and first not in p else slot
