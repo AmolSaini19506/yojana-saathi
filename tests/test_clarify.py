@@ -10,9 +10,9 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import dialog  # noqa: E402
-import langs   # noqa: E402
-import nlu     # noqa: E402
+from yojana import dialog  # noqa: E402
+from yojana import langs   # noqa: E402
+from yojana import nlu     # noqa: E402
 from helpers import until  # noqa: E402
 
 
@@ -129,7 +129,7 @@ def test_screenshot_conversation_keeps_cash_worker_schemes():
 # ---------------------------------------------------------------- scheme cards in the conversation's language
 @pytest.mark.parametrize("lang", [x for x in langs.ALL if x != "en"])
 def test_card_fields_in_users_language(lang):
-    import schemes
+    from yojana import schemes
     e, _ = schemes.match({"age": 30, "occupation": "labourer", "income_month": 12000, "itax": False, "epf": False}, lang)
     for c in e:
         assert c["apply_local"] and c["docs_local"] and c["note_local"], (lang, c["id"])

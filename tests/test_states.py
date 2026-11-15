@@ -6,11 +6,11 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import dialog   # noqa: E402
-import langs    # noqa: E402
-import nlu      # noqa: E402
-import schemes  # noqa: E402
-import states   # noqa: E402
+from yojana import dialog   # noqa: E402
+from yojana import langs    # noqa: E402
+from yojana import nlu      # noqa: E402
+from yojana import schemes  # noqa: E402
+from yojana import states   # noqa: E402
 
 
 def talk(intro, answers, lang="hi"):

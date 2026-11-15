@@ -14,8 +14,7 @@ import re
 import unicodedata
 from functools import lru_cache
 
-import langs
-import states
+from . import langs, states
 
 # ---------------------------------------------------------------- helpers
 
@@ -614,7 +613,7 @@ COLLEGE_KEYS = [_nfc(k) for k in ["college", "degree", "graduation", "graduate",
 
 def _extra_words(kind):
     """Words for the new questions in the 8 pack languages (langs/more_q.py), valid whatever the conversation's language."""
-    from langs import more_q
+    from .langs import more_q
     return [_nfc(w) for w in more_q.WORDS[kind]]
 
 

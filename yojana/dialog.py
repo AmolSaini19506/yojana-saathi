@@ -4,12 +4,8 @@ Conversation flow. Stateless on the server: the browser sends back `state` every
 Turn 1: open question ("tell me about yourself"). One sentence can fill several slots.
 Then we only ask for what's still missing, and stop as soon as we can decide.
 """
-import catalog
-import engine
-import langs
-import nlu
-import schemes
-import states
+from . import engine, langs, nlu, schemes, states
+from .data import catalog
 
 # What to say for each slot. `show` is displayed, `say` is spoken by Timbre.
 Q = {
@@ -36,8 +32,8 @@ Q = {
         "itax": {"show": "क्या आप इनकम टैक्स भरते हैं?", "say": "क्या आप इनकम टैक्स भरते हैं?"},
         "epf": {"show": "क्या आपकी सैलरी से PF कटता है, या ESIC कार्ड है?",
                 "say": "क्या आपकी सैलरी से पीएफ कटता है, या ईएसआईसी कार्ड है?"},
-        "state": {"show": "आप किस राज्य में रहते हैं? जैसे UP, बिहार, महाराष्ट्र।",
-                  "say": "आप किस राज्य में रहते हैं? जैसे यूपी, बिहार, महाराष्ट्र।"},
+        "state": {"show": "आप किस राज्य में रहते हैं? जैसे उत्तर प्रदेश, बिहार, महाराष्ट्र।",
+                  "say": "आप किस राज्य में रहते हैं? जैसे उत्तर प्रदेश, बिहार, महाराष्ट्र।"},
         "gender": {"show": "क्या आप महिला हैं या पुरुष? कुछ योजनाएँ सिर्फ़ महिलाओं के लिए हैं।",
                    "say": "क्या आप महिला हैं या पुरुष? कुछ योजनाएँ सिर्फ़ महिलाओं के लिए हैं।"},
         "biz": {"show": "क्या आप अपना नया काम-धंधा शुरू करना चाहते हैं?",
@@ -94,6 +90,12 @@ Q = {
                            "फ़ॉर्म भरते हैं। अगर आपने कभी ITR नहीं भरा, तो जवाब है 'नहीं'।",
                    "say": "इनकम टैक्स वो टैक्स है जो साल की कमाई ज़्यादा होने पर सरकार को भरते हैं, और हर साल आईटीआर फ़ॉर्म "
                           "भरते हैं। अगर आपने कभी आईटीआर नहीं भरा, तो जवाब है नहीं।"},
+        "x_bpl": {"show": "BPL यानी गरीबी रेखा से नीचे वाले परिवार। ऐसे परिवारों को सरकार खास राशन कार्ड "
+                          "देती है: अंत्योदय कार्ड या प्राथमिकता वाला (PHH) कार्ड, जिस पर हर महीने मुफ़्त अनाज मिलता है। अगर "
+                          "आपके राशन कार्ड पर मुफ़्त अनाज मिलता है, तो जवाब है 'हाँ'। कार्ड नहीं है या सामान्य कार्ड है, तो 'नहीं'।",
+                  "say": "बीपीएल यानी गरीबी रेखा से नीचे वाले परिवार। ऐसे परिवारों को सरकार खास राशन कार्ड देती है: अंत्योदय "
+                         "कार्ड या प्राथमिकता वाला कार्ड, जिस पर हर महीने मुफ़्त अनाज मिलता है। अगर आपके राशन कार्ड पर मुफ़्त "
+                         "अनाज मिलता है, तो जवाब है हाँ। कार्ड नहीं है या सामान्य कार्ड है, तो नहीं।"},
         "ok_skip": {"show": "कोई बात नहीं।", "say": "कोई बात नहीं।"},
     },
     "en": {
@@ -117,7 +119,8 @@ Q = {
         "itax": {"show": "Do you pay income tax?", "say": "Do you pay income tax?"},
         "epf": {"show": "Is PF deducted from your salary, or do you have an ESIC card?",
                 "say": "Is PF deducted from your salary, or do you have an ESIC card?"},
-        "state": {"show": "Which state do you live in?", "say": "Which state do you live in?"},
+        "state": {"show": "Which state do you live in? For example Uttar Pradesh, Bihar, Maharashtra.",
+                  "say": "Which state do you live in? For example Uttar Pradesh, Bihar, Maharashtra."},
         "gender": {"show": "Are you a woman or a man? Some schemes are only for women.",
                    "say": "Are you a woman or a man? Some schemes are only for women."},
         "biz": {"show": "Do you want to start a new business of your own?",
@@ -170,6 +173,13 @@ Q = {
                            "form every year. If you have never filed an ITR, the answer is no.",
                    "say": "Income tax is the tax people with higher yearly earnings pay to the government, filing an ITR "
                           "form every year. If you have never filed an ITR, the answer is no."},
+        "x_bpl": {"show": "BPL means Below Poverty Line. The government gives such families a special ration card: an "
+                          "Antyodaya card or a priority household (PHH) card, which gets free grain every month. If your "
+                          "ration card gets free grain, the answer is yes. If you have no card or a general card, the answer "
+                          "is no.",
+                  "say": "BPL means Below Poverty Line. The government gives such families a special ration card: an "
+                         "Antyodaya card or a priority household card, which gets free grain every month. If your ration "
+                         "card gets free grain, the answer is yes. If you have no card or a general card, the answer is no."},
         "ok_skip": {"show": "No problem.", "say": "No problem."},
     },
 }
@@ -210,7 +220,7 @@ def qt(lang, key):
 MAX_RETRIES = 1        # re-ask a slot once, then move on
 YES_NO_SLOTS = {"itax", "epf", "daughter_u10", "biz", "bpl", "pucca", "lpg", "maternity", "widow", "disabled",
                 "school_kids"}
-EXPLAINABLE = {"itax", "epf"}   # jargon people often ask about; Q["x_itax"] / Q["x_epf"] explain it
+EXPLAINABLE = {"itax", "epf", "bpl"}   # jargon people often ask about; Q["x_itax"] etc. explain it
 MAX_SPOKEN = 3         # speak the top 3 schemes (keeps the voice reply short), show all on screen
 
 

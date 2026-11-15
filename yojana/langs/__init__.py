@@ -22,8 +22,8 @@ BASE = {
     "en": {"code": "en-IN", "name": "English", "en_name": "English", "beta": False},
 }
 PACK_IDS = ["bn", "gu", "kn", "ml", "mr", "pa", "ta", "te"]
-PACK_IDS = [x for x in PACK_IDS if importlib.util.find_spec(f"langs.{x}")]      # skip packs not written yet
-PACKS = {lang: importlib.import_module(f"langs.{lang}") for lang in PACK_IDS}
+PACK_IDS = [x for x in PACK_IDS if importlib.util.find_spec(f"{__name__}.{x}")]      # skip packs not written yet
+PACKS = {lang: importlib.import_module(f"{__name__}.{lang}") for lang in PACK_IDS}
 ALL = ["hi", "en"] + PACK_IDS
 
 # questions added later for all packs at once (see more_q.py)

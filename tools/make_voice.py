@@ -7,6 +7,7 @@ missing clips are made. Needs GNANI_API_KEY in .env.
 
     python tools/make_voice.py            # Hindi and English
     python tools/make_voice.py hi ta      # chosen languages
+    python tools/make_voice.py --prune    # delete clips for lines that were reworded
 """
 import os
 import sys
@@ -14,15 +15,13 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import app       # noqa: E402
-import dialog    # noqa: E402
-import langs     # noqa: E402
-import schemes   # noqa: E402
+import app                                   # noqa: E402
+from yojana import dialog, langs, schemes    # noqa: E402
 
 # lines filled in at run time (amounts, state names, document lists) can't be made in advance
 TEMPLATES = {"state_note", "saved", "docs_all", "found"}
 # not questions: never follow "no problem" / "sorry, I didn't catch that"
-NOT_QUESTIONS = {"intro", "retry", "none", "outro", "more", "ok_skip", "member_intro", "x_epf", "x_itax"}
+NOT_QUESTIONS = {"intro", "retry", "none", "outro", "more", "ok_skip", "member_intro", "x_epf", "x_itax", "x_bpl"}
 
 
 def keys(lang):
@@ -58,7 +57,20 @@ def lines(lang):
     return parts
 
 
-def main(chosen):
+def prune(lang):
+    """Delete clips whose line no longer exists (a question was reworded). Returns how many."""
+    keep = {os.path.basename(app.voice_file(part, lang)) for part in lines(lang)}
+    folder = os.path.join(app.VOICE_DIR, lang)
+    old = [f for f in os.listdir(folder) if f.endswith(".mp3") and f not in keep] if os.path.isdir(folder) else []
+    for f in old:
+        os.remove(os.path.join(folder, f))
+    return len(old)
+
+
+def main(chosen, remove_old=False):
+    if remove_old:
+        print("removed", sum(prune(lang) for lang in chosen), "clips for lines that changed")
+        return
     if not app.API_KEY:
         sys.exit("GNANI_API_KEY is not set (.env)")
     made = have = failed = 0
@@ -79,4 +91,5 @@ def main(chosen):
 
 
 if __name__ == "__main__":
-    main([langs.valid(x) for x in sys.argv[1:]] or ["hi", "en"])
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    main([langs.valid(x) for x in args] or ["hi", "en"], remove_old="--prune" in sys.argv)

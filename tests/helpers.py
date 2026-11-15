@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import dialog  # noqa: E402
+from yojana import dialog  # noqa: E402
 
 # What a person who has nothing special to report says. "pata nahi" leaves a detail blank.
 DEFAULT = {"age": "pata nahi", "occupation": "pata nahi", "state": "pata nahi", "gender": "pata nahi",

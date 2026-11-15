@@ -10,12 +10,12 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import ask      # noqa: E402
-import dialog   # noqa: E402
-import kb       # noqa: E402
-import langs    # noqa: E402
-import nlu      # noqa: E402
-import schemes  # noqa: E402
+from yojana import ask      # noqa: E402
+from yojana import dialog   # noqa: E402
+from yojana.data import kb       # noqa: E402
+from yojana import langs    # noqa: E402
+from yojana import nlu      # noqa: E402
+from yojana import schemes  # noqa: E402
 
 PACKS = langs.PACK_IDS
 STATE_LANG = {"MH": "mr", "WB": "bn", "TN": "ta", "KA": "kn"}   # state schemes are translated into the state's language
@@ -72,10 +72,10 @@ def test_pack_complete(lang):
 def test_pack_facts_match_hindi(lang):
     """Same schemes, same question types as the verified Hindi facts; placeholders only where they can be filled."""
     p = langs.pack(lang)
-    import kb_more
-    import schemes
+    from yojana.data import kb_more
+    from yojana import schemes
     by_id = {s["id"]: s for s in schemes.SCHEMES + schemes.MAYBE}
-    import catalog
+    from yojana.data import catalog
     new_ids = {s["id"] for s in catalog.all_entries()}
     for sid, entry in kb.KB.items():
         if sid in new_ids:
@@ -230,7 +230,7 @@ def test_other_script_short_replies_keep_language(text, current, expected):
 
 
 def test_hindi_in_gurmukhi_is_understood():
-    import dialog
+    from yojana import dialog
     st = {"profile": {"age": 30, "occupation": "farmer", "land_ha": 0.8, "income_month": 9000, "itax": False,
                       "state": "UP"}, "asked": "daughter_u10", "retries": {}}
     r = dialog.turn(st, langs.for_parsing("ਹਾਂ, ਬੇਟੀ ਹੈ", "hi"), "hi")

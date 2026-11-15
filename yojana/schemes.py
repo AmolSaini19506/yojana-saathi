@@ -1,14 +1,12 @@
 """
-Central government schemes + eligibility rules.
+The first central schemes, the matcher that checks a profile against every scheme, and the "why you qualify" lines.
 
 Rules checked against official / news sources in Nov 2026 (see README "Sources").
 These are simplified screening rules, not a legal eligibility decision: every result
 tells the user to confirm at a CSC, bank or the official portal.
 """
-import catalog
-import langs
-import more_schemes
-import states
+from . import langs, states
+from .data import catalog, more_schemes
 
 UNORGANISED = {"street_vendor", "labourer", "artisan", "other_self_employed"}
 NON_FARM_BUSINESS = {"shopkeeper", "street_vendor", "artisan", "other_self_employed"}
@@ -341,7 +339,7 @@ def match(profile: dict, lang: str = "hi", open_ids=()):
         # "Where / Documents / Note" on the card in the conversation's language, from the same verified facts the
         # Samjhaiye chat uses (kb.py / the language pack). English keeps the short English fields above.
         if lang != "en":
-            import ask                                  # local import: ask.py doesn't depend on schemes.py
+            from . import ask                                  # local import: ask.py doesn't depend on schemes.py
             facts = ask._facts(s["id"], lang)
             if facts.get("apply"):
                 out["apply_local"] = ask._fill(facts["apply"], s["id"], lang)[0]

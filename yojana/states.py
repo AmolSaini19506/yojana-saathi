@@ -1,8 +1,8 @@
 """
 Indian states: names (for the question "which state?") and which ones have state schemes in the app.
 
-COVERED states have 1–2 flagship state schemes in schemes.py (checked 9 Nov 2026). For every other state the app
-still checks central schemes and says honestly that its state schemes aren't in the app yet.
+COVERED states have one to three flagship state schemes (data/more_schemes.py, data/catalog_states.py). For every
+other state the app still checks central schemes and says honestly that its state schemes aren't in the app yet.
 """
 import re
 import unicodedata
@@ -11,7 +11,8 @@ import unicodedata
 # Bare "up" / "mp" are ambiguous ("set up"), so they only count as an answer to the state question.
 STATES = {
     "UP": ("Uttar Pradesh", "उत्तर प्रदेश",
-           ["uttar pradesh", "u.p.", "up se", "up mein", "up me", "उत्तर प्रदेश", "यूपी", "यू.पी", "lucknow", "लखनऊ",
+           ["uttar pradesh", "uttarpradesh", "u.p.", "up se", "up mein", "up me", "up ka", "up ki", "up ke", "up wala",
+            "up wali", "from up", "in up", "उत्तर प्रदेश", "उत्तरप्रदेश", "यूपी", "यू.पी", "यू पी", "lucknow", "लखनऊ",
             "kanpur", "कानपुर", "varanasi", "banaras", "वाराणसी", "बनारस", "prayagraj", "allahabad", "प्रयागराज",
             "agra", "आगरा", "meerut", "मेरठ", "gorakhpur", "गोरखपुर", "ghaziabad", "गाज़ियाबाद", "गाजियाबाद",
             "noida", "नोएडा", "bareilly", "बरेली", "aligarh", "अलीगढ़", "moradabad", "मुरादाबाद", "ayodhya", "अयोध्या",
@@ -23,7 +24,8 @@ STATES = {
             "नागपूर", "nashik", "नाशिक", "aurangabad", "औरंगाबाद", "sambhajinagar", "संभाजीनगर", "kolhapur", "कोल्हापूर",
             "solapur", "सोलापूर", "thane", "ठाणे", "மகாராஷ்டிரா", "ಮಹಾರಾಷ್ಟ್ರ", "মহারাষ্ট্র"]),
     "MP": ("Madhya Pradesh", "मध्य प्रदेश",
-           ["madhya pradesh", "m.p.", "mp se", "mp mein", "mp me", "मध्य प्रदेश", "मध्यप्रदेश", "एमपी", "bhopal", "भोपाल",
+           ["madhya pradesh", "madhyapradesh", "m.p.", "mp se", "mp mein", "mp me", "mp ka", "mp ki", "mp ke",
+            "from mp", "in mp", "मध्य प्रदेश", "मध्यप्रदेश", "एमपी", "bhopal", "भोपाल",
             "indore", "इंदौर", "jabalpur", "जबलपुर", "gwalior", "ग्वालियर", "ujjain", "उज्जैन", "rewa",
             "रीवा", "satna", "सतना"]),
     "RJ": ("Rajasthan", "राजस्थान", ["rajasthan", "राजस्थान", "jaipur", "जयपुर", "jodhpur", "जोधपुर", "udaipur",

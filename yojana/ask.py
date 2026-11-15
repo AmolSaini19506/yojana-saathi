@@ -17,9 +17,9 @@ from functools import lru_cache
 
 import requests
 
-import langs
-from kb import INTENTS, KB, SCHEME_NAMES
-from nlu import find_kw, kw, normalize
+from . import langs
+from .data.kb import INTENTS, KB, SCHEME_NAMES
+from .nlu import find_kw, kw, normalize
 
 HI_DIGITS = ["शून्य", "एक", "दो", "तीन", "चार", "पाँच", "छह", "सात", "आठ", "नौ"]
 EN_DIGITS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]

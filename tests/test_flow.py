@@ -4,10 +4,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import ask     # noqa: E402
+from yojana import ask     # noqa: E402
 from helpers import talk  # noqa: E402
-import dialog  # noqa: E402
-import nlu     # noqa: E402
+from yojana import dialog  # noqa: E402
+from yojana import nlu     # noqa: E402
 
 
 def ids(res):

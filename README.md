@@ -92,7 +92,7 @@ limits Gnani calls per visitor.
 Hindi / Hinglish, English, and (beta) Bengali, Gujarati, Kannada, Malayalam, Marathi, Punjabi, Tamil and Telugu: the
 10 languages Prisma v3.0 and Timbre v3.0 support.
 
-- Until the language is known, Prisma gets `indic-auto`. `langs/__init__.py` combines Prisma's
+- Until the language is known, Prisma gets `indic-auto`. `yojana/langs/__init__.py` combines Prisma's
   `detected_language_code` with the script of the text, and keeps the current language for short replies like "35".
   Choosing a language on the first screen fixes it for the conversation.
 - Questions, scheme cards, the list of papers, the Q&A and the WhatsApp text all follow the language.
@@ -173,26 +173,35 @@ workers, Kerala's schemes (the government changed in 2026), Telangana's ₹2,500
 python -m pytest -q
 ```
 
-323 tests cover parsing (Hinglish, Devanagari, other scripts, number words, land units), full conversations, the
+337 tests cover parsing (Hinglish, Devanagari, other scripts, number words, land units), full conversations, the
 question engine, every scheme entry (complete, same amounts in every language), family mode, every language pack, and
 the request formats sent to Prisma and Timbre (network mocked).
 
-## Files
+## Project layout
 
-| File | What it does |
-|---|---|
-| `app.py` | Flask server: `/ws/stt` (Prisma stream), `/api/stt` (Prisma REST), `/api/tts` (Timbre), `/api/turn`, `/api/member`, `/api/ask` |
-| `nlu.py` | Extracts details from speech: "35 saal", "पंद्रह हज़ार", "do bigha", "gaon mein", "main vidhwa hoon" |
-| `engine.py` | Chooses the next question from the scheme rules |
-| `dialog.py` | The conversation: opening question, follow-ups, results, the next family member |
-| `schemes.py`, `more_schemes.py` | The first 30 schemes, matching, and "why you qualify" reasons |
-| `catalog.py`, `catalog_states.py`, `catalog_local.py` | Schemes added in November 2026 (card, rule, papers, yearly cash) and their translations |
-| `states.py` | State names, cities, and which states have state schemes |
-| `kb.py`, `kb_more.py` | Verified facts per scheme for the spoken Q&A |
-| `ask.py` | The "समझाइए" Q&A: finds the scheme and the question, answers from the facts |
-| `langs/` | Language detection and one file per beta language |
-| `static/index.html` | The single-page app: mic streaming, chat, summary, cards, family, sharing |
-| `tools/make_voice.py`, `voice/` | Ready-made Timbre clips for the fixed lines, so questions play without waiting |
+```
+app.py                  Flask server: Prisma stream (/ws/stt) and REST (/api/stt), Timbre (/api/tts),
+                        conversation (/api/turn, /api/member), scheme Q&A (/api/ask)
+yojana/
+  nlu.py                pulls details out of speech: "35 saal", "पंद्रह हज़ार", "do bigha", "gaon mein", "vidhwa hoon"
+  engine.py             chooses the next question from the scheme rules
+  dialog.py             the conversation: opening question, follow-ups, results, the next family member
+  schemes.py            the first central schemes, the matcher and the "why you qualify" lines
+  ask.py                the "समझाइए" Q&A: finds the scheme and the question, answers from the facts
+  states.py             state names, cities, and which states have state schemes
+  data/
+    catalog.py          central schemes added in November 2026, document names, yearly cash
+    catalog_states.py   state schemes added in November 2026
+    catalog_local.py    those central schemes in the eight beta languages
+    more_schemes.py     business, farming and the first state schemes
+    kb.py, kb_more.py   verified spoken facts per scheme for the Q&A
+  langs/                language detection, one file per beta language, more_q.py for newer lines
+static/index.html       the single-page app: mic streaming, chat, summary, cards, family, sharing
+voice/                  ready-made Timbre clips for the fixed lines (made by tools/make_voice.py)
+tools/make_voice.py     makes or prunes those clips
+tests/                  pytest suite; helpers.py holds whole conversations by answering each question by name
+render.yaml             Render deployment (Singapore, free plan)
+```
 
 ## Sources (checked November 2026)
 

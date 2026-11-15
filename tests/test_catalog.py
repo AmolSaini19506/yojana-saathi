@@ -7,14 +7,14 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import ask      # noqa: E402
-import catalog  # noqa: E402
-import dialog   # noqa: E402
-import engine   # noqa: E402
-import kb       # noqa: E402
-import langs    # noqa: E402
-import nlu      # noqa: E402
-import schemes  # noqa: E402
+from yojana import ask      # noqa: E402
+from yojana.data import catalog  # noqa: E402
+from yojana import dialog   # noqa: E402
+from yojana import engine   # noqa: E402
+from yojana.data import kb       # noqa: E402
+from yojana import langs    # noqa: E402
+from yojana import nlu      # noqa: E402
+from yojana import schemes  # noqa: E402
 from helpers import talk, until  # noqa: E402
 
 FIELDS = ["id", "name", "name_hi", "benefit", "benefit_hi", "speak_en", "speak_hi", "apply", "apply_hi", "docs",
@@ -226,7 +226,7 @@ def test_chat_answers_from_the_card():
 
 
 def test_central_cards_translated_with_the_same_amounts():
-    import catalog_local
+    from yojana.data import catalog_local
     amount = r"₹\d+(?:,\d+)*(?:\.\d+)?"
     by_id = {s["id"]: s for s in catalog.all_entries()}
     assert set(catalog_local.LOCAL) == {s["id"] for s in catalog.CENTRAL}

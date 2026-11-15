@@ -6,9 +6,9 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import catalog  # noqa: E402
-import dialog   # noqa: E402
-import langs    # noqa: E402
+from yojana.data import catalog  # noqa: E402
+from yojana import dialog   # noqa: E402
+from yojana import langs    # noqa: E402
 from helpers import talk  # noqa: E402
 
 
@@ -90,7 +90,7 @@ def test_mother_gets_her_own_list():
 
 
 def test_relative_named_in_the_first_sentence():
-    import nlu
+    from yojana import nlu
     assert nlu.relation_gender("meri maa 66 saal ki hain") == "f" and nlu.relation_gender("मेरे पिताजी किसान हैं") is None
     assert nlu.relation_gender("mere pita ji kisan hain") == "m" and nlu.relation_gender("main 30 saal ka hoon") is None
     assert nlu.detect_occupation("meri maa ghar par rehti hain")[0] == "homemaker"

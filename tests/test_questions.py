@@ -1,14 +1,13 @@
 """Only relevant questions, few of them, and no question whose answer the person already gave."""
 import pytest
 
-import engine
-import nlu
+from yojana import engine, nlu
 from helpers import talk
 
 
 def asked(first, answers=None, lang="hi"):
     """The follow-up questions (after age / work / state) the app asks, and the final reply."""
-    import dialog
+    from yojana import dialog
     answers = answers or {}
     r = dialog.turn({}, "", lang)
     r = dialog.turn(r["state"], first, lang)
@@ -95,6 +94,38 @@ def test_gender_question_skipped_when_wording_says_it():
 ])
 def test_occupation_in_own_words(text, want):
     assert nlu.detect_occupation(text)[0] == want
+
+
+# ---------------------------------------------------------------- Uttar Pradesh, written out
+@pytest.mark.parametrize("text", ["main UP ka hoon", "I live in UP", "from UP", "Uttar Pradesh", "uttarpradesh",
+                                  "उत्तर प्रदेश से", "उत्तरप्रदेश", "यूपी से हूँ", "lucknow mein rehta hoon"])
+def test_uttar_pradesh_from_short_and_full_name(text):
+    from yojana import states
+    assert states.find_state(text) == "UP"
+
+
+def test_uttar_pradesh_is_written_out_for_people():
+    from yojana import dialog, states
+    assert states.name("UP", "en") == "Uttar Pradesh" and states.name("UP", "hi") == "उत्तर प्रदेश"
+    assert "उत्तर प्रदेश" in dialog.qt("hi", "state")[0] and "UP" not in dialog.qt("hi", "state")[0]
+    assert "Uttar Pradesh" in dialog.qt("en", "state")[0]
+
+
+# ---------------------------------------------------------------- "what is BPL?"
+@pytest.mark.parametrize("lang,first,question,yes", [
+    ("hi", "38 saal ki hoon, gharelu mahila, Rajasthan", "BPL kya hota hai?", "haan"),
+    ("hi", "38 saal ki hoon, gharelu mahila, Rajasthan", "ये क्या होता है?", "हाँ"),
+    ("en", "I am a 38 year old housewife in Rajasthan", "what is BPL?", "yes"),
+    ("mr", "मी ३८ वर्षांची गृहिणी आहे, राजस्थान", "BPL म्हणजे काय?", "हो"),
+])
+def test_bpl_is_explained_then_asked_again(lang, first, question, yes):
+    from yojana import dialog
+    from helpers import until
+    r = until("bpl", first, {"income_month": "8000", "rural": "gaon"}, lang=lang)
+    r = dialog.turn(r["state"], question, lang)
+    assert r["state"]["asked"] == "bpl" and "BPL" in r["show"] and len(r["show"]) > 120
+    r = dialog.turn(r["state"], yes, lang)
+    assert r["state"]["profile"]["bpl"] is True
 
 
 def test_farmer_with_young_daughter_still_hears_about_sukanya():

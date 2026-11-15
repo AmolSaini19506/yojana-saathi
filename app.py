@@ -1,5 +1,5 @@
 """
-Yojana Saathi: speak in Hindi/Hinglish/English, find government schemes you qualify for.
+Yojana Saathi: speak in any of 10 Indian languages, find the government schemes you qualify for.
 
   Prisma (Gnani STT)  ->  rule-based understanding + eligibility rules  ->  Timbre (Gnani TTS)
 
@@ -17,11 +17,7 @@ from collections import OrderedDict, defaultdict, deque
 import requests
 from flask import Flask, Response, jsonify, request, send_from_directory
 
-import ask
-import dialog
-import schemes
-import states
-import langs
+from yojana import ask, dialog, langs, schemes, states
 
 
 # ---------------------------------------------------------------- config (.env without extra packages)

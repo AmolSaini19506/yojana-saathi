@@ -258,7 +258,7 @@ STATE = [
         "name": "Old-age pension (Uttar Pradesh)", "name_hi": "वृद्धावस्था पेंशन (उत्तर प्रदेश)",
         "benefit": "₹1,000 a month for people aged 60 or more from poor families",
         "benefit_hi": "गरीब परिवारों के 60 साल या उससे बड़े लोगों को हर महीने ₹1,000",
-        "speak_en": "UP's old-age pension: one thousand rupees a month from the age of sixty.",
+        "speak_en": "Uttar Pradesh's old-age pension: one thousand rupees a month from the age of sixty.",
         "speak_hi": "उत्तर प्रदेश की वृद्धावस्था पेंशन: साठ साल की उम्र से हर महीने एक हज़ार रुपये।",
         "apply": "sspy-up.gov.in or your nearest CSC",
         "apply_hi": "{web} पर या नज़दीकी सीएससी केंद्र पर आवेदन कीजिए।",

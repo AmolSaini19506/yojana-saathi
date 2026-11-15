@@ -108,9 +108,9 @@ CENTRAL = [
         "id": "jsy",
         "name": "Janani Suraksha Yojana", "name_hi": "जननी सुरक्षा योजना",
         "benefit": "Cash when you deliver in a government hospital: ₹1,400 in villages and ₹1,000 in towns in 10 states "
-                   "(UP, Bihar, MP, Rajasthan, Jharkhand, Chhattisgarh, Odisha, Uttarakhand, Assam, J&K); "
+                   "(Uttar Pradesh, Bihar, Madhya Pradesh, Rajasthan, Jharkhand, Chhattisgarh, Odisha, Uttarakhand, Assam, J&K); "
                    "₹700 and ₹600 for BPL, SC and ST women in other states",
-        "benefit_hi": "सरकारी अस्पताल में डिलीवरी पर नकद: 10 राज्यों (यूपी, बिहार, एमपी, राजस्थान, झारखंड, छत्तीसगढ़, ओडिशा, उत्तराखंड, "
+        "benefit_hi": "सरकारी अस्पताल में डिलीवरी पर नकद: 10 राज्यों (उत्तर प्रदेश, बिहार, मध्य प्रदेश, राजस्थान, झारखंड, छत्तीसगढ़, ओडिशा, उत्तराखंड, "
                       "असम, जम्मू-कश्मीर) में गाँव में ₹1,400 और शहर में ₹1,000; बाकी राज्यों में BPL, SC, ST महिलाओं को ₹700 और ₹600",
         "speak_en": "Janani Suraksha Yojana: cash of up to fourteen hundred rupees when you deliver in a government hospital.",
         "speak_hi": "जननी सुरक्षा योजना: सरकारी अस्पताल में डिलीवरी करवाने पर चौदह सौ रुपये तक नकद।",
@@ -476,7 +476,7 @@ CENTRAL_CHECK = [
     },
 ]
 
-from catalog_states import STATE, STATE_CHECK  # noqa: E402  (state schemes: see catalog_states.py)
+from .catalog_states import STATE, STATE_CHECK  # noqa: E402  (state schemes: see catalog_states.py)
 
 
 # ---------------------------------------------------------------- documents, for the one combined list of papers
@@ -533,7 +533,7 @@ for _s in all_entries():
     _s["catalog"] = True
 
 # the central cards in the 8 beta languages (catalog_local.py); the spoken line is the name plus the benefit
-from catalog_local import LOCAL  # noqa: E402
+from .catalog_local import LOCAL  # noqa: E402
 
 for _s in all_entries():
     for _lang, (_name, _benefit) in LOCAL.get(_s["id"], {}).items():
@@ -563,7 +563,7 @@ def doc_label(tag, lang="en"):
         return hi
     if lang == "en":
         return en
-    from langs import more_q
+    from ..langs import more_q
     return more_q.DOCS.get(lang, {}).get(tag, en)
 
 
