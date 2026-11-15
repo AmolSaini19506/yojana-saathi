@@ -6,6 +6,8 @@ Built by Amol and Yash for the Great Indian AI Internship Challenge, on Gnani AI
 
 **Live demo:** https://yojana-saathi-sg.onrender.com (free hosting: the first visit after a quiet spell can take up to a minute)
 
+**One-page pitch:** [PITCH.md](PITCH.md)
+
 ## Why
 
 Most people don't miss government schemes because they aren't eligible. They miss them because nobody told them.
